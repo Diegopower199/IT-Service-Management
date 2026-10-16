@@ -20,4 +20,6 @@ public interface StatusRepository extends JpaRepository<StatusModel, Long> {
     List<StatusModel> findByActiveTrueOrderByIdStatusAsc();
 
     Optional<StatusModel> findByIdStatusAndActiveTrue(Long idStatus);
+
+    Optional<StatusModel> findByNameAndActiveTrue(String name);
 }

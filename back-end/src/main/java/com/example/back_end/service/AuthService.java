@@ -45,7 +45,6 @@ public class AuthService {
      * @return respuesta que contiene el JWT
      */
     public AuthResponse login(LoginRequest request) {
-
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),

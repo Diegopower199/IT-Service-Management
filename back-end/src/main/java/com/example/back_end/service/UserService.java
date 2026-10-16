@@ -149,7 +149,9 @@ public class UserService {
                     "Current password is incorrect");
         }
 
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        String newEncodedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(newEncodedPassword);
 
         userRepository.save(user);
     }

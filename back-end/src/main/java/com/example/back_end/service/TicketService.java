@@ -100,31 +100,26 @@ public class TicketService {
 
     public TicketResponse createTicket(CreateTicketRequest request) {
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-
-        String username = authentication.getName();
-
-        UserModel createdBy = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found"));
+        UserModel createdBy = getAuthenticatedUser();
 
         UserModel requestedFor = userRepository.findById(request.getRequestedForId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Requested user not found"));
 
-        CategoryModel category = categoryRepository.findById(request.getCategoryId())
+        CategoryModel category = categoryRepository
+                .findByIdCategoryAndActiveTrue(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Category not found"));
+                        "Active category with id " + request.getCategoryId() + " not found"));
 
-        PriorityModel priority = priorityRepository.findById(request.getPriorityId())
+        PriorityModel priority = priorityRepository
+                .findByIdPriorityAndActiveTrue(request.getPriorityId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Priority not found"));
+                        "Active priority with id " + request.getPriorityId() + " not found"));
 
-        StatusModel status = statusRepository.findByName("OPEN")
+        StatusModel status = statusRepository
+                .findByNameAndActiveTrue("OPEN")
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "OPEN status not found"));
+                        "Active OPEN status not found"));
 
         TicketModel ticket = new TicketModel();
 
@@ -193,9 +188,10 @@ public class TicketService {
 
         if (request.getCategoryId() != null) {
 
-            CategoryModel category = categoryRepository.findById(request.getCategoryId())
+            CategoryModel category = categoryRepository
+                    .findByIdCategoryAndActiveTrue(request.getCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Category with id " + request.getCategoryId() + " not found"));
+                            "Active category with id " + request.getCategoryId() + " not found"));
 
             ticket.setCategory(category);
         }
@@ -241,9 +237,9 @@ public class TicketService {
                         "Ticket with id " + ticketId + " not found"));
 
         PriorityModel priority = priorityRepository
-                .findById(request.getPriorityId())
+                .findByIdPriorityAndActiveTrue(request.getPriorityId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Priority with id " + request.getPriorityId() + " not found"));
+                        "Active priority with id " + request.getPriorityId() + " not found"));
 
         ticket.setPriority(priority);
         ticket.setLastUpdated(LocalDateTime.now());
@@ -262,9 +258,9 @@ public class TicketService {
                         "Ticket with id " + ticketId + " not found"));
 
         StatusModel status = statusRepository
-                .findById(request.getStatusId())
+                .findByIdStatusAndActiveTrue(request.getStatusId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Status with id " + request.getStatusId() + " not found"));
+                        "Active status with id " + request.getStatusId() + " not found"));
 
         ticket.setStatus(status);
         ticket.setLastUpdated(LocalDateTime.now());
