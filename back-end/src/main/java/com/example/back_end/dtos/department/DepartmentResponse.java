@@ -11,4 +11,5 @@ public class DepartmentResponse {
 
     private Long idDepartment;
     private String name;
+    private boolean active;
 }

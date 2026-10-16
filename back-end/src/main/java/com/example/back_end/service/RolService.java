@@ -32,6 +32,18 @@ public class RolService {
         return result;
     }
 
+    public List<RolResponse> getActiveRoles() {
+
+        List<RolModel> roles = rolRepository.findByActiveTrueOrderByIdRolAsc();
+        List<RolResponse> result = new ArrayList<>();
+
+        for (RolModel rol : roles) {
+            result.add(convertToResponse(rol));
+        }
+
+        return result;
+    }
+
     public RolResponse getRolById(Long rolId) {
 
         RolModel rol = rolRepository.findById(rolId)
@@ -50,6 +62,7 @@ public class RolService {
 
         RolModel newRol = new RolModel();
         newRol.setName(request.getName());
+        newRol.setActive(true);
 
         RolModel savedRol = rolRepository.save(newRol);
 
@@ -78,19 +91,33 @@ public class RolService {
         return convertToResponse(updatedRol);
     }
 
-    public void deleteRol(Long rolId) {
+    public void deactivateRol(Long id) {
 
-        rolRepository.findById(rolId)
+        RolModel rol = rolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Role with id " + rolId + " not found"));
+                        "Role with id " + id + " not found"));
 
-        rolRepository.deleteById(rolId);
+        rol.setActive(false);
+
+        rolRepository.save(rol);
+    }
+
+    public void activateRol(Long id) {
+
+        RolModel rol = rolRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role with id " + id + " not found"));
+
+        rol.setActive(true);
+
+        rolRepository.save(rol);
     }
 
     private RolResponse convertToResponse(RolModel rol) {
 
         return new RolResponse(
                 rol.getIdRol(),
-                rol.getName());
+                rol.getName(),
+                rol.isActive());
     }
 }

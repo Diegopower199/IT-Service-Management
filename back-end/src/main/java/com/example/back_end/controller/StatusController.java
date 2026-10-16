@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.GET, RequestMethod.POST,
-        RequestMethod.PUT, RequestMethod.DELETE
+        RequestMethod.PUT, RequestMethod.PATCH
 })
 @RestController
 @RequestMapping("/statuses")
@@ -43,6 +43,13 @@ public class StatusController {
         }
 
         return ResponseEntity.ok(statuses);
+    }
+
+    @GetMapping("/actives")
+    public ResponseEntity<List<StatusResponse>> getActiveStatuses() {
+
+        return ResponseEntity.ok(
+                statusService.getActiveStatuses());
     }
 
     @GetMapping("/{id}")
@@ -75,12 +82,20 @@ public class StatusController {
         return ResponseEntity.ok(updatedStatus);
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteStatus(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> deactivateStatus(@PathVariable Long id) {
 
-        statusService.deleteStatus(id);
+        statusService.deactivateStatus(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activateStatus(@PathVariable Long id) {
+
+        statusService.activateStatus(id);
 
         return ResponseEntity.noContent().build();
     }

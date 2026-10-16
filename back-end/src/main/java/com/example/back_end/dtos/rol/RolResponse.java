@@ -11,4 +11,5 @@ public class RolResponse {
 
     private Long idRol;
     private String name;
+    private boolean active;
 }

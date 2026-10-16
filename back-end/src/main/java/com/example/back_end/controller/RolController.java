@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.GET, RequestMethod.POST,
-        RequestMethod.PUT, RequestMethod.DELETE })
+        RequestMethod.PUT, RequestMethod.PATCH })
 @RestController
 @RequestMapping("/roles")
 @RequiredArgsConstructor
@@ -43,7 +43,14 @@ public class RolController {
         }
 
         return ResponseEntity.ok(roles);
+    }
 
+    @GetMapping("/actives")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<RolResponse>> getActiveRoles() {
+
+        return ResponseEntity.ok(
+                rolService.getActiveRoles());
     }
 
     @GetMapping("/{id}")
@@ -77,12 +84,22 @@ public class RolController {
         return ResponseEntity.ok(updatedRol);
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteRol(
+    public ResponseEntity<Void> deactivateRol(
             @PathVariable Long id) {
 
-        rolService.deleteRol(id);
+        rolService.deactivateRol(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activateRol(
+            @PathVariable Long id) {
+
+        rolService.activateRol(id);
 
         return ResponseEntity.noContent().build();
     }

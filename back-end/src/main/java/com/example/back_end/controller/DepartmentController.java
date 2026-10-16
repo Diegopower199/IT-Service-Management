@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.GET, RequestMethod.POST,
-        RequestMethod.PUT, RequestMethod.DELETE
+        RequestMethod.PUT, RequestMethod.PATCH
 })
 @RestController
 @RequestMapping("/departments")
@@ -43,6 +43,13 @@ public class DepartmentController {
         }
 
         return ResponseEntity.ok(departments);
+    }
+
+    @GetMapping("/actives")
+    public ResponseEntity<List<DepartmentResponse>> getActiveDepartments() {
+
+        return ResponseEntity.ok(
+                departmentService.getActiveDepartments());
     }
 
     @GetMapping("/{id}")
@@ -75,12 +82,22 @@ public class DepartmentController {
         return ResponseEntity.ok(updatedDepartment);
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteDepartment(
+    public ResponseEntity<Void> deactivateDepartment(
             @PathVariable Long id) {
 
-        departmentService.deleteDepartment(id);
+        departmentService.deactivateDepartment(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activateDepartment(
+            @PathVariable Long id) {
+
+        departmentService.activateDepartment(id);
 
         return ResponseEntity.noContent().build();
     }

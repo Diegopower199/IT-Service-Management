@@ -32,6 +32,19 @@ public class PriorityService {
         return result;
     }
 
+    public List<PriorityResponse> getActivePriorities() {
+
+        List<PriorityModel> priorities = priorityRepository.findByActiveTrueOrderByIdPriorityAsc();
+
+        List<PriorityResponse> result = new ArrayList<>();
+
+        for (PriorityModel priority : priorities) {
+            result.add(convertToResponse(priority));
+        }
+
+        return result;
+    }
+
     public PriorityResponse getPriorityById(Long priorityId) {
 
         PriorityModel priority = priorityRepository.findById(priorityId)
@@ -50,6 +63,7 @@ public class PriorityService {
 
         PriorityModel newPriority = new PriorityModel();
         newPriority.setName(request.getName());
+        newPriority.setActive(true);
 
         PriorityModel savedPriority = priorityRepository.save(newPriority);
 
@@ -78,19 +92,33 @@ public class PriorityService {
         return convertToResponse(updatedPriority);
     }
 
-    public void deletePriority(Long priorityId) {
+    public void deactivatePriority(Long id) {
 
-        priorityRepository.findById(priorityId)
+        PriorityModel priority = priorityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Priority with id " + priorityId + " not found"));
+                        "Priority with id " + id + " not found"));
 
-        priorityRepository.deleteById(priorityId);
+        priority.setActive(false);
+
+        priorityRepository.save(priority);
+    }
+
+    public void activatePriority(Long id) {
+
+        PriorityModel priority = priorityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Priority with id " + id + " not found"));
+
+        priority.setActive(true);
+
+        priorityRepository.save(priority);
     }
 
     private PriorityResponse convertToResponse(PriorityModel priority) {
 
         return new PriorityResponse(
                 priority.getIdPriority(),
-                priority.getName());
+                priority.getName(),
+                priority.isActive());
     }
 }

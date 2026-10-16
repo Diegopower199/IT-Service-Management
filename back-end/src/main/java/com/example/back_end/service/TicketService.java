@@ -318,7 +318,8 @@ public class TicketService {
         if (ticket.getCategory() != null) {
             categoryResponse = new CategoryResponse(
                     ticket.getCategory().getIdCategory(),
-                    ticket.getCategory().getName());
+                    ticket.getCategory().getName(),
+                    ticket.getCategory().isActive());
         }
 
         PriorityResponse priorityResponse = null;
@@ -326,7 +327,8 @@ public class TicketService {
         if (ticket.getPriority() != null) {
             priorityResponse = new PriorityResponse(
                     ticket.getPriority().getIdPriority(),
-                    ticket.getPriority().getName());
+                    ticket.getPriority().getName(),
+                    ticket.getPriority().isActive());
         }
 
         StatusResponse statusResponse = null;
@@ -334,7 +336,8 @@ public class TicketService {
         if (ticket.getStatus() != null) {
             statusResponse = new StatusResponse(
                     ticket.getStatus().getIdStatus(),
-                    ticket.getStatus().getName());
+                    ticket.getStatus().getName(),
+                    ticket.getStatus().isActive());
         }
 
         return new TicketResponse(

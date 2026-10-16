@@ -27,8 +27,7 @@ import lombok.RequiredArgsConstructor;
  * JWT.
  * </p>
  */
-@CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.GET, RequestMethod.POST,
-        RequestMethod.PUT, RequestMethod.DELETE })
+@CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.POST })
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor

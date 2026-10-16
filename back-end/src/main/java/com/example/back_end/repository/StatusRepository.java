@@ -16,4 +16,8 @@ public interface StatusRepository extends JpaRepository<StatusModel, Long> {
 
     @Query("SELECT s FROM StatusModel s ORDER BY s.idStatus ASC")
     List<StatusModel> findAllOrderedById();
+
+    List<StatusModel> findByActiveTrueOrderByIdStatusAsc();
+
+    Optional<StatusModel> findByIdStatusAndActiveTrue(Long idStatus);
 }

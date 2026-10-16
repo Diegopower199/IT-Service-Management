@@ -32,6 +32,19 @@ public class CategoryService {
         return result;
     }
 
+    public List<CategoryResponse> getActiveCategories() {
+
+        List<CategoryModel> categories = categoryRepository.findByActiveTrueOrderByIdCategoryAsc();
+
+        List<CategoryResponse> result = new ArrayList<>();
+
+        for (CategoryModel category : categories) {
+            result.add(convertToResponse(category));
+        }
+
+        return result;
+    }
+
     public CategoryResponse getCategoryById(Long categoryId) {
 
         CategoryModel category = categoryRepository.findById(categoryId)
@@ -50,6 +63,7 @@ public class CategoryService {
 
         CategoryModel newCategory = new CategoryModel();
         newCategory.setName(request.getName());
+        newCategory.setActive(true);
 
         CategoryModel savedCategory = categoryRepository.save(newCategory);
 
@@ -78,19 +92,33 @@ public class CategoryService {
         return convertToResponse(updatedCategory);
     }
 
-    public void deleteCategory(Long categoryId) {
+    public void deactivateCategory(Long id) {
 
-        categoryRepository.findById(categoryId)
+        CategoryModel category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Category with id " + categoryId + " not found"));
+                        "Category with id " + id + " not found"));
 
-        categoryRepository.deleteById(categoryId);
+        category.setActive(false);
+
+        categoryRepository.save(category);
+    }
+
+    public void activateCategory(Long id) {
+
+        CategoryModel category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Category with id " + id + " not found"));
+
+        category.setActive(true);
+
+        categoryRepository.save(category);
     }
 
     private CategoryResponse convertToResponse(CategoryModel category) {
 
         return new CategoryResponse(
                 category.getIdCategory(),
-                category.getName());
+                category.getName(),
+                category.isActive());
     }
 }

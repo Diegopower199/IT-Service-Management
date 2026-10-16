@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.back_end.dtos.user.ChangePasswordRequest;
-import com.example.back_end.dtos.user.UserRequest;
+import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
 import com.example.back_end.service.UserService;
 import com.example.back_end.utils.GlobalConstants;
@@ -26,7 +26,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.GET, RequestMethod.POST,
-        RequestMethod.PUT, RequestMethod.DELETE })
+        RequestMethod.PUT, RequestMethod.PATCH })
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -59,7 +59,7 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(
-            @Valid @RequestBody UserRequest request) {
+            @Valid @RequestBody CreateUserRequest request) {
 
         UserResponse savedUser = userService.createUser(request);
 
@@ -70,23 +70,14 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserRequest request) {
+            @Valid @RequestBody CreateUserRequest request) {
 
         UserResponse updatedUser = userService.updateUser(request, id);
 
         return ResponseEntity.ok(updatedUser);
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-
-        userService.deleteUser(id);
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}/password")
+    @PatchMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody ChangePasswordRequest request) {

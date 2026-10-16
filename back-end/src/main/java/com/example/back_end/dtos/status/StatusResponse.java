@@ -11,4 +11,5 @@ public class StatusResponse {
 
     private Long idStatus;
     private String name;
+    private boolean active;
 }

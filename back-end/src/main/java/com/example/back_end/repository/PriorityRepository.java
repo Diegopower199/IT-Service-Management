@@ -1,6 +1,7 @@
 package com.example.back_end.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,4 +14,8 @@ public interface PriorityRepository extends JpaRepository<PriorityModel, Long> {
 
     @Query("SELECT p FROM PriorityModel p ORDER BY p.idPriority ASC")
     List<PriorityModel> findAllOrderedById();
+
+    List<PriorityModel> findByActiveTrueOrderByIdPriorityAsc();
+
+    Optional<PriorityModel> findByIdPriorityAndActiveTrue(Long idPriority);
 }

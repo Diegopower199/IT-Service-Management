@@ -49,7 +49,7 @@ public class TicketController {
         return ResponseEntity.ok(tickets);
     }
 
-    @GetMapping("/{id}") // TODO: USER only if the ticket belongs to/affects them (AUN NO ESTA HECHO)
+    @GetMapping("/{id}")
     public ResponseEntity<TicketResponse> getTicketById(
             @PathVariable Long id) {
 
@@ -78,7 +78,7 @@ public class TicketController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTicket);
     }
 
-    @PatchMapping("/{id}") // TODO: USER only if the ticket belongs to/affects them (AUN NO ESTA HECHO)
+    @PatchMapping("/{id}")
     public ResponseEntity<TicketResponse> updateTicket(
             @PathVariable Long id,
             @RequestBody UpdateTicketRequest request) {

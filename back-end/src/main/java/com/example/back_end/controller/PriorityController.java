@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.GET, RequestMethod.POST,
-        RequestMethod.PUT, RequestMethod.DELETE
+        RequestMethod.PUT, RequestMethod.PATCH
 })
 @RestController
 @RequestMapping("/priorities")
@@ -43,6 +43,13 @@ public class PriorityController {
         }
 
         return ResponseEntity.ok(priorities);
+    }
+
+    @GetMapping("/actives")
+    public ResponseEntity<List<PriorityResponse>> getActivePriorities() {
+
+        return ResponseEntity.ok(
+                priorityService.getActivePriorities());
     }
 
     @GetMapping("/{id}")
@@ -76,12 +83,20 @@ public class PriorityController {
 
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deletePriority(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> deactivatePriority(@PathVariable Long id) {
 
-        priorityService.deletePriority(id);
+        priorityService.deactivatePriority(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activatePriority(@PathVariable Long id) {
+
+        priorityService.activatePriority(id);
 
         return ResponseEntity.noContent().build();
     }

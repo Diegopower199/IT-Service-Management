@@ -11,4 +11,5 @@ public class PriorityResponse {
 
     private Long idPriority;
     private String name;
+    private boolean active;
 }

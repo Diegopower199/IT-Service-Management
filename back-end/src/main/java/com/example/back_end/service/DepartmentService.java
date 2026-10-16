@@ -32,6 +32,19 @@ public class DepartmentService {
         return result;
     }
 
+    public List<DepartmentResponse> getActiveDepartments() {
+
+        List<DepartmentModel> departments = departmentRepository.findByActiveTrueOrderByIdDepartmentAsc();
+
+        List<DepartmentResponse> result = new ArrayList<>();
+
+        for (DepartmentModel department : departments) {
+            result.add(convertToResponse(department));
+        }
+
+        return result;
+    }
+
     public DepartmentResponse getDepartmentById(Long id) {
 
         DepartmentModel department = departmentRepository.findById(id)
@@ -50,8 +63,8 @@ public class DepartmentService {
         }
 
         DepartmentModel department = new DepartmentModel();
-
         department.setName(request.getName());
+        department.setActive(true);
 
         DepartmentModel savedDepartment = departmentRepository.save(department);
 
@@ -80,13 +93,26 @@ public class DepartmentService {
         return convertToResponse(updatedDepartment);
     }
 
-    public void deleteDepartment(Long id) {
+    public void deactivateDepartment(Long id) {
 
         DepartmentModel department = departmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Department with id " + id + " not found"));
 
-        departmentRepository.delete(department);
+        department.setActive(false);
+
+        departmentRepository.save(department);
+    }
+
+    public void activateDepartment(Long id) {
+
+        DepartmentModel department = departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department with id " + id + " not found"));
+
+        department.setActive(true);
+
+        departmentRepository.save(department);
     }
 
     private DepartmentResponse convertToResponse(
@@ -94,6 +120,7 @@ public class DepartmentService {
 
         return new DepartmentResponse(
                 department.getIdDepartment(),
-                department.getName());
+                department.getName(),
+                department.isActive());
     }
 }

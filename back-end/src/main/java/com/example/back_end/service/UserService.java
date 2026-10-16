@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.example.back_end.dtos.department.DepartmentResponse;
 import com.example.back_end.dtos.rol.RolResponse;
 import com.example.back_end.dtos.user.ChangePasswordRequest;
-import com.example.back_end.dtos.user.UserRequest;
+import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
 import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
@@ -53,7 +53,7 @@ public class UserService {
         return convertToResponse(user);
     }
 
-    public UserResponse createUser(UserRequest request) {
+    public UserResponse createUser(CreateUserRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new ResourceAlreadyExistsException(
@@ -76,6 +76,8 @@ public class UserService {
         UserModel newUser = new UserModel();
 
         newUser.setUsername(request.getUsername());
+        newUser.setPassword(
+                passwordEncoder.encode(request.getPassword()));
         newUser.setEmail(request.getEmail());
         newUser.setFirstName(request.getFirstName());
         newUser.setLastName(request.getLastName());
@@ -89,7 +91,7 @@ public class UserService {
     }
 
     public UserResponse updateUser(
-            UserRequest request,
+            CreateUserRequest request,
             Long userId) {
 
         UserModel existingUser = userRepository.findById(userId)
@@ -131,15 +133,6 @@ public class UserService {
         return convertToResponse(updatedUser);
     }
 
-    public void deleteUser(Long userId) {
-
-        userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User with id " + userId + " not found"));
-
-        userRepository.deleteById(userId);
-    }
-
     public void changePassword(
             Long userId,
             ChangePasswordRequest request) {
@@ -169,13 +162,15 @@ public class UserService {
         if (user.getRol() != null) {
             rolResponse = new RolResponse(
                     user.getRol().getIdRol(),
-                    user.getRol().getName());
+                    user.getRol().getName(),
+                    user.getRol().isActive());
         }
 
         if (user.getDepartment() != null) {
             departmentResponse = new DepartmentResponse(
                     user.getDepartment().getIdDepartment(),
-                    user.getDepartment().getName());
+                    user.getDepartment().getName(),
+                    user.getDepartment().isActive());
         }
 
         return new UserResponse(

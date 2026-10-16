@@ -1,6 +1,5 @@
 package com.example.back_end.service;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +22,20 @@ public class StatusService {
 
     public List<StatusResponse> getAllStatuses() {
 
-        List<StatusModel> statuses =
-                statusRepository.findAllOrderedById();
+        List<StatusModel> statuses = statusRepository.findAllOrderedById();
+
+        List<StatusResponse> result = new ArrayList<>();
+
+        for (StatusModel status : statuses) {
+            result.add(convertToResponse(status));
+        }
+
+        return result;
+    }
+
+    public List<StatusResponse> getActiveStatuses() {
+
+        List<StatusModel> statuses = statusRepository.findByActiveTrueOrderByIdStatusAsc();
 
         List<StatusResponse> result = new ArrayList<>();
 
@@ -39,8 +50,7 @@ public class StatusService {
 
         StatusModel status = statusRepository.findById(statusId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Status with id " + statusId + " not found"
-                ));
+                        "Status with id " + statusId + " not found"));
 
         return convertToResponse(status);
     }
@@ -49,15 +59,14 @@ public class StatusService {
 
         if (statusRepository.existsByName(request.getName())) {
             throw new ResourceAlreadyExistsException(
-                    "Status '" + request.getName() + "' already exists"
-            );
+                    "Status '" + request.getName() + "' already exists");
         }
 
         StatusModel newStatus = new StatusModel();
         newStatus.setName(request.getName());
+        newStatus.setActive(true);
 
-        StatusModel savedStatus =
-                statusRepository.save(newStatus);
+        StatusModel savedStatus = statusRepository.save(newStatus);
 
         return convertToResponse(savedStatus);
     }
@@ -66,43 +75,51 @@ public class StatusService {
             StatusRequest request,
             Long statusId) {
 
-        StatusModel existingStatus =
-                statusRepository.findById(statusId)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Status with id " + statusId + " not found"
-                        ));
+        StatusModel existingStatus = statusRepository.findById(statusId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Status with id " + statusId + " not found"));
 
         if (!existingStatus.getName().equalsIgnoreCase(request.getName())
                 && statusRepository.existsByName(request.getName())) {
 
             throw new ResourceAlreadyExistsException(
-                    "Status '" + request.getName() + "' already exists"
-            );
+                    "Status '" + request.getName() + "' already exists");
         }
 
         existingStatus.setName(request.getName());
 
-        StatusModel updatedStatus =
-                statusRepository.save(existingStatus);
+        StatusModel updatedStatus = statusRepository.save(existingStatus);
 
         return convertToResponse(updatedStatus);
     }
 
-    public void deleteStatus(Long statusId) {
+    public void deactivateStatus(Long id) {
 
-        statusRepository.findById(statusId)
+        StatusModel status = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Status with id " + statusId + " not found"
-                ));
+                        "Status with id " + id + " not found"));
 
-        statusRepository.deleteById(statusId);
+        status.setActive(false);
+
+        statusRepository.save(status);
+    }
+
+    public void activateStatus(Long id) {
+
+        StatusModel status = statusRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Status with id " + id + " not found"));
+
+        status.setActive(true);
+
+        statusRepository.save(status);
     }
 
     private StatusResponse convertToResponse(StatusModel status) {
 
         return new StatusResponse(
                 status.getIdStatus(),
-                status.getName()
-        );
+                status.getName(),
+                status.isActive());
     }
 }

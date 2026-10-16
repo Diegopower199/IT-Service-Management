@@ -3,7 +3,7 @@ package com.example.back_end.dtos.user;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,10 +11,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequest {
+public class CreateUserRequest {
 
     @NotBlank(message = "The 'username' field is required")
     private String username;
+
+    @NotBlank(message = "The 'password' field is required")
+    @Size(min = 8, message = "The password must contain at least 8 characters")
+    private String password;
 
     @NotBlank(message = "The 'email' field is required")
     @Email(message = "The 'email' field must contain a valid email address")
