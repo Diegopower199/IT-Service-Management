@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.back_end.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
 
 /**
  * Configuracion de los componentes utilizados durante la autenticacion.
@@ -29,10 +28,13 @@ import lombok.RequiredArgsConstructor;
  * 
  */
 @Configuration
-@RequiredArgsConstructor
 public class ApplicationConfig {
 
     private final UserRepository userRepository;
+
+    public ApplicationConfig(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     /**
      * Obtiene el AuthenticationManager creado por Spring Security.

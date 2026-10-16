@@ -34,21 +34,20 @@ public class UserController {
 
     private final UserService userService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAll() {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userService.getAllUsers();
 
-        List<UserResponse> allUsers = userService.getAllUsers();
-
-        if (allUsers.isEmpty()) {
+        if (users.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
 
-        return ResponseEntity.ok(allUsers);
+        return ResponseEntity.ok(users);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> getUserById(
             @PathVariable Long id) {
 
@@ -57,40 +56,36 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody UserRequest request) {
 
-        UserResponse userGuardado = userService.saveUser(request);
+        UserResponse savedUser = userService.createUser(request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(userGuardado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRequest request) {
 
-        UserResponse userActualizado = userService.updateUser(request, id);
+        UserResponse updatedUser = userService.updateUser(request, id);
 
-        return ResponseEntity.ok(userActualizado);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(
-            @PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
 
         userService.deleteUser(id);
 
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,

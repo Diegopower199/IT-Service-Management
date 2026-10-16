@@ -1,9 +1,7 @@
 package com.example.back_end.model;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -58,22 +56,13 @@ public class UserModel implements UserDetails {
     @JoinColumn(name = "id_rol", nullable = false, foreignKey = @ForeignKey(name = "FK_users_roles"))
     private RolModel rol;
 
+    @ManyToOne
+    @JoinColumn(name = "id_department", nullable = false, foreignKey = @ForeignKey(name = "FK_users_departments"))
+    private DepartmentModel department;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(
                 new SimpleGrantedAuthority("ROLE_" + rol.getName()));
     }
-
-    public Map<String, Object> toMap() {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("idUser", idUser);
-        map.put("username", username);
-        map.put("email", email);
-        map.put("firstName", firstName);
-        map.put("lastName", lastName);
-        map.put("enabled", enabled);
-
-        return map;
-    }
-
 }

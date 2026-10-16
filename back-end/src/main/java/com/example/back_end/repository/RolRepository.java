@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import com.example.back_end.model.RolModel;
 
 public interface RolRepository extends JpaRepository<RolModel, Long> {
+
     @Query("SELECT c FROM RolModel c ORDER BY c.idRol")
     List<RolModel> findAllOrderedById();
 

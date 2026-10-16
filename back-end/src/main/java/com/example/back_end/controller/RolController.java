@@ -33,48 +33,54 @@ public class RolController {
 
     private final RolService rolService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<RolResponse>> getAll() {
-        List<RolResponse> allRoles = rolService.getAllRols();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<RolResponse>> getAllRoles() {
+        List<RolResponse> roles = rolService.getAllRoles();
 
-        if (allRoles.isEmpty()) {
+        if (roles.isEmpty()) {
             return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.ok(allRoles);
         }
-    }
 
-    @PostMapping
-    public ResponseEntity<RolResponse> createRol(@Valid @RequestBody RolRequest request) {
+        return ResponseEntity.ok(roles);
 
-        RolResponse rolGuardado = rolService.saveRol(request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(rolGuardado);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RolResponse> getRolById(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RolResponse> getRolById(
+            @PathVariable Long id) {
 
         RolResponse rol = rolService.getRolById(id);
 
         return ResponseEntity.ok(rol);
     }
 
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RolResponse> createRol(
+            @Valid @RequestBody RolRequest request) {
+
+        RolResponse savedRol = rolService.createRol(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedRol);
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RolResponse> updateRol(
             @PathVariable Long id,
             @Valid @RequestBody RolRequest request) {
 
-        RolResponse rolActualizado = rolService.updateRol(request, id);
+        RolResponse updatedRol = rolService.updateRol(request, id);
 
-        return ResponseEntity.ok(rolActualizado);
+        return ResponseEntity.ok(updatedRol);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRol(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteRol(
+            @PathVariable Long id) {
 
         rolService.deleteRol(id);
 

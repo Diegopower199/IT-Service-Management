@@ -14,6 +14,7 @@ import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.service.AuthService;
 import com.example.back_end.utils.GlobalConstants;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -42,7 +43,7 @@ public class AuthController {
      * @return token JWT
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
@@ -58,7 +59,7 @@ public class AuthController {
      * @return token JWT
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 }

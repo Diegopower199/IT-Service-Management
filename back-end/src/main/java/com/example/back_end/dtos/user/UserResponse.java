@@ -1,5 +1,6 @@
 package com.example.back_end.dtos.user;
 
+import com.example.back_end.dtos.department.DepartmentResponse;
 import com.example.back_end.dtos.rol.RolResponse;
 
 import lombok.AllArgsConstructor;
@@ -18,4 +19,5 @@ public class UserResponse {
     private String lastName;
     private boolean enabled;
     private RolResponse rol;
+    private DepartmentResponse department;
 }

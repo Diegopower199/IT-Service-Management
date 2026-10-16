@@ -20,28 +20,32 @@ public class RolService {
 
     private final RolRepository rolRepository;
 
-    public List<RolResponse> getAllRols() {
+    public List<RolResponse> getAllRoles() {
 
-        List<RolModel> listRoles = rolRepository.findAllOrderedById();
-        List<RolResponse> resultado = new ArrayList<>();
+        List<RolModel> roles = rolRepository.findAllOrderedById();
+        List<RolResponse> result = new ArrayList<>();
 
-        for (RolModel rol : listRoles) {
-
-            RolResponse response = new RolResponse(
-                    rol.getIdRol(),
-                    rol.getName());
-
-            resultado.add(response);
+        for (RolModel rol : roles) {
+            result.add(convertToResponse(rol));
         }
 
-        return resultado;
+        return result;
     }
 
-    public RolResponse saveRol(RolRequest request) {
+    public RolResponse getRolById(Long rolId) {
+
+        RolModel rol = rolRepository.findById(rolId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role with id " + rolId + " not found"));
+
+        return convertToResponse(rol);
+    }
+
+    public RolResponse createRol(RolRequest request) {
 
         if (rolRepository.existsByName(request.getName())) {
             throw new ResourceAlreadyExistsException(
-                    "El rol '" + request.getName() + "' ya existe");
+                    "Role '" + request.getName() + "' already exists");
         }
 
         RolModel newRol = new RolModel();
@@ -49,51 +53,44 @@ public class RolService {
 
         RolModel savedRol = rolRepository.save(newRol);
 
-        return new RolResponse(
-                savedRol.getIdRol(),
-                savedRol.getName());
+        return convertToResponse(savedRol);
     }
 
-    public RolResponse getRolById(Long rolId) {
-
-        RolModel foundRol = rolRepository.findById(rolId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Rol con id " + rolId + " no encontrado"));
-
-        return new RolResponse(
-                foundRol.getIdRol(),
-                foundRol.getName());
-    }
-
-    public RolResponse updateRol(RolRequest request, Long rolId) {
+    public RolResponse updateRol(
+            RolRequest request,
+            Long rolId) {
 
         RolModel existingRol = rolRepository.findById(rolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Rol con id " + rolId + " no encontrado"));
+                        "Role with id " + rolId + " not found"));
 
-        if (!existingRol.getName().equals(request.getName())) {
+        if (!existingRol.getName().equalsIgnoreCase(request.getName())
+                && rolRepository.existsByName(request.getName())) {
 
-            if (rolRepository.existsByName(request.getName())) {
-                throw new ResourceAlreadyExistsException(
-                        "El rol '" + request.getName() + "' ya existe");
-            }
-
-            existingRol.setName(request.getName());
+            throw new ResourceAlreadyExistsException(
+                    "Role '" + request.getName() + "' already exists");
         }
+
+        existingRol.setName(request.getName());
 
         RolModel updatedRol = rolRepository.save(existingRol);
 
-        return new RolResponse(
-                updatedRol.getIdRol(),
-                updatedRol.getName());
+        return convertToResponse(updatedRol);
     }
 
     public void deleteRol(Long rolId) {
 
         rolRepository.findById(rolId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Rol con id " + rolId + " no encontrado"));
+                        "Role with id " + rolId + " not found"));
 
         rolRepository.deleteById(rolId);
+    }
+
+    private RolResponse convertToResponse(RolModel rol) {
+
+        return new RolResponse(
+                rol.getIdRol(),
+                rol.getName());
     }
 }

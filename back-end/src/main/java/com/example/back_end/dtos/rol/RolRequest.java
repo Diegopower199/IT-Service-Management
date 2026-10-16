@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RolRequest {
 
-    @NotBlank(message = "El campo 'name' es obligatorio")
+    @NotBlank(message = "The 'name' field is required")
     private String name;
 }

@@ -1,8 +1,5 @@
 package com.example.back_end.model;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,14 +26,4 @@ public class RolModel {
 
     @Column(unique = true, nullable = false)
     private String name;
-
-    public Map<String, Object> toMap() {
-
-        Map<String, Object> map = new LinkedHashMap<>();
-
-        map.put("idRol", idRol);
-        map.put("name", name);
-
-        return map;
-    }
 }
