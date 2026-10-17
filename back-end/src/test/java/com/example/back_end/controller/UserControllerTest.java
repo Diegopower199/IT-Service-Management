@@ -60,7 +60,6 @@ class UserControllerTest {
     // =========================================================
     // GET ALL USERS
     // =========================================================
-
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldReturnAllUsers() throws Exception {
@@ -130,7 +129,6 @@ class UserControllerTest {
     // =========================================================
     // GET USER BY ID
     // =========================================================
-
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldReturnUserById() throws Exception {
@@ -181,7 +179,6 @@ class UserControllerTest {
     // =========================================================
     // CREATE USER
     // =========================================================
-
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldAllowAdminToCreateUser() throws Exception {
@@ -250,7 +247,6 @@ class UserControllerTest {
     // =========================================================
     // UPDATE USER
     // =========================================================
-
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldAllowAdminToUpdateUser() throws Exception {
@@ -315,7 +311,6 @@ class UserControllerTest {
     // =========================================================
     // CHANGE PASSWORD
     // =========================================================
-
     @Test
     @WithMockUser(username = "user", roles = "USER")
     void shouldAllowAuthenticatedUserToChangePassword() throws Exception {
@@ -382,7 +377,6 @@ class UserControllerTest {
     // =========================================================
     // HELPERS
     // =========================================================
-
     private UserResponse createUserResponse(
             Long id,
             String username,

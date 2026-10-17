@@ -338,7 +338,6 @@ class DepartmentControllerTest {
     // =========================================================
     // ACTIVATE DEPARTMENT
     // =========================================================
-
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldAllowAdminToActivateDepartment()
