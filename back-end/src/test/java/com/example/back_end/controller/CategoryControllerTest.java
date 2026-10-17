@@ -136,7 +136,6 @@ class CategoryControllerTest {
     // =========================================================
     // GET CATEGORY BY ID
     // =========================================================
-
     @Test
     @WithMockUser(username = "user", roles = "USER")
     void shouldReturnCategoryById() throws Exception {

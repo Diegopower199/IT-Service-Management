@@ -62,7 +62,8 @@ class AuthControllerTest {
                 .thenReturn(response);
 
         mockMvc.perform(
-                post("/auth/login")
+                post("/api/v1/auth/login")
+                        .servletPath("/api/v1")
                         .contentType(
                                 MediaType.APPLICATION_JSON)
                         .content("""
@@ -97,7 +98,8 @@ class AuthControllerTest {
                 .thenReturn(response);
 
         mockMvc.perform(
-                post("/auth/register")
+                post("/api/v1/auth/register")
+                        .servletPath("/api/v1")
                         .contentType(
                                 MediaType.APPLICATION_JSON)
                         .content("""
