@@ -18,7 +18,9 @@ import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
 import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.TicketHistoryAction;
 import com.example.back_end.exception.AccessDeniedException;
+import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.InvalidRoleException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.CategoryModel;
@@ -43,6 +45,8 @@ public class TicketService {
     private final CategoryRepository categoryRepository;
     private final PriorityRepository priorityRepository;
     private final StatusRepository statusRepository;
+
+    private final TicketHistoryService ticketHistoryService;
 
     public List<TicketResponse> getAllTickets() {
 
@@ -139,6 +143,14 @@ public class TicketService {
 
         TicketModel savedTicket = ticketRepository.save(ticket);
 
+        ticketHistoryService.createHistory(
+                savedTicket,
+                createdBy,
+                TicketHistoryAction.TICKET_CREATED,
+                null,
+                null,
+                null);
+
         return convertToResponse(savedTicket);
     }
 
@@ -178,27 +190,80 @@ public class TicketService {
             }
         }
 
-        if (request.getTitle() != null) {
+        String oldTitle = null;
+        boolean titleChanged = false;
+
+        if (request.getTitle() != null
+                && !request.getTitle().equals(ticket.getTitle())) {
+
+            oldTitle = ticket.getTitle();
             ticket.setTitle(request.getTitle());
+
+            titleChanged = true;
         }
 
-        if (request.getDescription() != null) {
+        String oldDescription = null;
+        boolean descriptionChanged = false;
+
+        if (request.getDescription() != null
+                && !request.getDescription().equals(ticket.getDescription())) {
+
+            oldDescription = ticket.getDescription();
             ticket.setDescription(request.getDescription());
+
+            descriptionChanged = true;
         }
 
-        if (request.getCategoryId() != null) {
+        String oldCategory = null;
+        boolean categoryChanged = false;
+
+        if (request.getCategoryId() != null && !request.getCategoryId()
+                .equals(ticket.getCategory().getIdCategory())) {
 
             CategoryModel category = categoryRepository
                     .findByIdCategoryAndActiveTrue(request.getCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Active category with id " + request.getCategoryId() + " not found"));
 
+            oldCategory = ticket.getCategory().getName();
             ticket.setCategory(category);
+
+            categoryChanged = true;
         }
 
         ticket.setLastUpdated(LocalDateTime.now());
 
         TicketModel updatedTicket = ticketRepository.save(ticket);
+
+        if (titleChanged) {
+            ticketHistoryService.createHistory(
+                    updatedTicket,
+                    currentUser,
+                    TicketHistoryAction.TITLE_CHANGED,
+                    "title",
+                    oldTitle,
+                    updatedTicket.getTitle());
+        }
+
+        if (descriptionChanged) {
+            ticketHistoryService.createHistory(
+                    updatedTicket,
+                    currentUser,
+                    TicketHistoryAction.DESCRIPTION_CHANGED,
+                    "description",
+                    oldDescription,
+                    updatedTicket.getDescription());
+        }
+
+        if (categoryChanged) {
+            ticketHistoryService.createHistory(
+                    updatedTicket,
+                    currentUser,
+                    TicketHistoryAction.CATEGORY_CHANGED,
+                    "category",
+                    oldCategory,
+                    updatedTicket.getCategory().getName());
+        }
 
         return convertToResponse(updatedTicket);
     }
@@ -220,10 +285,31 @@ public class TicketService {
                     "Assigned user must have the TECHNICIAN role");
         }
 
+        UserModel currentUser = getAuthenticatedUser();
+
+        String oldAssignedTo = null;
+
+        TicketHistoryAction action = TicketHistoryAction.ASSIGNED;
+
+        if (ticket.getAssignedTo() != null) {
+
+            oldAssignedTo = ticket.getAssignedTo().getUsername();
+
+            action = TicketHistoryAction.REASSIGNED;
+        }
+
         ticket.setAssignedTo(assignedTo);
         ticket.setLastUpdated(LocalDateTime.now());
 
         TicketModel updatedTicket = ticketRepository.save(ticket);
+
+        ticketHistoryService.createHistory(
+                updatedTicket,
+                currentUser,
+                action,
+                "assignedTo",
+                oldAssignedTo,
+                updatedTicket.getAssignedTo().getUsername());
 
         return convertToResponse(updatedTicket);
     }
@@ -241,10 +327,29 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Active priority with id " + request.getPriorityId() + " not found"));
 
+        UserModel currentUser = getAuthenticatedUser();
+
+        String oldPriority = ticket.getPriority().getName();
+
+        if (ticket.getPriority().getIdPriority()
+                .equals(priority.getIdPriority())) {
+
+            throw new InvalidOperationException(
+                    "The ticket already has the selected priority");
+        }
+
         ticket.setPriority(priority);
         ticket.setLastUpdated(LocalDateTime.now());
 
         TicketModel updatedTicket = ticketRepository.save(ticket);
+
+        ticketHistoryService.createHistory(
+                updatedTicket,
+                currentUser,
+                TicketHistoryAction.PRIORITY_CHANGED,
+                "priority",
+                oldPriority,
+                updatedTicket.getPriority().getName());
 
         return convertToResponse(updatedTicket);
     }
@@ -262,10 +367,29 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Active status with id " + request.getStatusId() + " not found"));
 
+        UserModel currentUser = getAuthenticatedUser();
+
+        String oldStatus = ticket.getStatus().getName();
+
+        if (ticket.getStatus().getIdStatus()
+                .equals(status.getIdStatus())) {
+
+            throw new InvalidOperationException(
+                    "The ticket already has the selected status");
+        }
+
         ticket.setStatus(status);
         ticket.setLastUpdated(LocalDateTime.now());
 
         TicketModel updatedTicket = ticketRepository.save(ticket);
+
+        ticketHistoryService.createHistory(
+                updatedTicket,
+                currentUser,
+                TicketHistoryAction.STATUS_CHANGED,
+                "status",
+                oldStatus,
+                updatedTicket.getStatus().getName());
 
         return convertToResponse(updatedTicket);
     }
