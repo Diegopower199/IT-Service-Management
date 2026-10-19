@@ -29,9 +29,9 @@ public class TicketCommentController {
 
     private final TicketCommentService ticketCommentService;
 
-    @GetMapping("{ticketId}")
-    public ResponseEntity<List<TicketCommentResponse>> getCommentsByTicketId(@PathVariable Long ticketId) {
-        List<TicketCommentResponse> comments = ticketCommentService.getCommentsByTicketId(ticketId);
+    @GetMapping("{id}")
+    public ResponseEntity<List<TicketCommentResponse>> getCommentsByTicketId(@PathVariable Long id) {
+        List<TicketCommentResponse> comments = ticketCommentService.getCommentsByTicketId(id);
 
         if (comments.isEmpty()) {
             return ResponseEntity.noContent().build();
@@ -40,12 +40,12 @@ public class TicketCommentController {
         return ResponseEntity.ok(comments);
     }
 
-    @PostMapping("{ticketId}")
+    @PostMapping("{id}")
     public ResponseEntity<TicketCommentResponse> createCommentForTicket(
-            @PathVariable Long ticketId,
+            @PathVariable Long id,
             @Valid @RequestBody TicketCommentRequest request) {
 
-        TicketCommentResponse savedTicketComment = ticketCommentService.createCommentForTicket(ticketId, request);
+        TicketCommentResponse savedTicketComment = ticketCommentService.createCommentForTicket(id, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTicketComment);
     }

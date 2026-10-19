@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,7 +30,9 @@ import com.example.back_end.dtos.ticket.ChangeStatusRequest;
 import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
+import com.example.back_end.enums.TicketHistoryAction;
 import com.example.back_end.exception.AccessDeniedException;
+import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.InvalidRoleException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.CategoryModel;
@@ -45,7 +49,7 @@ import com.example.back_end.repository.TicketRepository;
 import com.example.back_end.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class TicketServiceTest {
+class TicketServiceTest {
 
     @Mock
     private TicketRepository ticketRepository;
@@ -62,6 +66,9 @@ public class TicketServiceTest {
     @Mock
     private StatusRepository statusRepository;
 
+    @Mock
+    private TicketHistoryService ticketHistoryService;
+
     @InjectMocks
     private TicketService ticketService;
 
@@ -73,12 +80,19 @@ public class TicketServiceTest {
     // =========================================================
     // GET ALL TICKETS
     // =========================================================
+
     @Test
     void shouldReturnAllTickets() {
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel user = new UserModel(
                 1L,
@@ -91,11 +105,20 @@ public class TicketServiceTest {
                 userRol,
                 department);
 
-        CategoryModel category = new CategoryModel(1L, "Hardware", true);
+        CategoryModel category = new CategoryModel(
+                1L,
+                "Hardware",
+                true);
 
-        PriorityModel priority = new PriorityModel(2L, "MEDIUM", true);
+        PriorityModel priority = new PriorityModel(
+                2L,
+                "MEDIUM",
+                true);
 
-        StatusModel status = new StatusModel(1L, "OPEN", true);
+        StatusModel status = new StatusModel(
+                1L,
+                "OPEN",
+                true);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -140,17 +163,30 @@ public class TicketServiceTest {
 
         assertEquals(
                 "ana",
-                response.get(0).getCreatedBy().getUsername());
+                response.get(0)
+                        .getCreatedBy()
+                        .getUsername());
 
-        assertEquals("Hardware", response.get(0).getCategory().getName());
+        assertEquals(
+                "Hardware",
+                response.get(0)
+                        .getCategory()
+                        .getName());
 
         assertEquals(
                 "MEDIUM",
-                response.get(0).getPriority().getName());
+                response.get(0)
+                        .getPriority()
+                        .getName());
 
         assertEquals(
                 "OPEN",
-                response.get(0).getStatus().getName());
+                response.get(0)
+                        .getStatus()
+                        .getName());
+
+        verify(ticketRepository)
+                .findAll();
     }
 
     @Test
@@ -162,17 +198,27 @@ public class TicketServiceTest {
         List<TicketResponse> response = ticketService.getAllTickets();
 
         assertTrue(response.isEmpty());
+
+        verify(ticketRepository)
+                .findAll();
     }
 
     // =========================================================
     // GET TICKET BY ID
     // =========================================================
+
     @Test
     void shouldReturnTicketByIdWhenUserIsRelatedToTicket() {
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel currentUser = new UserModel(
                 1L,
@@ -185,11 +231,20 @@ public class TicketServiceTest {
                 userRol,
                 department);
 
-        CategoryModel category = new CategoryModel(1L, "Hardware", true);
+        CategoryModel category = new CategoryModel(
+                1L,
+                "Hardware",
+                true);
 
-        PriorityModel priority = new PriorityModel(2L, "MEDIUM", true);
+        PriorityModel priority = new PriorityModel(
+                2L,
+                "MEDIUM",
+                true);
 
-        StatusModel status = new StatusModel(1L, "OPEN", true);
+        StatusModel status = new StatusModel(
+                1L,
+                "OPEN",
+                true);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -245,9 +300,15 @@ public class TicketServiceTest {
     @Test
     void shouldThrowAccessDeniedWhenUserIsNotRelatedToTicket() {
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel currentUser = new UserModel(
                 1L,
@@ -296,11 +357,20 @@ public class TicketServiceTest {
     @Test
     void shouldAllowAdminToGetAnyTicket() {
 
-        RolModel adminRol = new RolModel(1L, "ADMIN", true);
+        RolModel adminRol = new RolModel(
+                1L,
+                "ADMIN",
+                true);
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel admin = new UserModel(
                 1L,
@@ -324,11 +394,20 @@ public class TicketServiceTest {
                 userRol,
                 department);
 
-        CategoryModel category = new CategoryModel(1L, "Hardware", true);
+        CategoryModel category = new CategoryModel(
+                1L,
+                "Hardware",
+                true);
 
-        PriorityModel priority = new PriorityModel(2L, "MEDIUM", true);
+        PriorityModel priority = new PriorityModel(
+                2L,
+                "MEDIUM",
+                true);
 
-        StatusModel status = new StatusModel(1L, "OPEN", true);
+        StatusModel status = new StatusModel(
+                1L,
+                "OPEN",
+                true);
 
         TicketModel ticket = new TicketModel();
         ticket.setIdTicket(1L);
@@ -361,12 +440,19 @@ public class TicketServiceTest {
     // =========================================================
     // GET MY TICKETS
     // =========================================================
+
     @Test
     void shouldReturnMyTickets() {
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel currentUser = new UserModel(
                 1L,
@@ -379,11 +465,20 @@ public class TicketServiceTest {
                 userRol,
                 department);
 
-        CategoryModel category = new CategoryModel(1L, "Hardware", true);
+        CategoryModel category = new CategoryModel(
+                1L,
+                "Hardware",
+                true);
 
-        PriorityModel priority = new PriorityModel(2L, "MEDIUM", true);
+        PriorityModel priority = new PriorityModel(
+                2L,
+                "MEDIUM",
+                true);
 
-        StatusModel status = new StatusModel(1L, "OPEN", true);
+        StatusModel status = new StatusModel(
+                1L,
+                "OPEN",
+                true);
 
         TicketModel ticket = new TicketModel();
         ticket.setIdTicket(1L);
@@ -427,9 +522,15 @@ public class TicketServiceTest {
     @Test
     void shouldReturnEmptyListWhenUserHasNoTickets() {
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel currentUser = new UserModel(
                 1L,
@@ -464,6 +565,7 @@ public class TicketServiceTest {
     // =========================================================
     // CREATE TICKET
     // =========================================================
+
     @Test
     void shouldCreateTicketSuccessfully() {
 
@@ -485,9 +587,15 @@ public class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(2L);
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel createdBy = new UserModel(
                 1L,
@@ -573,29 +681,42 @@ public class TicketServiceTest {
 
         assertEquals(
                 "ana",
-                response.getCreatedBy().getUsername());
+                response.getCreatedBy()
+                        .getUsername());
 
         assertEquals(
                 "carlos",
-                response.getRequestedFor().getUsername());
+                response.getRequestedFor()
+                        .getUsername());
 
         assertEquals(
                 "Hardware",
-                response.getCategory().getName());
+                response.getCategory()
+                        .getName());
 
         assertEquals(
                 "MEDIUM",
-                response.getPriority().getName());
+                response.getPriority()
+                        .getName());
 
         assertEquals(
                 "OPEN",
-                response.getStatus().getName());
+                response.getStatus()
+                        .getName());
 
-        assertNull(
-                response.getAssignedTo());
+        assertNull(response.getAssignedTo());
 
         verify(ticketRepository)
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        any(TicketModel.class),
+                        eq(createdBy),
+                        eq(TicketHistoryAction.TICKET_CREATED),
+                        isNull(),
+                        isNull(),
+                        isNull());
     }
 
     @Test
@@ -607,9 +728,15 @@ public class TicketServiceTest {
         when(request.getRequestedForId())
                 .thenReturn(99L);
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel createdBy = new UserModel(
                 1L,
@@ -640,6 +767,15 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     @Test
@@ -654,9 +790,15 @@ public class TicketServiceTest {
         when(request.getCategoryId())
                 .thenReturn(99L);
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel createdBy = new UserModel(
                 1L,
@@ -702,6 +844,15 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     @Test
@@ -719,9 +870,15 @@ public class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(99L);
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel createdBy = new UserModel(
                 1L,
@@ -776,6 +933,15 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     @Test
@@ -793,9 +959,15 @@ public class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(2L);
 
-        RolModel userRol = new RolModel(3L, "USER", true);
+        RolModel userRol = new RolModel(
+                3L,
+                "USER",
+                true);
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
 
         UserModel createdBy = new UserModel(
                 1L,
@@ -859,11 +1031,21 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     // =========================================================
     // UPDATE TICKET
     // =========================================================
+
     @Test
     void shouldAllowRelatedUserToUpdateTicket() {
 
@@ -877,7 +1059,7 @@ public class TicketServiceTest {
                 .thenReturn("Updated description");
 
         when(request.getCategoryId())
-                .thenReturn(1L);
+                .thenReturn(2L);
 
         RolModel userRol = new RolModel(
                 3L,
@@ -900,9 +1082,14 @@ public class TicketServiceTest {
                 userRol,
                 department);
 
-        CategoryModel category = new CategoryModel(
+        CategoryModel oldCategory = new CategoryModel(
                 1L,
                 "Hardware",
+                true);
+
+        CategoryModel newCategory = new CategoryModel(
+                2L,
+                "Software",
                 true);
 
         PriorityModel priority = new PriorityModel(
@@ -921,7 +1108,7 @@ public class TicketServiceTest {
         ticket.setDescription("Old description");
         ticket.setCreatedBy(currentUser);
         ticket.setRequestedFor(currentUser);
-        ticket.setCategory(category);
+        ticket.setCategory(oldCategory);
         ticket.setPriority(priority);
         ticket.setStatus(status);
 
@@ -938,8 +1125,8 @@ public class TicketServiceTest {
                 .thenReturn(Optional.of(currentUser));
 
         when(categoryRepository
-                .findByIdCategoryAndActiveTrue(1L))
-                .thenReturn(Optional.of(category));
+                .findByIdCategoryAndActiveTrue(2L))
+                .thenReturn(Optional.of(newCategory));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
@@ -957,14 +1144,42 @@ public class TicketServiceTest {
                 response.getDescription());
 
         assertEquals(
-                "Hardware",
-                response.getCategory().getName());
+                "Software",
+                response.getCategory()
+                        .getName());
 
         verify(categoryRepository)
-                .findByIdCategoryAndActiveTrue(1L);
+                .findByIdCategoryAndActiveTrue(2L);
 
         verify(ticketRepository)
                 .save(ticket);
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        currentUser,
+                        TicketHistoryAction.TITLE_CHANGED,
+                        "title",
+                        "Old title",
+                        "Updated title");
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        currentUser,
+                        TicketHistoryAction.DESCRIPTION_CHANGED,
+                        "description",
+                        "Old description",
+                        "Updated description");
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        currentUser,
+                        TicketHistoryAction.CATEGORY_CHANGED,
+                        "category",
+                        "Hardware",
+                        "Software");
     }
 
     @Test
@@ -1030,6 +1245,15 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     @Test
@@ -1045,7 +1269,7 @@ public class TicketServiceTest {
                 .thenReturn("Issue has been fixed");
 
         when(request.getCategoryId())
-                .thenReturn(1L);
+                .thenReturn(2L);
 
         RolModel technicianRol = new RolModel(
                 2L,
@@ -1084,9 +1308,14 @@ public class TicketServiceTest {
                 userRol,
                 department);
 
-        CategoryModel category = new CategoryModel(
+        CategoryModel oldCategory = new CategoryModel(
                 1L,
                 "Hardware",
+                true);
+
+        CategoryModel newCategory = new CategoryModel(
+                2L,
+                "Software",
                 true);
 
         PriorityModel priority = new PriorityModel(
@@ -1106,7 +1335,7 @@ public class TicketServiceTest {
         ticket.setCreatedBy(user);
         ticket.setRequestedFor(user);
         ticket.setAssignedTo(technician);
-        ticket.setCategory(category);
+        ticket.setCategory(oldCategory);
         ticket.setPriority(priority);
         ticket.setStatus(status);
 
@@ -1123,8 +1352,8 @@ public class TicketServiceTest {
                 .thenReturn(Optional.of(technician));
 
         when(categoryRepository
-                .findByIdCategoryAndActiveTrue(1L))
-                .thenReturn(Optional.of(category));
+                .findByIdCategoryAndActiveTrue(2L))
+                .thenReturn(Optional.of(newCategory));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
@@ -1142,14 +1371,39 @@ public class TicketServiceTest {
                 response.getDescription());
 
         assertEquals(
-                "Hardware",
-                response.getCategory().getName());
-
-        verify(categoryRepository)
-                .findByIdCategoryAndActiveTrue(1L);
+                "Software",
+                response.getCategory()
+                        .getName());
 
         verify(ticketRepository)
                 .save(ticket);
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        technician,
+                        TicketHistoryAction.TITLE_CHANGED,
+                        "title",
+                        "Old title",
+                        "Fixed issue");
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        technician,
+                        TicketHistoryAction.DESCRIPTION_CHANGED,
+                        "description",
+                        "Old description",
+                        "Issue has been fixed");
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        technician,
+                        TicketHistoryAction.CATEGORY_CHANGED,
+                        "category",
+                        "Hardware",
+                        "Software");
     }
 
     @Test
@@ -1203,11 +1457,21 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     // =========================================================
     // ASSIGN TICKET
     // =========================================================
+
     @Test
     void shouldAssignTicketToTechnicianSuccessfully() {
 
@@ -1216,6 +1480,11 @@ public class TicketServiceTest {
 
         when(request.getAssignedToId())
                 .thenReturn(2L);
+
+        RolModel adminRol = new RolModel(
+                1L,
+                "ADMIN",
+                true);
 
         RolModel technicianRol = new RolModel(
                 2L,
@@ -1226,6 +1495,17 @@ public class TicketServiceTest {
                 1L,
                 "IT",
                 true);
+
+        UserModel admin = new UserModel(
+                1L,
+                "admin",
+                "admin@example.com",
+                "encodedPassword",
+                "Admin",
+                "User",
+                true,
+                adminRol,
+                department);
 
         UserModel technician = new UserModel(
                 2L,
@@ -1260,11 +1540,20 @@ public class TicketServiceTest {
         ticket.setPriority(priority);
         ticket.setStatus(status);
 
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null));
+
         when(ticketRepository.findById(1L))
                 .thenReturn(Optional.of(ticket));
 
         when(userRepository.findById(2L))
                 .thenReturn(Optional.of(technician));
+
+        when(userRepository.findByUsername("admin"))
+                .thenReturn(Optional.of(admin));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
@@ -1275,10 +1564,137 @@ public class TicketServiceTest {
 
         assertEquals(
                 "tech",
-                response.getAssignedTo().getUsername());
+                response.getAssignedTo()
+                        .getUsername());
 
         verify(ticketRepository)
                 .save(ticket);
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        admin,
+                        TicketHistoryAction.ASSIGNED,
+                        "assignedTo",
+                        null,
+                        "tech");
+    }
+
+    @Test
+    void shouldReassignTicketToAnotherTechnicianSuccessfully() {
+
+        AssignTicketRequest request = org.mockito.Mockito.mock(
+                AssignTicketRequest.class);
+
+        when(request.getAssignedToId())
+                .thenReturn(3L);
+
+        RolModel adminRol = new RolModel(
+                1L,
+                "ADMIN",
+                true);
+
+        RolModel technicianRol = new RolModel(
+                2L,
+                "TECHNICIAN",
+                true);
+
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
+
+        UserModel admin = new UserModel(
+                1L,
+                "admin",
+                "admin@example.com",
+                "encodedPassword",
+                "Admin",
+                "User",
+                true,
+                adminRol,
+                department);
+
+        UserModel oldTechnician = new UserModel(
+                2L,
+                "tech1",
+                "tech1@example.com",
+                "encodedPassword",
+                "Technical",
+                "One",
+                true,
+                technicianRol,
+                department);
+
+        UserModel newTechnician = new UserModel(
+                3L,
+                "tech2",
+                "tech2@example.com",
+                "encodedPassword",
+                "Technical",
+                "Two",
+                true,
+                technicianRol,
+                department);
+
+        CategoryModel category = new CategoryModel(
+                1L,
+                "Hardware",
+                true);
+
+        PriorityModel priority = new PriorityModel(
+                2L,
+                "MEDIUM",
+                true);
+
+        StatusModel status = new StatusModel(
+                1L,
+                "OPEN",
+                true);
+
+        TicketModel ticket = new TicketModel();
+        ticket.setIdTicket(1L);
+        ticket.setTitle("Laptop broken");
+        ticket.setAssignedTo(oldTechnician);
+        ticket.setCategory(category);
+        ticket.setPriority(priority);
+        ticket.setStatus(status);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null));
+
+        when(ticketRepository.findById(1L))
+                .thenReturn(Optional.of(ticket));
+
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(newTechnician));
+
+        when(userRepository.findByUsername("admin"))
+                .thenReturn(Optional.of(admin));
+
+        when(ticketRepository.save(ticket))
+                .thenReturn(ticket);
+
+        TicketResponse response = ticketService.assignTicket(
+                1L,
+                request);
+
+        assertEquals(
+                "tech2",
+                response.getAssignedTo()
+                        .getUsername());
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        admin,
+                        TicketHistoryAction.REASSIGNED,
+                        "assignedTo",
+                        "tech1",
+                        "tech2");
     }
 
     @Test
@@ -1307,6 +1723,15 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     @Test
@@ -1356,11 +1781,21 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     // =========================================================
     // CHANGE PRIORITY
     // =========================================================
+
     @Test
     void shouldChangePrioritySuccessfully() {
 
@@ -1370,20 +1805,56 @@ public class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(3L);
 
-        PriorityModel priority = new PriorityModel(
+        RolModel adminRol = new RolModel(
+                1L,
+                "ADMIN",
+                true);
+
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
+
+        UserModel admin = new UserModel(
+                1L,
+                "admin",
+                "admin@example.com",
+                "encodedPassword",
+                "Admin",
+                "User",
+                true,
+                adminRol,
+                department);
+
+        PriorityModel oldPriority = new PriorityModel(
+                2L,
+                "MEDIUM",
+                true);
+
+        PriorityModel newPriority = new PriorityModel(
                 3L,
                 "HIGH",
                 true);
 
         TicketModel ticket = new TicketModel();
         ticket.setIdTicket(1L);
+        ticket.setPriority(oldPriority);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null));
 
         when(ticketRepository.findById(1L))
                 .thenReturn(Optional.of(ticket));
 
         when(priorityRepository
                 .findByIdPriorityAndActiveTrue(3L))
-                .thenReturn(Optional.of(priority));
+                .thenReturn(Optional.of(newPriority));
+
+        when(userRepository.findByUsername("admin"))
+                .thenReturn(Optional.of(admin));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
@@ -1392,10 +1863,22 @@ public class TicketServiceTest {
                 1L,
                 request);
 
-        assertEquals("HIGH", response.getPriority().getName());
+        assertEquals(
+                "HIGH",
+                response.getPriority()
+                        .getName());
 
         verify(ticketRepository)
                 .save(ticket);
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        admin,
+                        TicketHistoryAction.PRIORITY_CHANGED,
+                        "priority",
+                        "MEDIUM",
+                        "HIGH");
     }
 
     @Test
@@ -1425,11 +1908,95 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
+    }
+
+    @Test
+    void shouldThrowInvalidOperationWhenPriorityDoesNotChange() {
+
+        ChangePriorityRequest request = org.mockito.Mockito.mock(
+                ChangePriorityRequest.class);
+
+        when(request.getPriorityId())
+                .thenReturn(2L);
+
+        RolModel adminRol = new RolModel(
+                1L,
+                "ADMIN",
+                true);
+
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
+
+        UserModel admin = new UserModel(
+                1L,
+                "admin",
+                "admin@example.com",
+                "encodedPassword",
+                "Admin",
+                "User",
+                true,
+                adminRol,
+                department);
+
+        PriorityModel priority = new PriorityModel(
+                2L,
+                "MEDIUM",
+                true);
+
+        TicketModel ticket = new TicketModel();
+        ticket.setIdTicket(1L);
+        ticket.setPriority(priority);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null));
+
+        when(ticketRepository.findById(1L))
+                .thenReturn(Optional.of(ticket));
+
+        when(priorityRepository
+                .findByIdPriorityAndActiveTrue(2L))
+                .thenReturn(Optional.of(priority));
+
+        when(userRepository.findByUsername("admin"))
+                .thenReturn(Optional.of(admin));
+
+        assertThrows(
+                InvalidOperationException.class,
+                () -> ticketService.changePriority(
+                        1L,
+                        request));
+
+        verify(ticketRepository, never())
+                .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 
     // =========================================================
     // CHANGE STATUS
     // =========================================================
+
     @Test
     void shouldChangeStatusSuccessfully() {
 
@@ -1439,20 +2006,56 @@ public class TicketServiceTest {
         when(request.getStatusId())
                 .thenReturn(2L);
 
-        StatusModel status = new StatusModel(
+        RolModel adminRol = new RolModel(
+                1L,
+                "ADMIN",
+                true);
+
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
+
+        UserModel admin = new UserModel(
+                1L,
+                "admin",
+                "admin@example.com",
+                "encodedPassword",
+                "Admin",
+                "User",
+                true,
+                adminRol,
+                department);
+
+        StatusModel oldStatus = new StatusModel(
+                1L,
+                "OPEN",
+                true);
+
+        StatusModel newStatus = new StatusModel(
                 2L,
                 "IN_PROGRESS",
                 true);
 
         TicketModel ticket = new TicketModel();
         ticket.setIdTicket(1L);
+        ticket.setStatus(oldStatus);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null));
 
         when(ticketRepository.findById(1L))
                 .thenReturn(Optional.of(ticket));
 
         when(statusRepository
                 .findByIdStatusAndActiveTrue(2L))
-                .thenReturn(Optional.of(status));
+                .thenReturn(Optional.of(newStatus));
+
+        when(userRepository.findByUsername("admin"))
+                .thenReturn(Optional.of(admin));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
@@ -1461,10 +2064,22 @@ public class TicketServiceTest {
                 1L,
                 request);
 
-        assertEquals("IN_PROGRESS", response.getStatus().getName());
+        assertEquals(
+                "IN_PROGRESS",
+                response.getStatus()
+                        .getName());
 
         verify(ticketRepository)
                 .save(ticket);
+
+        verify(ticketHistoryService)
+                .createHistory(
+                        ticket,
+                        admin,
+                        TicketHistoryAction.STATUS_CHANGED,
+                        "status",
+                        "OPEN",
+                        "IN_PROGRESS");
     }
 
     @Test
@@ -1477,7 +2092,6 @@ public class TicketServiceTest {
                 .thenReturn(99L);
 
         TicketModel ticket = new TicketModel();
-
         ticket.setIdTicket(1L);
 
         when(ticketRepository.findById(1L))
@@ -1495,5 +2109,88 @@ public class TicketServiceTest {
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
+    }
+
+    @Test
+    void shouldThrowInvalidOperationWhenStatusDoesNotChange() {
+
+        ChangeStatusRequest request = org.mockito.Mockito.mock(
+                ChangeStatusRequest.class);
+
+        when(request.getStatusId())
+                .thenReturn(1L);
+
+        RolModel adminRol = new RolModel(
+                1L,
+                "ADMIN",
+                true);
+
+        DepartmentModel department = new DepartmentModel(
+                1L,
+                "IT",
+                true);
+
+        UserModel admin = new UserModel(
+                1L,
+                "admin",
+                "admin@example.com",
+                "encodedPassword",
+                "Admin",
+                "User",
+                true,
+                adminRol,
+                department);
+
+        StatusModel status = new StatusModel(
+                1L,
+                "OPEN",
+                true);
+
+        TicketModel ticket = new TicketModel();
+        ticket.setIdTicket(1L);
+        ticket.setStatus(status);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null));
+
+        when(ticketRepository.findById(1L))
+                .thenReturn(Optional.of(ticket));
+
+        when(statusRepository
+                .findByIdStatusAndActiveTrue(1L))
+                .thenReturn(Optional.of(status));
+
+        when(userRepository.findByUsername("admin"))
+                .thenReturn(Optional.of(admin));
+
+        assertThrows(
+                InvalidOperationException.class,
+                () -> ticketService.changeStatus(
+                        1L,
+                        request));
+
+        verify(ticketRepository, never())
+                .save(any(TicketModel.class));
+
+        verify(ticketHistoryService, never())
+                .createHistory(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        any());
     }
 }
