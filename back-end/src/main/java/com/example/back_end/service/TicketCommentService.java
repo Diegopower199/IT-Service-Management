@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.example.back_end.dtos.ticketComment.TicketCommentRequest;
 import com.example.back_end.dtos.ticketComment.TicketCommentResponse;
 import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.RoleName;
 import com.example.back_end.exception.AccessDeniedException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.TicketCommentModel;
@@ -43,7 +44,7 @@ public class TicketCommentService {
 
         String role = currentUser.getRol().getName();
 
-        if (role.equals("USER")) {
+        if (role.equalsIgnoreCase(RoleName.USER.name())) {
             boolean isCreatedBy = existingTicket.getCreatedBy().getIdUser()
                     .equals(currentUser.getIdUser());
 
@@ -83,7 +84,7 @@ public class TicketCommentService {
         // Validate whether the current user can comment on this ticket.
         String role = currentUser.getRol().getName();
 
-        if (role.equals("USER")) {
+        if (role.equalsIgnoreCase(RoleName.USER.name())) {
             boolean isCreatedBy = existingTicket.getCreatedBy().getIdUser()
                     .equals(currentUser.getIdUser());
 

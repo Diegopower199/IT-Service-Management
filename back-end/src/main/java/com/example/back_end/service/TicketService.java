@@ -18,6 +18,8 @@ import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
 import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.RoleName;
+import com.example.back_end.enums.StatusName;
 import com.example.back_end.enums.TicketHistoryAction;
 import com.example.back_end.exception.AccessDeniedException;
 import com.example.back_end.exception.InvalidOperationException;
@@ -70,7 +72,7 @@ public class TicketService {
 
         String role = currentUser.getRol().getName();
 
-        if (role.equalsIgnoreCase("USER")) {
+        if (role.equalsIgnoreCase(RoleName.USER.name())) {
 
             boolean isCreatedByUser = ticket.getCreatedBy().getIdUser().equals(currentUser.getIdUser());
 
@@ -121,7 +123,7 @@ public class TicketService {
                         "Active priority with id " + request.getPriorityId() + " not found"));
 
         StatusModel status = statusRepository
-                .findByNameAndActiveTrue("OPEN")
+                .findByNameAndActiveTrue(StatusName.OPEN.name())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Active OPEN status not found"));
 
@@ -166,7 +168,7 @@ public class TicketService {
 
         String role = currentUser.getRol().getName();
 
-        if (role.equalsIgnoreCase("USER")) {
+        if (role.equalsIgnoreCase(RoleName.USER.name())) {
 
             boolean isCreatedByUser = ticket.getCreatedBy().getIdUser().equals(currentUser.getIdUser());
 
@@ -178,7 +180,7 @@ public class TicketService {
             }
         }
 
-        if (role.equalsIgnoreCase("TECHNICIAN")) {
+        if (role.equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
 
             if (ticket.getAssignedTo() == null
                     || !ticket.getAssignedTo()
@@ -280,7 +282,7 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User with id " + request.getAssignedToId() + " not found"));
 
-        if (!assignedTo.getRol().getName().equalsIgnoreCase("TECHNICIAN")) {
+        if (!assignedTo.getRol().getName().equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
             throw new InvalidRoleException(
                     "Assigned user must have the TECHNICIAN role");
         }
