@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.back_end.dtos.category.CategoryResponse;
 import com.example.back_end.dtos.priority.PriorityResponse;
@@ -104,6 +105,7 @@ public class TicketService {
         return result;
     }
 
+    @Transactional
     public TicketResponse createTicket(CreateTicketRequest request) {
 
         UserModel createdBy = getAuthenticatedUser();
@@ -156,6 +158,7 @@ public class TicketService {
         return convertToResponse(savedTicket);
     }
 
+    @Transactional
     public TicketResponse updateTicket(
             Long ticketId,
             UpdateTicketRequest request) {
@@ -270,6 +273,7 @@ public class TicketService {
         return convertToResponse(updatedTicket);
     }
 
+    @Transactional
     public TicketResponse assignTicket(
             Long ticketId,
             AssignTicketRequest request) {
@@ -282,9 +286,19 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User with id " + request.getAssignedToId() + " not found"));
 
-        if (!assignedTo.getRol().getName().equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
+        if (!assignedTo.getRol().getName()
+                .equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
+
             throw new InvalidRoleException(
                     "Assigned user must have the TECHNICIAN role");
+        }
+
+        if (ticket.getAssignedTo() != null
+                && ticket.getAssignedTo().getIdUser()
+                        .equals(assignedTo.getIdUser())) {
+
+            throw new InvalidOperationException(
+                    "The ticket is already assigned to this technician");
         }
 
         UserModel currentUser = getAuthenticatedUser();
@@ -311,11 +325,13 @@ public class TicketService {
                 action,
                 "assignedTo",
                 oldAssignedTo,
-                updatedTicket.getAssignedTo().getUsername());
+                updatedTicket.getAssignedTo()
+                        .getUsername());
 
         return convertToResponse(updatedTicket);
     }
 
+    @Transactional
     public TicketResponse changePriority(
             Long ticketId,
             ChangePriorityRequest request) {
@@ -356,6 +372,7 @@ public class TicketService {
         return convertToResponse(updatedTicket);
     }
 
+    @Transactional
     public TicketResponse changeStatus(
             Long ticketId,
             ChangeStatusRequest request) {
