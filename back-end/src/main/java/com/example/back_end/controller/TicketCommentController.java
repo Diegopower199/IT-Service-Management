@@ -29,7 +29,7 @@ public class TicketCommentController {
 
     private final TicketCommentService ticketCommentService;
 
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<List<TicketCommentResponse>> getCommentsByTicketId(@PathVariable Long id) {
         List<TicketCommentResponse> comments = ticketCommentService.getCommentsByTicketId(id);
 
@@ -40,7 +40,7 @@ public class TicketCommentController {
         return ResponseEntity.ok(comments);
     }
 
-    @PostMapping("{id}")
+    @PostMapping("/{id}")
     public ResponseEntity<TicketCommentResponse> createCommentForTicket(
             @PathVariable Long id,
             @Valid @RequestBody TicketCommentRequest request) {
