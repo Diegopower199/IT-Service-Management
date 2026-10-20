@@ -1,8 +1,8 @@
-import type { TicketSummary } from "@/types/ticketTypes";
+import type { TicketResponse } from "@/types/ticketTypes";
 import styles from "../styles/dashboard.module.css";
 
 interface DashboardRecentTicketsProps {
-  tickets: TicketSummary[];
+  tickets: TicketResponse[];
 }
 
 export default function DashboardRecentTickets({
@@ -26,13 +26,13 @@ export default function DashboardRecentTickets({
 
         <tbody>
           {tickets.map((ticket) => (
-            <tr key={ticket.id}>
-              <td className={styles.ticketId}>#{ticket.id}</td>
+            <tr key={ticket.idTicket}>
+              <td className={styles.ticketId}>#{ticket.idTicket}</td>
               <td>{ticket.title}</td>
-              <td>{ticket.status}</td>
-              <td>{ticket.priority}</td>
-              <td>{ticket.assignedTo ?? "-"}</td>
-              <td>{ticket.updatedAt}</td>
+              <td>{ticket.status.name}</td>
+              <td>{ticket.priority.name}</td>
+              <td>{ticket.assignedTo?.username ?? "-"}</td>
+              <td>{ticket.lastUpdated}</td>
             </tr>
           ))}
         </tbody>

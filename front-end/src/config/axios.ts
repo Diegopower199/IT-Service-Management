@@ -5,4 +5,20 @@ const api = axios.create({
   baseURL: API_URL_BACK_END,
 });
 
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+
+    const isAuthEndpoint =
+      config.url?.includes("/auth/login") ||
+      config.url?.includes("/auth/register");
+
+    if (token && !isAuthEndpoint) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  return config;
+});
+
 export default api;

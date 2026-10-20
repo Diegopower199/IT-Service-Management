@@ -38,10 +38,6 @@ public class CategoryController {
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         List<CategoryResponse> allCategories = categoryService.getAllCategories();
 
-        if (allCategories.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
         return ResponseEntity.ok(allCategories);
     }
 

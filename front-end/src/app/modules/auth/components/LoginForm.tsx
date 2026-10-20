@@ -140,6 +140,24 @@ export default function LoginForm() {
       <Button type="submit" variant="login" disabled={isLoading}>
         {isLoading ? "Logging in..." : "Login"}
       </Button>
+
+      <Button
+        onClick={() => setFormData({ username: "admin", password: "123456" })}
+      >
+        ADMIN
+      </Button>
+
+      <Button
+        onClick={() => setFormData({ username: "technicial", password: "123456" })}
+      >
+        TECHINICIAL
+      </Button>
+
+      <Button
+        onClick={() => setFormData({ username: "user", password: "123456" })}
+      >
+        USER
+      </Button>
     </form>
   );
 }

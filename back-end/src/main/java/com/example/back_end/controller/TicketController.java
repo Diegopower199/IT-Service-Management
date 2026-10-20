@@ -42,10 +42,6 @@ public class TicketController {
     public ResponseEntity<List<TicketResponse>> getAllTickets() {
         List<TicketResponse> tickets = ticketService.getAllTickets();
 
-        if (tickets.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
         return ResponseEntity.ok(tickets);
     }
 
@@ -61,10 +57,6 @@ public class TicketController {
     @GetMapping("/my")
     public ResponseEntity<List<TicketResponse>> getMyTickets() {
         List<TicketResponse> tickets = ticketService.getMyTickets();
-
-        if (tickets.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
 
         return ResponseEntity.ok(tickets);
     }
