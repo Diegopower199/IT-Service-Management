@@ -1,8 +1,7 @@
 package com.example.back_end.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,16 +31,11 @@ public class UserService {
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<UserResponse> getAllUsers() {
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
 
-        List<UserModel> users = userRepository.findAll();
-        List<UserResponse> result = new ArrayList<>();
+        Page<UserModel> users = userRepository.findAll(pageable);
 
-        for (UserModel user : users) {
-            result.add(convertToResponse(user));
-        }
-
-        return result;
+        return users.map(this::convertToResponse);
     }
 
     public UserResponse getUserById(Long userId) {

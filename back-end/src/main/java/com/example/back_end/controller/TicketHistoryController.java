@@ -1,7 +1,7 @@
 package com.example.back_end.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -27,8 +27,10 @@ public class TicketHistoryController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
-    public ResponseEntity<List<TicketHistoryResponse>> getAllHistory() {
-        List<TicketHistoryResponse> history = ticketHistoryService.getAllHistory();
+    public ResponseEntity<Page<TicketHistoryResponse>> getAllHistory(
+            Pageable pageable) {
+
+        Page<TicketHistoryResponse> history = ticketHistoryService.getAllHistory(pageable);
 
         return ResponseEntity.ok(history);
     }

@@ -1,5 +1,6 @@
 package com.example.back_end.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -53,6 +57,10 @@ class TicketHistoryControllerTest {
     // =========================================================
     // GET ALL HISTORY
     // =========================================================
+    // =========================================================
+    // GET ALL HISTORY
+    // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldAllowAdminToGetAllHistory()
@@ -72,41 +80,49 @@ class TicketHistoryControllerTest {
                 "IN_PROGRESS",
                 now);
 
+        Page<TicketHistoryResponse> page = new PageImpl<>(List.of(history));
+
         when(ticketHistoryService
-                .getAllHistory())
-                .thenReturn(List.of(history));
+                .getAllHistory(any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(
-                get("/ticket-history"))
+                get("/ticket-history")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt,desc"))
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        jsonPath("$.length()")
+                        jsonPath("$.content.length()")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].idHistory")
+                        jsonPath("$.content[0].idHistory")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].ticketId")
+                        jsonPath("$.content[0].ticketId")
                                 .value(10))
                 .andExpect(
-                        jsonPath("$[0].user.username")
+                        jsonPath("$.content[0].user.username")
                                 .value("admin"))
                 .andExpect(
-                        jsonPath("$[0].action")
+                        jsonPath("$.content[0].action")
                                 .value("STATUS_CHANGED"))
                 .andExpect(
-                        jsonPath("$[0].fieldName")
+                        jsonPath("$.content[0].fieldName")
                                 .value("status"))
                 .andExpect(
-                        jsonPath("$[0].oldValue")
+                        jsonPath("$.content[0].oldValue")
                                 .value("OPEN"))
                 .andExpect(
-                        jsonPath("$[0].newValue")
-                                .value("IN_PROGRESS"));
+                        jsonPath("$.content[0].newValue")
+                                .value("IN_PROGRESS"))
+                .andExpect(
+                        jsonPath("$.totalElements")
+                                .value(1));
 
         verify(ticketHistoryService)
-                .getAllHistory();
+                .getAllHistory(any(Pageable.class));
     }
 
     @Test
@@ -120,7 +136,7 @@ class TicketHistoryControllerTest {
                         status().isForbidden());
 
         verify(ticketHistoryService, never())
-                .getAllHistory();
+                .getAllHistory(any(Pageable.class));
     }
 
     // =========================================================

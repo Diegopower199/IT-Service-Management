@@ -18,6 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -74,20 +77,27 @@ class UserControllerTest {
                         "ana",
                         "ana@example.com"));
 
-        when(userService.getAllUsers())
-                .thenReturn(users);
+        Page<UserResponse> page = new PageImpl<>(users);
 
-        mockMvc.perform(get("/users"))
+        when(userService.getAllUsers(
+                any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(
+                get("/users")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].idUser").value(1))
-                .andExpect(jsonPath("$[0].username").value("admin"))
-                .andExpect(jsonPath("$[0].email").value("admin@example.com"))
-                .andExpect(jsonPath("$[1].idUser").value(2))
-                .andExpect(jsonPath("$[1].username").value("ana"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].idUser").value(1))
+                .andExpect(jsonPath("$.content[0].username").value("admin"))
+                .andExpect(jsonPath("$.content[0].email").value("admin@example.com"))
+                .andExpect(jsonPath("$.content[1].idUser").value(2))
+                .andExpect(jsonPath("$.content[1].username").value("ana"))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
         verify(userService)
-                .getAllUsers();
+                .getAllUsers(any(Pageable.class));
     }
 
     @Test
@@ -98,7 +108,7 @@ class UserControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(userService, never())
-                .getAllUsers();
+                .getAllUsers(any(Pageable.class));
     }
 
     @Test
@@ -109,7 +119,7 @@ class UserControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(userService, never())
-                .getAllUsers();
+                .getAllUsers(any(Pageable.class));
     }
 
     // =========================================================

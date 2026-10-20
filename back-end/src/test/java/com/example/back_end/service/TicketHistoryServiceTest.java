@@ -18,6 +18,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.example.back_end.dtos.ticketHistory.TicketHistoryResponse;
 import com.example.back_end.enums.TicketHistoryAction;
@@ -41,6 +45,10 @@ class TicketHistoryServiceTest {
     // =========================================================
     // GET ALL HISTORY
     // =========================================================
+    // =========================================================
+    // GET ALL HISTORY
+    // =========================================================
+
     @Test
     void shouldReturnAllHistory() {
 
@@ -90,72 +98,104 @@ class TicketHistoryServiceTest {
         history2.setNewValue("IN_PROGRESS");
         history2.setCreatedAt(now);
 
-        when(ticketHistoryRepository.findAll())
-                .thenReturn(List.of(
-                        history1,
-                        history2));
+        Pageable pageable = PageRequest.of(0, 10);
 
-        List<TicketHistoryResponse> response =
-                ticketHistoryService.getAllHistory();
+        Page<TicketHistoryModel> historyPage = new PageImpl<>(
+                List.of(
+                        history1,
+                        history2),
+                pageable,
+                2);
+
+        when(ticketHistoryRepository.findAll(pageable))
+                .thenReturn(historyPage);
+
+        Page<TicketHistoryResponse> response = ticketHistoryService.getAllHistory(pageable);
 
         assertEquals(
                 2,
-                response.size());
+                response.getTotalElements());
+
+        assertEquals(
+                2,
+                response.getContent().size());
 
         assertEquals(
                 1L,
-                response.get(0).getIdHistory());
+                response.getContent()
+                        .get(0)
+                        .getIdHistory());
 
         assertEquals(
                 1L,
-                response.get(0).getTicketId());
+                response.getContent()
+                        .get(0)
+                        .getTicketId());
 
         assertEquals(
                 "admin",
-                response.get(0)
+                response.getContent()
+                        .get(0)
                         .getUser()
                         .getUsername());
 
         assertEquals(
                 TicketHistoryAction.TICKET_CREATED,
-                response.get(0).getAction());
+                response.getContent()
+                        .get(0)
+                        .getAction());
 
         assertNull(
-                response.get(0).getFieldName());
+                response.getContent()
+                        .get(0)
+                        .getFieldName());
 
         assertEquals(
                 TicketHistoryAction.STATUS_CHANGED,
-                response.get(1).getAction());
+                response.getContent()
+                        .get(1)
+                        .getAction());
 
         assertEquals(
                 "status",
-                response.get(1).getFieldName());
+                response.getContent()
+                        .get(1)
+                        .getFieldName());
 
         assertEquals(
                 "OPEN",
-                response.get(1).getOldValue());
+                response.getContent()
+                        .get(1)
+                        .getOldValue());
 
         assertEquals(
                 "IN_PROGRESS",
-                response.get(1).getNewValue());
+                response.getContent()
+                        .get(1)
+                        .getNewValue());
 
         verify(ticketHistoryRepository)
-                .findAll();
+                .findAll(pageable);
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoHistoryExists() {
+    void shouldReturnEmptyPageWhenNoHistoryExists() {
 
-        when(ticketHistoryRepository.findAll())
-                .thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
 
-        List<TicketHistoryResponse> response =
-                ticketHistoryService.getAllHistory();
+        when(ticketHistoryRepository.findAll(pageable))
+                .thenReturn(Page.empty(pageable));
+
+        Page<TicketHistoryResponse> response = ticketHistoryService.getAllHistory(pageable);
 
         assertTrue(response.isEmpty());
 
+        assertEquals(
+                0,
+                response.getTotalElements());
+
         verify(ticketHistoryRepository)
-                .findAll();
+                .findAll(pageable);
     }
 
     // =========================================================
@@ -190,8 +230,7 @@ class TicketHistoryServiceTest {
 
         LocalDateTime now = LocalDateTime.now();
 
-        TicketHistoryModel history =
-                new TicketHistoryModel();
+        TicketHistoryModel history = new TicketHistoryModel();
 
         history.setIdHistory(1L);
         history.setTicket(ticket);
@@ -206,9 +245,8 @@ class TicketHistoryServiceTest {
         when(ticketHistoryRepository.findById(1L))
                 .thenReturn(Optional.of(history));
 
-        TicketHistoryResponse response =
-                ticketHistoryService
-                        .getHistoryById(1L);
+        TicketHistoryResponse response = ticketHistoryService
+                .getHistoryById(1L);
 
         assertEquals(
                 1L,
@@ -290,8 +328,7 @@ class TicketHistoryServiceTest {
 
         when(ticketHistoryRepository
                 .save(any(TicketHistoryModel.class)))
-                .thenAnswer(invocation ->
-                        invocation.getArgument(0));
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         ticketHistoryService.createHistory(
                 ticket,
@@ -301,15 +338,13 @@ class TicketHistoryServiceTest {
                 "OPEN",
                 "IN_PROGRESS");
 
-        ArgumentCaptor<TicketHistoryModel> captor =
-                ArgumentCaptor.forClass(
-                        TicketHistoryModel.class);
+        ArgumentCaptor<TicketHistoryModel> captor = ArgumentCaptor.forClass(
+                TicketHistoryModel.class);
 
         verify(ticketHistoryRepository)
                 .save(captor.capture());
 
-        TicketHistoryModel savedHistory =
-                captor.getValue();
+        TicketHistoryModel savedHistory = captor.getValue();
 
         assertEquals(
                 ticket,
@@ -374,15 +409,13 @@ class TicketHistoryServiceTest {
                 null,
                 null);
 
-        ArgumentCaptor<TicketHistoryModel> captor =
-                ArgumentCaptor.forClass(
-                        TicketHistoryModel.class);
+        ArgumentCaptor<TicketHistoryModel> captor = ArgumentCaptor.forClass(
+                TicketHistoryModel.class);
 
         verify(ticketHistoryRepository)
                 .save(captor.capture());
 
-        TicketHistoryModel savedHistory =
-                captor.getValue();
+        TicketHistoryModel savedHistory = captor.getValue();
 
         assertEquals(
                 TicketHistoryAction.TICKET_CREATED,

@@ -17,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.back_end.dtos.user.ChangePasswordRequest;
@@ -86,35 +90,112 @@ public class UserServiceTest {
                 technicianRol,
                 supportDepartment);
 
-        when(userRepository.findAll())
-                .thenReturn(List.of(user1, user2));
+        Pageable pageable = PageRequest.of(0, 10);
 
-        List<UserResponse> response = userService.getAllUsers();
+        Page<UserModel> userPage = new PageImpl<>(
+                List.of(user1, user2),
+                pageable,
+                2);
 
-        assertEquals(2, response.size());
+        when(userRepository.findAll(pageable))
+                .thenReturn(userPage);
 
-        assertEquals(1L, response.get(0).getIdUser());
-        assertEquals("admin", response.get(0).getUsername());
-        assertEquals("admin@example.com", response.get(0).getEmail());
-        assertEquals("ADMIN", response.get(0).getRol().getName());
-        assertEquals("IT", response.get(0).getDepartment().getName());
+        Page<UserResponse> response = userService.getAllUsers(pageable);
 
-        assertEquals(2L, response.get(1).getIdUser());
-        assertEquals("carlos", response.get(1).getUsername());
-        assertEquals("carlos@example.com", response.get(1).getEmail());
-        assertEquals("TECHNICIAN", response.get(1).getRol().getName());
-        assertEquals("Support", response.get(1).getDepartment().getName());
+        assertEquals(
+                2,
+                response.getTotalElements());
+
+        assertEquals(
+                2,
+                response.getContent().size());
+
+        assertEquals(
+                1L,
+                response.getContent()
+                        .get(0)
+                        .getIdUser());
+
+        assertEquals(
+                "admin",
+                response.getContent()
+                        .get(0)
+                        .getUsername());
+
+        assertEquals(
+                "admin@example.com",
+                response.getContent()
+                        .get(0)
+                        .getEmail());
+
+        assertEquals(
+                "ADMIN",
+                response.getContent()
+                        .get(0)
+                        .getRol()
+                        .getName());
+
+        assertEquals(
+                "IT",
+                response.getContent()
+                        .get(0)
+                        .getDepartment()
+                        .getName());
+
+        assertEquals(
+                2L,
+                response.getContent()
+                        .get(1)
+                        .getIdUser());
+
+        assertEquals(
+                "carlos",
+                response.getContent()
+                        .get(1)
+                        .getUsername());
+
+        assertEquals(
+                "carlos@example.com",
+                response.getContent()
+                        .get(1)
+                        .getEmail());
+
+        assertEquals(
+                "TECHNICIAN",
+                response.getContent()
+                        .get(1)
+                        .getRol()
+                        .getName());
+
+        assertEquals(
+                "Support",
+                response.getContent()
+                        .get(1)
+                        .getDepartment()
+                        .getName());
+
+        verify(userRepository)
+                .findAll(pageable);
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoUsersExist() {
+    void shouldReturnEmptyPageWhenNoUsersExist() {
 
-        when(userRepository.findAll())
-                .thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
 
-        List<UserResponse> response = userService.getAllUsers();
+        when(userRepository.findAll(pageable))
+                .thenReturn(Page.empty(pageable));
+
+        Page<UserResponse> response = userService.getAllUsers(pageable);
 
         assertTrue(response.isEmpty());
+
+        assertEquals(
+                0,
+                response.getTotalElements());
+
+        verify(userRepository)
+                .findAll(pageable);
     }
 
     // =========================================================
