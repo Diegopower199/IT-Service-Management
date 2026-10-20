@@ -16,8 +16,6 @@ export default function DashboardContent() {
 
   return (
     <main>
-      <h1>Dashboard</h1>
-
       {user && (
         <>
           <DashboardHeader username={user.username} rol={user.rol} />
