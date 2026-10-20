@@ -1,3 +1,5 @@
+import { UserRole } from "@/types/roleTypes";
+
 export interface LoginRequest {
   username: string;
   password: string;
@@ -6,7 +8,7 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string;
   username: string;
-  rol: string;
+  rol: UserRole;
 }
 
 export interface RegisterRequest {

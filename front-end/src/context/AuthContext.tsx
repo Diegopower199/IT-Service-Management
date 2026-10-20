@@ -1,10 +1,11 @@
 "use client";
 
+import { UserRole } from "@/types/roleTypes";
 import { createContext, useEffect, useState, type ReactNode } from "react";
 
 interface AuthUser {
   username: string;
-  rol: string;
+  rol: UserRole;
 }
 
 interface AuthContextType {
@@ -12,7 +13,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isAuthReady: boolean;
-  setAuthentication: (token: string, username: string, rol: string) => void;
+  setAuthentication: (token: string, username: string, rol: UserRole) => void;
   logout: () => void;
 }
 
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUsername = localStorage.getItem("username");
-    const storedRol = localStorage.getItem("rol");
+    const storedRol = localStorage.getItem("rol") as UserRole | null;
 
     if (storedToken && storedUsername && storedRol) {
       setToken(storedToken);
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const setAuthentication = (
     newToken: string,
     username: string,
-    rol: string,
+    rol: UserRole,
   ) => {
     localStorage.setItem("token", newToken);
     localStorage.setItem("username", username);

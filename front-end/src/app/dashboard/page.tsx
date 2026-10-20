@@ -1,6 +1,5 @@
-import Dashboard from "../modules/dashboard/components/Dashboard";
-
+import DashboardContent from "../modules/dashboard/components/DashboardContent";
 
 export default function DashboardPage() {
-  return <Dashboard />;
+  return <DashboardContent />;
 }
