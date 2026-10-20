@@ -10,6 +10,7 @@ import com.example.back_end.dtos.auth.AuthResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
+import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.RolModel;
 import com.example.back_end.model.UserModel;
@@ -51,7 +52,7 @@ public class AuthService {
                         request.getPassword()));
 
         UserDetails user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String token = jwtService.getToken(user);
 
