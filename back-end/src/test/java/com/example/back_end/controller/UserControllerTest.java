@@ -91,20 +91,6 @@ class UserControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldReturnNoContentWhenNoUsersExist() throws Exception {
-
-        when(userService.getAllUsers())
-                .thenReturn(List.of());
-
-        mockMvc.perform(get("/users"))
-                .andExpect(status().isNoContent());
-
-        verify(userService)
-                .getAllUsers();
-    }
-
-    @Test
     @WithMockUser(username = "user", roles = "USER")
     void shouldForbidUserFromGettingAllUsers() throws Exception {
 

@@ -21,6 +21,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -80,7 +84,6 @@ class TicketServiceTest {
     // =========================================================
     // GET ALL TICKETS
     // =========================================================
-
     @Test
     void shouldReturnAllTickets() {
 
@@ -146,67 +149,93 @@ class TicketServiceTest {
         ticket2.setPriority(priority);
         ticket2.setStatus(status);
 
-        when(ticketRepository.findAll())
-                .thenReturn(List.of(ticket1, ticket2));
+        Pageable pageable = PageRequest.of(0, 10);
 
-        List<TicketResponse> response = ticketService.getAllTickets();
+        Page<TicketModel> ticketPage = new PageImpl<>(
+                List.of(ticket1, ticket2),
+                pageable,
+                2);
 
-        assertEquals(2, response.size());
+        when(ticketRepository.findAll(pageable))
+                .thenReturn(ticketPage);
+
+        Page<TicketResponse> response = ticketService.getAllTickets(pageable);
+
+        assertEquals(
+                2,
+                response.getTotalElements());
+
+        assertEquals(
+                2,
+                response.getContent().size());
 
         assertEquals(
                 "Laptop broken",
-                response.get(0).getTitle());
+                response.getContent()
+                        .get(0)
+                        .getTitle());
 
         assertEquals(
                 "VPN problem",
-                response.get(1).getTitle());
+                response.getContent()
+                        .get(1)
+                        .getTitle());
 
         assertEquals(
                 "ana",
-                response.get(0)
+                response.getContent()
+                        .get(0)
                         .getCreatedBy()
                         .getUsername());
 
         assertEquals(
                 "Hardware",
-                response.get(0)
+                response.getContent()
+                        .get(0)
                         .getCategory()
                         .getName());
 
         assertEquals(
                 "MEDIUM",
-                response.get(0)
+                response.getContent()
+                        .get(0)
                         .getPriority()
                         .getName());
 
         assertEquals(
                 "OPEN",
-                response.get(0)
+                response.getContent()
+                        .get(0)
                         .getStatus()
                         .getName());
 
         verify(ticketRepository)
-                .findAll();
+                .findAll(pageable);
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoTicketsExist() {
+    void shouldReturnEmptyPageWhenNoTicketsExist() {
 
-        when(ticketRepository.findAll())
-                .thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
 
-        List<TicketResponse> response = ticketService.getAllTickets();
+        when(ticketRepository.findAll(pageable))
+                .thenReturn(Page.empty(pageable));
+
+        Page<TicketResponse> response = ticketService.getAllTickets(pageable);
 
         assertTrue(response.isEmpty());
 
+        assertEquals(
+                0,
+                response.getTotalElements());
+
         verify(ticketRepository)
-                .findAll();
+                .findAll(pageable);
     }
 
     // =========================================================
     // GET TICKET BY ID
     // =========================================================
-
     @Test
     void shouldReturnTicketByIdWhenUserIsRelatedToTicket() {
 
@@ -440,7 +469,6 @@ class TicketServiceTest {
     // =========================================================
     // GET MY TICKETS
     // =========================================================
-
     @Test
     void shouldReturnMyTickets() {
 
@@ -498,29 +526,44 @@ class TicketServiceTest {
         when(userRepository.findByUsername("ana"))
                 .thenReturn(Optional.of(currentUser));
 
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<TicketModel> ticketPage = new PageImpl<>(
+                List.of(ticket),
+                pageable,
+                1);
+
         when(ticketRepository.findByCreatedByOrRequestedFor(
                 currentUser,
-                currentUser))
-                .thenReturn(List.of(ticket));
+                currentUser,
+                pageable))
+                .thenReturn(ticketPage);
 
-        List<TicketResponse> response = ticketService.getMyTickets();
+        Page<TicketResponse> response = ticketService.getMyTickets(pageable);
 
         assertEquals(
                 1,
-                response.size());
+                response.getTotalElements());
+
+        assertEquals(
+                1,
+                response.getContent().size());
 
         assertEquals(
                 "Laptop broken",
-                response.get(0).getTitle());
+                response.getContent()
+                        .get(0)
+                        .getTitle());
 
         verify(ticketRepository)
                 .findByCreatedByOrRequestedFor(
                         currentUser,
-                        currentUser);
+                        currentUser,
+                        pageable);
     }
 
     @Test
-    void shouldReturnEmptyListWhenUserHasNoTickets() {
+    void shouldReturnEmptyPageWhenUserHasNoTickets() {
 
         RolModel userRol = new RolModel(
                 3L,
@@ -552,20 +595,32 @@ class TicketServiceTest {
         when(userRepository.findByUsername("ana"))
                 .thenReturn(Optional.of(currentUser));
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         when(ticketRepository.findByCreatedByOrRequestedFor(
                 currentUser,
-                currentUser))
-                .thenReturn(List.of());
+                currentUser,
+                pageable))
+                .thenReturn(Page.empty(pageable));
 
-        List<TicketResponse> response = ticketService.getMyTickets();
+        Page<TicketResponse> response = ticketService.getMyTickets(pageable);
 
         assertTrue(response.isEmpty());
+
+        assertEquals(
+                0,
+                response.getTotalElements());
+
+        verify(ticketRepository)
+                .findByCreatedByOrRequestedFor(
+                        currentUser,
+                        currentUser,
+                        pageable);
     }
 
     // =========================================================
     // CREATE TICKET
     // =========================================================
-
     @Test
     void shouldCreateTicketSuccessfully() {
 
@@ -1045,7 +1100,6 @@ class TicketServiceTest {
     // =========================================================
     // UPDATE TICKET
     // =========================================================
-
     @Test
     void shouldAllowRelatedUserToUpdateTicket() {
 
@@ -1471,7 +1525,6 @@ class TicketServiceTest {
     // =========================================================
     // ASSIGN TICKET
     // =========================================================
-
     @Test
     void shouldAssignTicketToTechnicianSuccessfully() {
 
@@ -1795,7 +1848,6 @@ class TicketServiceTest {
     // =========================================================
     // CHANGE PRIORITY
     // =========================================================
-
     @Test
     void shouldChangePrioritySuccessfully() {
 
@@ -1996,7 +2048,6 @@ class TicketServiceTest {
     // =========================================================
     // CHANGE STATUS
     // =========================================================
-
     @Test
     void shouldChangeStatusSuccessfully() {
 

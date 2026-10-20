@@ -84,7 +84,7 @@ class AuthControllerTest {
                         jsonPath("$.username")
                                 .value("ana"))
                 .andExpect(
-                        jsonPath("$.role")
+                        jsonPath("$.rol")
                                 .value("USER"));
 
         verify(authService)

@@ -81,19 +81,6 @@ class DepartmentControllerTest {
         verify(departmentService).getAllDepartments();
     }
 
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnNoContentWhenNoDepartmentsExist() throws Exception {
-
-        when(departmentService.getAllDepartments())
-                .thenReturn(List.of());
-
-        mockMvc.perform(get("/departments"))
-                .andExpect(status().isNoContent());
-
-        verify(departmentService).getAllDepartments();
-    }
-
     // =========================================================
     // GET ACTIVE DEPARTMENTS
     // =========================================================

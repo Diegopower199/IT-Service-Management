@@ -18,6 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -98,40 +101,48 @@ class TicketControllerTest {
                         "OPEN",
                         true));
 
-        when(ticketService.getAllTickets())
-                .thenReturn(List.of(ticket));
+        Page<TicketResponse> page = new PageImpl<>(List.of(ticket));
+
+        when(ticketService.getAllTickets(
+                any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(
-                get("/tickets"))
+                get("/tickets")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        jsonPath("$.length()")
+                        jsonPath("$.content.length()")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].idTicket")
+                        jsonPath("$.content[0].idTicket")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].title")
+                        jsonPath("$.content[0].title")
                                 .value("Laptop broken"))
                 .andExpect(
-                        jsonPath("$[0].createdBy.username")
+                        jsonPath("$.content[0].createdBy.username")
                                 .value("ana"))
                 .andExpect(
-                        jsonPath("$[0].requestedFor.username")
+                        jsonPath("$.content[0].requestedFor.username")
                                 .value("carlos"))
                 .andExpect(
-                        jsonPath("$[0].category.name")
+                        jsonPath("$.content[0].category.name")
                                 .value("Hardware"))
                 .andExpect(
-                        jsonPath("$[0].priority.name")
+                        jsonPath("$.content[0].priority.name")
                                 .value("MEDIUM"))
                 .andExpect(
-                        jsonPath("$[0].status.name")
-                                .value("OPEN"));
+                        jsonPath("$.content[0].status.name")
+                                .value("OPEN"))
+                .andExpect(
+                        jsonPath("$.totalElements")
+                                .value(1));
 
         verify(ticketService)
-                .getAllTickets();
+                .getAllTickets(any(Pageable.class));
     }
 
     @Test
@@ -139,16 +150,28 @@ class TicketControllerTest {
     void shouldAllowTechnicianToGetAllTickets()
             throws Exception {
 
-        when(ticketService.getAllTickets())
-                .thenReturn(List.of());
+        when(ticketService.getAllTickets(
+                any(Pageable.class)))
+                .thenReturn(Page.empty());
 
         mockMvc.perform(
-                get("/tickets"))
+                get("/tickets")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(
-                        status().isNoContent());
+                        status().isOk())
+                .andExpect(
+                        jsonPath("$.content.length()")
+                                .value(0))
+                .andExpect(
+                        jsonPath("$.empty")
+                                .value(true))
+                .andExpect(
+                        jsonPath("$.totalElements")
+                                .value(0));
 
         verify(ticketService)
-                .getAllTickets();
+                .getAllTickets(any(Pageable.class));
     }
 
     @Test
@@ -162,7 +185,7 @@ class TicketControllerTest {
                         status().isForbidden());
 
         verify(ticketService, never())
-                .getAllTickets();
+                .getAllTickets(any(Pageable.class));
     }
 
     // =========================================================
@@ -258,39 +281,59 @@ class TicketControllerTest {
                         "OPEN",
                         true));
 
-        when(ticketService.getMyTickets())
-                .thenReturn(List.of(ticket));
+        Page<TicketResponse> page = new PageImpl<>(List.of(ticket));
+
+        when(ticketService.getMyTickets(
+                any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(
-                get("/tickets/my"))
+                get("/tickets/my")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        jsonPath("$.length()")
+                        jsonPath("$.content.length()")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].title")
-                                .value("Laptop broken"));
+                        jsonPath("$.content[0].title")
+                                .value("Laptop broken"))
+                .andExpect(
+                        jsonPath("$.totalElements")
+                                .value(1));
 
         verify(ticketService)
-                .getMyTickets();
+                .getMyTickets(any(Pageable.class));
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnNoContentWhenUserHasNoTickets()
+    void shouldReturnEmptyPageWhenUserHasNoTickets()
             throws Exception {
 
-        when(ticketService.getMyTickets())
-                .thenReturn(List.of());
+        when(ticketService.getMyTickets(
+                any(Pageable.class)))
+                .thenReturn(Page.empty());
 
         mockMvc.perform(
-                get("/tickets/my"))
+                get("/tickets/my")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(
-                        status().isNoContent());
+                        status().isOk())
+                .andExpect(
+                        jsonPath("$.content.length()")
+                                .value(0))
+                .andExpect(
+                        jsonPath("$.empty")
+                                .value(true))
+                .andExpect(
+                        jsonPath("$.totalElements")
+                                .value(0));
 
         verify(ticketService)
-                .getMyTickets();
+                .getMyTickets(any(Pageable.class));
     }
 
     // =========================================================

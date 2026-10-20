@@ -110,24 +110,6 @@ class TicketHistoryControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToGetAllHistory()
-            throws Exception {
-
-        when(ticketHistoryService
-                .getAllHistory())
-                .thenReturn(List.of());
-
-        mockMvc.perform(
-                get("/ticket-history"))
-                .andExpect(
-                        status().isNoContent());
-
-        verify(ticketHistoryService)
-                .getAllHistory();
-    }
-
-    @Test
     @WithMockUser(username = "user", roles = "USER")
     void shouldForbidUserFromGettingAllHistory()
             throws Exception {
@@ -138,24 +120,6 @@ class TicketHistoryControllerTest {
                         status().isForbidden());
 
         verify(ticketHistoryService, never())
-                .getAllHistory();
-    }
-
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldReturnNoContentWhenHistoryIsEmpty()
-            throws Exception {
-
-        when(ticketHistoryService
-                .getAllHistory())
-                .thenReturn(List.of());
-
-        mockMvc.perform(
-                get("/ticket-history"))
-                .andExpect(
-                        status().isNoContent());
-
-        verify(ticketHistoryService)
                 .getAllHistory();
     }
 

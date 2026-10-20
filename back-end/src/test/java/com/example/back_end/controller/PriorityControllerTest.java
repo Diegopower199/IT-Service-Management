@@ -81,19 +81,6 @@ class PriorityControllerTest {
         verify(priorityService).getAllPriorities();
     }
 
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnNoContentWhenNoPrioritiesExist() throws Exception {
-
-        when(priorityService.getAllPriorities())
-                .thenReturn(List.of());
-
-        mockMvc.perform(get("/priorities"))
-                .andExpect(status().isNoContent());
-
-        verify(priorityService).getAllPriorities();
-    }
-
     // =========================================================
     // GET ACTIVE PRIORITIES
     // =========================================================

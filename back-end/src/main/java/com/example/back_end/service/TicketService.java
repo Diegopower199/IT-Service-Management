@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -51,16 +53,11 @@ public class TicketService {
 
     private final TicketHistoryService ticketHistoryService;
 
-    public List<TicketResponse> getAllTickets() {
+    public Page<TicketResponse> getAllTickets(Pageable pageable) {
 
-        List<TicketModel> tickets = ticketRepository.findAll();
-        List<TicketResponse> result = new ArrayList<>();
+        Page<TicketModel> tickets = ticketRepository.findAll(pageable);
 
-        for (TicketModel ticket : tickets) {
-            result.add(convertToResponse(ticket));
-        }
-
-        return result;
+        return tickets.map(this::convertToResponse);
     }
 
     public TicketResponse getTicketById(Long ticketId) {
@@ -88,21 +85,15 @@ public class TicketService {
         return convertToResponse(ticket);
     }
 
-    public List<TicketResponse> getMyTickets() {
+    public Page<TicketResponse> getMyTickets(Pageable pageable) {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        List<TicketModel> tickets = ticketRepository.findByCreatedByOrRequestedFor(
+        Page<TicketModel> tickets = ticketRepository.findByCreatedByOrRequestedFor(
                 currentUser,
-                currentUser);
+                currentUser, pageable);
 
-        List<TicketResponse> result = new ArrayList<>();
-
-        for (TicketModel ticket : tickets) {
-            result.add(convertToResponse(ticket));
-        }
-
-        return result;
+        return tickets.map(this::convertToResponse);
     }
 
     @Transactional

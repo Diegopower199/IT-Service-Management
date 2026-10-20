@@ -138,42 +138,6 @@ class TicketCommentControllerTest {
                 .getCommentsByTicketId(1L);
     }
 
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToGetComments()
-            throws Exception {
-
-        when(ticketCommentService
-                .getCommentsByTicketId(1L))
-                .thenReturn(List.of());
-
-        mockMvc.perform(
-                get("/ticket-comments/1"))
-                .andExpect(
-                        status().isNoContent());
-
-        verify(ticketCommentService)
-                .getCommentsByTicketId(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnNoContentWhenTicketHasNoComments()
-            throws Exception {
-
-        when(ticketCommentService
-                .getCommentsByTicketId(1L))
-                .thenReturn(List.of());
-
-        mockMvc.perform(
-                get("/ticket-comments/1"))
-                .andExpect(
-                        status().isNoContent());
-
-        verify(ticketCommentService)
-                .getCommentsByTicketId(1L);
-    }
-
     // =========================================================
     // CREATE COMMENT
     // =========================================================

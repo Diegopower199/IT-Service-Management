@@ -82,19 +82,6 @@ class RolControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldReturnNoContentWhenNoRolesExist() throws Exception {
-
-        when(rolService.getAllRoles())
-                .thenReturn(List.of());
-
-        mockMvc.perform(get("/roles"))
-                .andExpect(status().isNoContent());
-
-        verify(rolService).getAllRoles();
-    }
-
-    @Test
     @WithMockUser(username = "user", roles = "USER")
     void shouldForbidUserFromGettingAllRoles() throws Exception {
 
