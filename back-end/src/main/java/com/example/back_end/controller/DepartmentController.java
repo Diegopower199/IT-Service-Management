@@ -38,10 +38,6 @@ public class DepartmentController {
     public ResponseEntity<List<DepartmentResponse>> getAllDepartments() {
         List<DepartmentResponse> departments = departmentService.getAllDepartments();
 
-        if (departments.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
         return ResponseEntity.ok(departments);
     }
 

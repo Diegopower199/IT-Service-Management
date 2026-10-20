@@ -28,12 +28,7 @@ public class TicketHistoryController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
     public ResponseEntity<List<TicketHistoryResponse>> getAllHistory() {
-
         List<TicketHistoryResponse> history = ticketHistoryService.getAllHistory();
-
-        if (history.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
 
         return ResponseEntity.ok(history);
     }

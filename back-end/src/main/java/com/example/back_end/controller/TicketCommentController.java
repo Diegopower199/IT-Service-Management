@@ -33,10 +33,6 @@ public class TicketCommentController {
     public ResponseEntity<List<TicketCommentResponse>> getCommentsByTicketId(@PathVariable Long id) {
         List<TicketCommentResponse> comments = ticketCommentService.getCommentsByTicketId(id);
 
-        if (comments.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
         return ResponseEntity.ok(comments);
     }
 

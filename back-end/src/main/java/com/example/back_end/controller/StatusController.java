@@ -38,10 +38,6 @@ public class StatusController {
     public ResponseEntity<List<StatusResponse>> getAllStatuses() {
         List<StatusResponse> statuses = statusService.getAllStatuses();
 
-        if (statuses.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
         return ResponseEntity.ok(statuses);
     }
 

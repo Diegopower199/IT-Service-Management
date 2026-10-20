@@ -38,10 +38,6 @@ public class RolController {
     public ResponseEntity<List<RolResponse>> getAllRoles() {
         List<RolResponse> roles = rolService.getAllRoles();
 
-        if (roles.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
         return ResponseEntity.ok(roles);
     }
 

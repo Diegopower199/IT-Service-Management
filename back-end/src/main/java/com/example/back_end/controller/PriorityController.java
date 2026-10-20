@@ -38,10 +38,6 @@ public class PriorityController {
     public ResponseEntity<List<PriorityResponse>> getAllPriorities() {
         List<PriorityResponse> priorities = priorityService.getAllPriorities();
 
-        if (priorities.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
         return ResponseEntity.ok(priorities);
     }
 
