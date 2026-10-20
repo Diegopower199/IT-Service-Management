@@ -1,9 +1,9 @@
 package com.example.back_end.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.back_end.dtos.ticketHistory.TicketHistoryResponse;
@@ -23,17 +23,12 @@ public class TicketHistoryService {
 
     private final TicketHistoryRepository ticketHistoryRepository;
 
-    public List<TicketHistoryResponse> getAllHistory() {
+    public Page<TicketHistoryResponse> getAllHistory(
+            Pageable pageable) {
 
-        List<TicketHistoryModel> history = ticketHistoryRepository.findAll();
+        Page<TicketHistoryModel> history = ticketHistoryRepository.findAll(pageable);
 
-        List<TicketHistoryResponse> result = new ArrayList<>();
-
-        for (TicketHistoryModel historyEntry : history) {
-            result.add(convertToResponse(historyEntry));
-        }
-
-        return result;
+        return history.map(this::convertToResponse);
     }
 
     public TicketHistoryResponse getHistoryById(Long idHistory) {

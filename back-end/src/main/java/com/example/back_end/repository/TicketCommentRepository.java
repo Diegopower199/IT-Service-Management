@@ -1,7 +1,7 @@
 package com.example.back_end.repository;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +12,11 @@ import com.example.back_end.model.TicketModel;
 public interface TicketCommentRepository
         extends JpaRepository<TicketCommentModel, Long> {
 
-    List<TicketCommentModel> findByTicketOrderByCreatedAtAsc(TicketModel ticket);
+    Page<TicketCommentModel> findByTicket(
+            TicketModel ticket,
+            Pageable pageable);
 
-    List<TicketCommentModel> findByTicketAndInternalFalseOrderByCreatedAtAsc(TicketModel ticket);
+    Page<TicketCommentModel> findByTicketAndInternalFalse(
+            TicketModel ticket,
+            Pageable pageable);
 }

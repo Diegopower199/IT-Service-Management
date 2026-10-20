@@ -1,8 +1,6 @@
 package com.example.back_end.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

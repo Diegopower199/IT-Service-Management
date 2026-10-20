@@ -1,9 +1,9 @@
 package com.example.back_end.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,24 +31,27 @@ public class TicketCommentService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
 
-    public List<TicketCommentResponse> getCommentsByTicketId(Long ticketId) {
+    public Page<TicketCommentResponse> getCommentsByTicketId(
+            Long ticketId,
+            Pageable pageable) {
 
         TicketModel existingTicket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Ticket with id " + ticketId + " not found"));
 
-        List<TicketCommentModel> ticketComments;
-        List<TicketCommentResponse> result = new ArrayList<>();
-
         UserModel currentUser = getAuthenticatedUser();
 
         String role = currentUser.getRol().getName();
 
+        Page<TicketCommentModel> ticketComments;
+
         if (role.equalsIgnoreCase(RoleName.USER.name())) {
-            boolean isCreatedBy = existingTicket.getCreatedBy().getIdUser()
+            boolean isCreatedBy = existingTicket.getCreatedBy()
+                    .getIdUser()
                     .equals(currentUser.getIdUser());
 
-            boolean isRequestedFor = existingTicket.getRequestedFor().getIdUser()
+            boolean isRequestedFor = existingTicket.getRequestedFor()
+                    .getIdUser()
                     .equals(currentUser.getIdUser());
 
             if (!isCreatedBy && !isRequestedFor) {
@@ -57,18 +60,18 @@ public class TicketCommentService {
             }
 
             ticketComments = ticketCommentRepository
-                    .findByTicketAndInternalFalseOrderByCreatedAtAsc(existingTicket);
+                    .findByTicketAndInternalFalse(
+                            existingTicket,
+                            pageable);
+
         } else {
             ticketComments = ticketCommentRepository
-                    .findByTicketOrderByCreatedAtAsc(existingTicket);
+                    .findByTicket(
+                            existingTicket,
+                            pageable);
         }
 
-        for (TicketCommentModel ticketComment : ticketComments) {
-            result.add(convertToResponse(ticketComment));
-        }
-
-        return result;
-
+        return ticketComments.map(this::convertToResponse);
     }
 
     public TicketCommentResponse createCommentForTicket(

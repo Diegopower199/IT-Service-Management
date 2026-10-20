@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -57,6 +60,10 @@ class TicketCommentControllerTest {
     // =========================================================
     // GET COMMENTS BY TICKET ID
     // =========================================================
+    // =========================================================
+    // GET COMMENTS BY TICKET ID
+    // =========================================================
+
     @Test
     @WithMockUser(username = "user", roles = "USER")
     void shouldReturnCommentsByTicketId()
@@ -74,35 +81,47 @@ class TicketCommentControllerTest {
                 false,
                 now);
 
+        Page<TicketCommentResponse> page = new PageImpl<>(List.of(comment));
+
         when(ticketCommentService
-                .getCommentsByTicketId(1L))
-                .thenReturn(List.of(comment));
+                .getCommentsByTicketId(
+                        eq(1L),
+                        any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(
-                get("/ticket-comments/1"))
+                get("/ticket-comments/1")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt,asc"))
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        jsonPath("$.length()")
+                        jsonPath("$.content.length()")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].idComment")
+                        jsonPath("$.content[0].idComment")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].ticketId")
+                        jsonPath("$.content[0].ticketId")
                                 .value(1))
                 .andExpect(
-                        jsonPath("$[0].user.username")
+                        jsonPath("$.content[0].user.username")
                                 .value("ana"))
                 .andExpect(
-                        jsonPath("$[0].comment")
+                        jsonPath("$.content[0].comment")
                                 .value("Public comment"))
                 .andExpect(
-                        jsonPath("$[0].internal")
-                                .value(false));
+                        jsonPath("$.content[0].internal")
+                                .value(false))
+                .andExpect(
+                        jsonPath("$.totalElements")
+                                .value(1));
 
         verify(ticketCommentService)
-                .getCommentsByTicketId(1L);
+                .getCommentsByTicketId(
+                        eq(1L),
+                        any(Pageable.class));
     }
 
     @Test
@@ -122,20 +141,32 @@ class TicketCommentControllerTest {
                 true,
                 now);
 
+        Page<TicketCommentResponse> page = new PageImpl<>(List.of(comment));
+
         when(ticketCommentService
-                .getCommentsByTicketId(1L))
-                .thenReturn(List.of(comment));
+                .getCommentsByTicketId(
+                        eq(1L),
+                        any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(
-                get("/ticket-comments/1"))
+                get("/ticket-comments/1")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt,asc"))
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        jsonPath("$[0].internal")
-                                .value(true));
+                        jsonPath("$.content[0].internal")
+                                .value(true))
+                .andExpect(
+                        jsonPath("$.totalElements")
+                                .value(1));
 
         verify(ticketCommentService)
-                .getCommentsByTicketId(1L);
+                .getCommentsByTicketId(
+                        eq(1L),
+                        any(Pageable.class));
     }
 
     // =========================================================

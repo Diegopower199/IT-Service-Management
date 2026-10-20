@@ -19,6 +19,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -58,6 +62,10 @@ class TicketCommentServiceTest {
     // =========================================================
     // GET COMMENTS BY TICKET ID
     // =========================================================
+    // =========================================================
+    // GET COMMENTS BY TICKET ID
+    // =========================================================
+
     @Test
     void shouldReturnPublicCommentsWhenUserIsRelatedToTicket() {
 
@@ -105,42 +113,70 @@ class TicketCommentServiceTest {
         when(userRepository.findByUsername("ana"))
                 .thenReturn(Optional.of(currentUser));
 
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<TicketCommentModel> commentPage = new PageImpl<>(
+                List.of(comment),
+                pageable,
+                1);
+
         when(ticketCommentRepository
-                .findByTicketAndInternalFalseOrderByCreatedAtAsc(ticket))
-                .thenReturn(List.of(comment));
+                .findByTicketAndInternalFalse(
+                        ticket,
+                        pageable))
+                .thenReturn(commentPage);
 
-        List<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(1L);
+        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
+                1L,
+                pageable);
 
-        assertEquals(1, response.size());
+        assertEquals(
+                1,
+                response.getTotalElements());
 
         assertEquals(
                 1L,
-                response.get(0).getIdComment());
+                response.getContent()
+                        .get(0)
+                        .getIdComment());
 
         assertEquals(
                 1L,
-                response.get(0).getTicketId());
+                response.getContent()
+                        .get(0)
+                        .getTicketId());
 
         assertEquals(
                 "ana",
-                response.get(0).getUser().getUsername());
+                response.getContent()
+                        .get(0)
+                        .getUser()
+                        .getUsername());
 
         assertEquals(
                 "Public comment",
-                response.get(0).getComment());
+                response.getContent()
+                        .get(0)
+                        .getComment());
 
         assertFalse(
-                response.get(0).isInternal());
+                response.getContent()
+                        .get(0)
+                        .isInternal());
 
         verify(ticketCommentRepository)
-                .findByTicketAndInternalFalseOrderByCreatedAtAsc(ticket);
+                .findByTicketAndInternalFalse(
+                        ticket,
+                        pageable);
 
         verify(ticketCommentRepository, never())
-                .findByTicketOrderByCreatedAtAsc(ticket);
+                .findByTicket(
+                        any(),
+                        any(Pageable.class));
     }
 
     @Test
-    void shouldReturnEmptyListWhenRelatedUserTicketHasNoPublicComments() {
+    void shouldReturnEmptyPageWhenRelatedUserTicketHasNoPublicComments() {
 
         RolModel userRole = new RolModel(
                 3L,
@@ -176,13 +212,28 @@ class TicketCommentServiceTest {
         when(userRepository.findByUsername("ana"))
                 .thenReturn(Optional.of(currentUser));
 
-        when(ticketCommentRepository
-                .findByTicketAndInternalFalseOrderByCreatedAtAsc(ticket))
-                .thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
 
-        List<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(1L);
+        when(ticketCommentRepository
+                .findByTicketAndInternalFalse(
+                        ticket,
+                        pageable))
+                .thenReturn(Page.empty(pageable));
+
+        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
+                1L,
+                pageable);
 
         assertTrue(response.isEmpty());
+
+        assertEquals(
+                0,
+                response.getTotalElements());
+
+        verify(ticketCommentRepository)
+                .findByTicketAndInternalFalse(
+                        ticket,
+                        pageable);
     }
 
     @Test
@@ -233,16 +284,24 @@ class TicketCommentServiceTest {
         when(userRepository.findByUsername("ana"))
                 .thenReturn(Optional.of(currentUser));
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         assertThrows(
                 AccessDeniedException.class,
                 () -> ticketCommentService
-                        .getCommentsByTicketId(1L));
+                        .getCommentsByTicketId(
+                                1L,
+                                pageable));
 
         verify(ticketCommentRepository, never())
-                .findByTicketAndInternalFalseOrderByCreatedAtAsc(any());
+                .findByTicketAndInternalFalse(
+                        any(),
+                        any(Pageable.class));
 
         verify(ticketCommentRepository, never())
-                .findByTicketOrderByCreatedAtAsc(any());
+                .findByTicket(
+                        any(),
+                        any(Pageable.class));
     }
 
     @Test
@@ -314,27 +373,48 @@ class TicketCommentServiceTest {
         when(userRepository.findByUsername("tech"))
                 .thenReturn(Optional.of(technician));
 
-        when(ticketCommentRepository
-                .findByTicketOrderByCreatedAtAsc(ticket))
-                .thenReturn(List.of(
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<TicketCommentModel> commentPage = new PageImpl<>(
+                List.of(
                         publicComment,
-                        internalComment));
+                        internalComment),
+                pageable,
+                2);
 
-        List<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(1L);
+        when(ticketCommentRepository
+                .findByTicket(
+                        ticket,
+                        pageable))
+                .thenReturn(commentPage);
 
-        assertEquals(2, response.size());
+        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
+                1L,
+                pageable);
+
+        assertEquals(
+                2,
+                response.getTotalElements());
 
         assertFalse(
-                response.get(0).isInternal());
+                response.getContent()
+                        .get(0)
+                        .isInternal());
 
         assertTrue(
-                response.get(1).isInternal());
+                response.getContent()
+                        .get(1)
+                        .isInternal());
 
         verify(ticketCommentRepository)
-                .findByTicketOrderByCreatedAtAsc(ticket);
+                .findByTicket(
+                        ticket,
+                        pageable);
 
         verify(ticketCommentRepository, never())
-                .findByTicketAndInternalFalseOrderByCreatedAtAsc(ticket);
+                .findByTicketAndInternalFalse(
+                        any(),
+                        any(Pageable.class));
     }
 
     @Test
@@ -380,19 +460,36 @@ class TicketCommentServiceTest {
         when(userRepository.findByUsername("admin"))
                 .thenReturn(Optional.of(admin));
 
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<TicketCommentModel> commentPage = new PageImpl<>(
+                List.of(comment),
+                pageable,
+                1);
+
         when(ticketCommentRepository
-                .findByTicketOrderByCreatedAtAsc(ticket))
-                .thenReturn(List.of(comment));
+                .findByTicket(
+                        ticket,
+                        pageable))
+                .thenReturn(commentPage);
 
-        List<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(1L);
+        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
+                1L,
+                pageable);
 
-        assertEquals(1, response.size());
+        assertEquals(
+                1,
+                response.getTotalElements());
 
         assertTrue(
-                response.get(0).isInternal());
+                response.getContent()
+                        .get(0)
+                        .isInternal());
 
         verify(ticketCommentRepository)
-                .findByTicketOrderByCreatedAtAsc(ticket);
+                .findByTicket(
+                        ticket,
+                        pageable);
     }
 
     @Test
@@ -401,16 +498,27 @@ class TicketCommentServiceTest {
         when(ticketRepository.findById(99L))
                 .thenReturn(Optional.empty());
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         assertThrows(
                 ResourceNotFoundException.class,
                 () -> ticketCommentService
-                        .getCommentsByTicketId(99L));
+                        .getCommentsByTicketId(
+                                99L,
+                                pageable));
 
         verify(userRepository, never())
                 .findByUsername(any());
 
         verify(ticketCommentRepository, never())
-                .findByTicketOrderByCreatedAtAsc(any());
+                .findByTicket(
+                        any(),
+                        any(Pageable.class));
+
+        verify(ticketCommentRepository, never())
+                .findByTicketAndInternalFalse(
+                        any(),
+                        any(Pageable.class));
     }
 
     @Test
@@ -427,13 +535,24 @@ class TicketCommentServiceTest {
         when(userRepository.findByUsername("unknown"))
                 .thenReturn(Optional.empty());
 
+        Pageable pageable = PageRequest.of(0, 10);
+
         assertThrows(
                 ResourceNotFoundException.class,
                 () -> ticketCommentService
-                        .getCommentsByTicketId(1L));
+                        .getCommentsByTicketId(
+                                1L,
+                                pageable));
 
         verify(ticketCommentRepository, never())
-                .findByTicketOrderByCreatedAtAsc(any());
+                .findByTicket(
+                        any(),
+                        any(Pageable.class));
+
+        verify(ticketCommentRepository, never())
+                .findByTicketAndInternalFalse(
+                        any(),
+                        any(Pageable.class));
     }
 
     // =========================================================

@@ -1,7 +1,7 @@
 package com.example.back_end.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -30,8 +30,13 @@ public class TicketCommentController {
     private final TicketCommentService ticketCommentService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<List<TicketCommentResponse>> getCommentsByTicketId(@PathVariable Long id) {
-        List<TicketCommentResponse> comments = ticketCommentService.getCommentsByTicketId(id);
+    public ResponseEntity<Page<TicketCommentResponse>> getCommentsByTicketId(
+            @PathVariable Long id,
+            Pageable pageable) {
+
+        Page<TicketCommentResponse> comments = ticketCommentService.getCommentsByTicketId(
+                id,
+                pageable);
 
         return ResponseEntity.ok(comments);
     }

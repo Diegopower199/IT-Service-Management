@@ -1,7 +1,7 @@
 package com.example.back_end.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,8 +36,10 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserResponse> users = userService.getAllUsers();
+    public ResponseEntity<Page<UserResponse>> getAllUsers(
+            Pageable pageable) {
+
+        Page<UserResponse> users = userService.getAllUsers(pageable);
 
         return ResponseEntity.ok(users);
     }
