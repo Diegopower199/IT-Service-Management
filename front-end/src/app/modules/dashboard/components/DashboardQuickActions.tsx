@@ -21,13 +21,17 @@ export default function DashboardQuickActions({
 
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
-            <Button type="button">Assign Ticket to Me</Button>
+            <Button type="button" variant="primary">
+              Assign Ticket to Me
+            </Button>
           </Link>
         </div>
 
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
-            <Button type="button">View Unassigned Tickets</Button>
+            <Button type="button" variant="secondary">
+              View Unassigned Tickets
+            </Button>
           </Link>
         </div>
       </section>
@@ -41,13 +45,17 @@ export default function DashboardQuickActions({
 
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
-            <Button type="button">Assign Ticket</Button>
+            <Button type="button" variant="primary">
+              Assign Ticket
+            </Button>
           </Link>
         </div>
 
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
-            <Button type="button">Reassign Ticket</Button>
+            <Button type="button" variant="secondary">
+              Reassign Ticket
+            </Button>
           </Link>
         </div>
       </section>

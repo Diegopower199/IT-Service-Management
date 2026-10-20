@@ -137,7 +137,7 @@ export default function LoginForm() {
 
       {error && <p>{error}</p>}
 
-      <Button type="submit" disabled={isLoading}>
+      <Button type="submit" variant="login" disabled={isLoading}>
         {isLoading ? "Logging in..." : "Login"}
       </Button>
     </form>
