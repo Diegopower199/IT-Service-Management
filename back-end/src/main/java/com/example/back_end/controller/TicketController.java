@@ -2,6 +2,8 @@ package com.example.back_end.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,8 +41,8 @@ public class TicketController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
-    public ResponseEntity<List<TicketResponse>> getAllTickets() {
-        List<TicketResponse> tickets = ticketService.getAllTickets();
+    public ResponseEntity<Page<TicketResponse>> getAllTickets(Pageable pageable) {
+        Page<TicketResponse> tickets = ticketService.getAllTickets(pageable);
 
         return ResponseEntity.ok(tickets);
     }
@@ -55,8 +57,8 @@ public class TicketController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<TicketResponse>> getMyTickets() {
-        List<TicketResponse> tickets = ticketService.getMyTickets();
+    public ResponseEntity<Page<TicketResponse>> getMyTickets(Pageable pageable) {
+        Page<TicketResponse> tickets = ticketService.getMyTickets(pageable);
 
         return ResponseEntity.ok(tickets);
     }

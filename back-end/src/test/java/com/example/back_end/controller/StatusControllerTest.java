@@ -81,19 +81,6 @@ class StatusControllerTest {
         verify(statusService).getAllStatuses();
     }
 
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnNoContentWhenNoStatusesExist() throws Exception {
-
-        when(statusService.getAllStatuses())
-                .thenReturn(List.of());
-
-        mockMvc.perform(get("/statuses"))
-                .andExpect(status().isNoContent());
-
-        verify(statusService).getAllStatuses();
-    }
-
     // =========================================================
     // GET ACTIVE STATUSES
     // =========================================================

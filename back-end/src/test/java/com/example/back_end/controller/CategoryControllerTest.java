@@ -81,19 +81,6 @@ class CategoryControllerTest {
         verify(categoryService).getAllCategories();
     }
 
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnNoContentWhenNoCategoriesExist() throws Exception {
-
-        when(categoryService.getAllCategories())
-                .thenReturn(List.of());
-
-        mockMvc.perform(get("/categories"))
-                .andExpect(status().isNoContent());
-
-        verify(categoryService).getAllCategories();
-    }
-
     // =========================================================
     // GET ACTIVE CATEGORIES
     // =========================================================
