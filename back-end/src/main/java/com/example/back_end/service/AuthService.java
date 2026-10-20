@@ -6,7 +6,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.back_end.dtos.auth.AuthResponse;
+import com.example.back_end.dtos.auth.AuthLoginResponse;
+import com.example.back_end.dtos.auth.AuthRegisterResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
@@ -39,24 +40,28 @@ public class AuthService {
      * {@link AuthenticationManager} comprueba las credenciales utilizando
      * el AuthenticationProvider configurado en {@code ApplicationConfig}.
      * Si la autenticacion falla, Spring lanza una excepcion. Si es correcta,
-     * se recupera el usuario y se genera su JWT.
+     * se recupera el usuario, se genera su JWT y se devuelve junto con su
+     * username y rol.
      * </p>
      *
      * @param request credenciales recibidas desde la API
-     * @return respuesta que contiene el JWT
+     * @return respuesta que contiene el JWT, username y rol del usuario
      */
-    public AuthResponse login(LoginRequest request) {
+    public AuthLoginResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
                         request.getPassword()));
 
-        UserDetails user = userRepository.findByUsername(request.getUsername())
+        UserModel user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String token = jwtService.getToken(user);
 
-        return new AuthResponse(token);
+        return new AuthLoginResponse(
+                token,
+                user.getUsername(),
+                user.getRol().getName());
     }
 
     /**
@@ -72,7 +77,7 @@ public class AuthService {
      * @param request datos del nuevo usuario
      * @return respuesta que contiene el JWT
      */
-    public AuthResponse register(RegisterRequest request) {
+    public AuthRegisterResponse register(RegisterRequest request) {
 
         RolModel rol = rolRepository.findById(request.getRol())
                 .orElseThrow(() -> new RuntimeException("Rol not found"));
@@ -105,7 +110,7 @@ public class AuthService {
 
         String token = jwtService.getToken(user);
 
-        return new AuthResponse(token);
+        return new AuthRegisterResponse(token);
     }
 
 }

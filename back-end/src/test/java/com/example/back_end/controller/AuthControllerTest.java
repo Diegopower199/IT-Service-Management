@@ -18,7 +18,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.back_end.config.SecurityConfig;
-import com.example.back_end.dtos.auth.AuthResponse;
+import com.example.back_end.dtos.auth.AuthLoginResponse;
+import com.example.back_end.dtos.auth.AuthRegisterResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.security.JwtAuthenticationFilter;
@@ -54,8 +55,10 @@ class AuthControllerTest {
     void shouldLoginSuccessfully()
             throws Exception {
 
-        AuthResponse response = new AuthResponse(
-                "jwt-token");
+        AuthLoginResponse response = new AuthLoginResponse(
+                "jwt-token",
+                "ana",
+                "USER");
 
         when(authService.login(
                 any(LoginRequest.class)))
@@ -76,7 +79,13 @@ class AuthControllerTest {
                         status().isOk())
                 .andExpect(
                         jsonPath("$.token")
-                                .value("jwt-token"));
+                                .value("jwt-token"))
+                .andExpect(
+                        jsonPath("$.username")
+                                .value("ana"))
+                .andExpect(
+                        jsonPath("$.role")
+                                .value("USER"));
 
         verify(authService)
                 .login(
@@ -90,7 +99,7 @@ class AuthControllerTest {
     void shouldRegisterSuccessfully()
             throws Exception {
 
-        AuthResponse response = new AuthResponse(
+        AuthRegisterResponse response = new AuthRegisterResponse(
                 "jwt-token");
 
         when(authService.register(
