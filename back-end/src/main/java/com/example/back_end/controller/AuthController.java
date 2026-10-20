@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.back_end.dtos.auth.AuthResponse;
+import com.example.back_end.dtos.auth.AuthLoginResponse;
+import com.example.back_end.dtos.auth.AuthRegisterResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.service.AuthService;
@@ -42,7 +43,7 @@ public class AuthController {
      * @return token JWT
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<AuthLoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
@@ -58,7 +59,7 @@ public class AuthController {
      * @return token JWT
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthRegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 }

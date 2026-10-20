@@ -18,10 +18,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.example.back_end.dtos.auth.AuthResponse;
+import com.example.back_end.dtos.auth.AuthLoginResponse;
+import com.example.back_end.dtos.auth.AuthRegisterResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
+import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.RolModel;
 import com.example.back_end.model.UserModel;
@@ -95,11 +97,19 @@ public class AuthServiceTest {
         when(jwtService.getToken(user))
                 .thenReturn("jwt-token");
 
-        AuthResponse response = authService.login(request);
+        AuthLoginResponse response = authService.login(request);
 
         assertEquals(
                 "jwt-token",
                 response.getToken());
+
+        assertEquals(
+                "ana",
+                response.getUsername());
+
+        assertEquals(
+                "USER",
+                response.getRol());
 
         verify(authenticationManager)
                 .authenticate(
@@ -127,12 +137,15 @@ public class AuthServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(
-                RuntimeException.class,
+                ResourceNotFoundException.class,
                 () -> authService.login(request));
 
         verify(authenticationManager)
                 .authenticate(
                         any(UsernamePasswordAuthenticationToken.class));
+
+        verify(userRepository)
+                .findByUsername("ana");
 
         verify(jwtService, never())
                 .getToken(any());
@@ -198,7 +211,7 @@ public class AuthServiceTest {
         when(jwtService.getToken(any(UserModel.class)))
                 .thenReturn("jwt-token");
 
-        AuthResponse response = authService.register(request);
+        AuthRegisterResponse response = authService.register(request);
 
         assertEquals(
                 "jwt-token",
