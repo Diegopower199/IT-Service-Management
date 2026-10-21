@@ -42,7 +42,6 @@ export default function TicketsContent() {
   const [loading, setLoading] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
-
   const [formMode, setFormMode] = useState<FormMode>(FORM_MODES.CREATE);
 
   const [selectedTicket, setSelectedTicket] = useState<TicketResponse | null>(

@@ -306,7 +306,13 @@ export default function TicketForm({
             select
             label="Requested For"
             name="requestedForId"
-            value={formData.requestedForId}
+            value={
+              usersOptions.some(
+                (user) => user.idUser === formData.requestedForId,
+              )
+                ? formData.requestedForId
+                : 0
+            }
             onChange={handleFormChange}
             error={Boolean(requiredFieldsIncomplete.requestedForId)}
             helperText={requiredFieldsIncomplete.requestedForId}
@@ -332,7 +338,13 @@ export default function TicketForm({
           select
           label="Category"
           name="categoryId"
-          value={formData.categoryId}
+          value={
+            categoriesOptions.some(
+              (category) => category.idCategory === formData.categoryId,
+            )
+              ? formData.categoryId
+              : 0
+          }
           onChange={handleFormChange}
           disabled={formMode === FORM_MODES.VIEW}
           error={Boolean(requiredFieldsIncomplete.categoryId)}
@@ -359,7 +371,13 @@ export default function TicketForm({
             select
             label="Priority"
             name="priorityId"
-            value={formData.priorityId}
+            value={
+              prioritiesOptions.some(
+                (priority) => priority.idPriority === formData.priorityId,
+              )
+                ? formData.priorityId
+                : 0
+            }
             onChange={handleFormChange}
             disabled={formMode === FORM_MODES.VIEW}
             error={Boolean(requiredFieldsIncomplete.priorityId)}
