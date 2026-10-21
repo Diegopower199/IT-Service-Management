@@ -20,6 +20,7 @@ import com.example.back_end.dtos.ticket.ChangePriorityRequest;
 import com.example.back_end.dtos.ticket.ChangeStatusRequest;
 import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
+import com.example.back_end.dtos.ticket.TicketStatisticsResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
 import com.example.back_end.service.TicketService;
 import com.example.back_end.utils.GlobalConstants;
@@ -111,6 +112,15 @@ public class TicketController {
         TicketResponse updatedStatus = ticketService.changeStatus(id, request);
 
         return ResponseEntity.ok(updatedStatus);
+    }
+
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN', 'USER')")
+    public ResponseEntity<TicketStatisticsResponse> getTicketStatistics() {
+
+        TicketStatisticsResponse statistics = ticketService.getTicketStatistics();
+
+        return ResponseEntity.ok(statistics);
     }
 
 }

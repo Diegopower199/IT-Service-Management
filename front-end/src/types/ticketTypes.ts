@@ -3,7 +3,6 @@ import { PriorityResponse } from "./priorityTypes";
 import { StatusResponse } from "./statusTypes";
 import { UserSummaryResponse } from "./userTypes";
 
-
 export interface TicketSummary {
   id: number;
   title: string;
@@ -28,4 +27,11 @@ export interface TicketResponse {
   category: CategoryResponse;
   priority: PriorityResponse;
   status: StatusResponse;
+}
+
+export interface TicketStatisticsResponse {
+  totalTickets: number;
+  openTickets: number;
+  inProgressTickets: number;
+  criticalTickets: number;
 }

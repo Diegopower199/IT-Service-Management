@@ -8,12 +8,18 @@ import DashboardQuickActions from "./DashboardQuickActions";
 import styles from "../styles/dashboard.module.css";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { TicketResponse } from "@/types/ticketTypes";
-import { getOwnTickets } from "../../tickets/services/ticketService";
+import { TicketResponse, TicketStatisticsResponse } from "@/types/ticketTypes";
+import {
+  getOwnTickets,
+  getTicketStatistics,
+} from "../../tickets/services/ticketService";
 
 export default function DashboardContent() {
   const { user, isAuthReady } = useAuth();
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
+  const [statistics, setStatistics] = useState<TicketStatisticsResponse | null>(
+    null,
+  );
 
   const router = useRouter();
 
@@ -24,15 +30,26 @@ export default function DashboardContent() {
 
     const loadTickets = async () => {
       try {
-        const response = await getOwnTickets();
+        const response = await getOwnTickets(0, 20, "lastUpdated,desc");
 
-        setTickets(response);
+        setTickets(response.content);
       } catch (error) {
         console.error("Error loading tickets:", error);
       }
     };
 
+    const loadStatistics = async () => {
+      try {
+        const response = await getTicketStatistics();
+
+        setStatistics(response);
+      } catch (error) {
+        console.error("Error loading statistics:", error);
+      }
+    };
+
     loadTickets();
+    loadStatistics();
   }, [isAuthReady, user, router]);
 
   if (!isAuthReady || !user) {
@@ -45,7 +62,9 @@ export default function DashboardContent() {
         <>
           <DashboardHeader username={user.username} rol={user.rol} />
 
-          <DashboardTicketStatistics rol={user.rol} tickets={tickets} />
+          {statistics && (
+            <DashboardTicketStatistics rol={user.rol} statistics={statistics} />
+          )}
 
           <div className={styles.dashboardBottom}>
             <DashboardRecentTickets tickets={tickets} />
