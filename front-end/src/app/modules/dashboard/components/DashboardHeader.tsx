@@ -27,8 +27,6 @@ export default function DashboardHeader({
     <header>
       <h1>Welcome, {username}</h1>
 
-      <p>{rol}</p>
-
       <p>{getDescription()}</p>
     </header>
   );

@@ -1,19 +1,39 @@
 import api from "@/config/axios";
-import { TicketResponse } from "@/types/ticketTypes";
+import { PageResponse } from "@/types/pageTypes";
+import { TicketResponse, TicketStatisticsResponse } from "@/types/ticketTypes";
 
+export const getAllTickets = async (): Promise<
+  PageResponse<TicketResponse>
+> => {
+  const response = await api.get<PageResponse<TicketResponse>>("/tickets");
 
+  return response.data;
+};
 
-export const getAllTickets = async (): Promise<TicketResponse[]> => {
-  const response = await api.get<TicketResponse[]>("/tickets");
+export const getOwnTickets = async (
+  page: number,
+  size: number,
+  sort: string,
+): Promise<PageResponse<TicketResponse>> => {
+  const response = await api.get<PageResponse<TicketResponse>>("/tickets/my", {
+    params: {
+      page,
+      size,
+      sort,
+    },
+  });
 
   return response.data;
 };
 
-export const getOwnTickets = async (): Promise<TicketResponse[]> => {
-  const response = await api.get<TicketResponse[]>("/tickets/my");
+export const getTicketStatistics =
+  async (): Promise<TicketStatisticsResponse> => {
+    const response = await api.get<TicketStatisticsResponse>(
+      "/tickets/statistics",
+    );
 
-  return response.data;
-};
+    return response.data;
+  };
 
 /*
 export const getTicketById = async (

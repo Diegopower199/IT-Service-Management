@@ -17,8 +17,10 @@ import com.example.back_end.dtos.ticket.ChangePriorityRequest;
 import com.example.back_end.dtos.ticket.ChangeStatusRequest;
 import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
+import com.example.back_end.dtos.ticket.TicketStatisticsResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
 import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.PriorityName;
 import com.example.back_end.enums.RoleName;
 import com.example.back_end.enums.StatusName;
 import com.example.back_end.enums.TicketHistoryAction;
@@ -400,6 +402,73 @@ public class TicketService {
                 updatedTicket.getStatus().getName());
 
         return convertToResponse(updatedTicket);
+    }
+
+    public TicketStatisticsResponse getTicketStatistics() {
+
+        UserModel currentUser = getAuthenticatedUser();
+
+        String role = currentUser.getRol().getName();
+
+        long totalTickets;
+        long openTickets;
+        long inProgressTickets;
+        long criticalTickets;
+
+        if (role.equalsIgnoreCase(RoleName.USER.name())) {
+
+            totalTickets = ticketRepository.countRelatedToUser(
+                    currentUser);
+
+            openTickets = ticketRepository.countRelatedToUserByStatus(
+                    currentUser,
+                    StatusName.OPEN.name());
+
+            inProgressTickets = ticketRepository.countRelatedToUserByStatus(
+                    currentUser,
+                    StatusName.IN_PROGRESS.name());
+
+            criticalTickets = ticketRepository.countRelatedToUserByPriority(
+                    currentUser,
+                    PriorityName.CRITICAL.name());
+
+        } else if (role.equalsIgnoreCase(
+                RoleName.TECHNICIAN.name())) {
+
+            totalTickets = ticketRepository.countByAssignedTo(
+                    currentUser);
+
+            openTickets = ticketRepository.countByAssignedToAndStatus_Name(
+                    currentUser,
+                    StatusName.OPEN.name());
+
+            inProgressTickets = ticketRepository.countByAssignedToAndStatus_Name(
+                    currentUser,
+                    StatusName.IN_PROGRESS.name());
+
+            criticalTickets = ticketRepository.countByAssignedToAndPriority_Name(
+                    currentUser,
+                    PriorityName.CRITICAL.name());
+
+        } else {
+
+            totalTickets = ticketRepository.count();
+
+            openTickets = ticketRepository.countByStatus_Name(
+                    StatusName.OPEN.name());
+
+            inProgressTickets = ticketRepository.countByStatus_Name(
+                    StatusName.IN_PROGRESS.name());
+
+            criticalTickets = ticketRepository.countByPriority_Name(
+                    PriorityName.CRITICAL.name());
+        }
+
+        return new TicketStatisticsResponse(
+                totalTickets,
+                openTickets,
+                inProgressTickets,
+                criticalTickets);
     }
 
     private UserModel getAuthenticatedUser() {

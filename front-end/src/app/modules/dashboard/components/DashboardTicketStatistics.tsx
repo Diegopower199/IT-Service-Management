@@ -1,30 +1,19 @@
 import DashboardTicketStatisticCard from "./DashboardTicketStatisticCard";
 import { USER_ROLES, type UserRole } from "@/types/roleTypes";
 import styles from "../styles/dashboard.module.css";
-import { TicketResponse } from "@/types/ticketTypes";
+import { TicketStatisticsResponse } from "@/types/ticketTypes";
 
 interface DashboardTicketStatisticsProps {
   rol: UserRole;
-  tickets: TicketResponse[];
+  statistics: TicketStatisticsResponse;
 }
 
 export default function DashboardTicketStatistics({
   rol,
-  tickets,
+  statistics,
 }: DashboardTicketStatisticsProps) {
-  const totalTickets = tickets.length;
-
-  const openTickets = tickets.filter(
-    (ticket) => ticket.status.name === "OPEN",
-  ).length;
-
-  const inProgressTickets = tickets.filter(
-    (ticket) => ticket.status.name === "IN_PROGRESS",
-  ).length;
-
-  const criticalTickets = tickets.filter(
-    (ticket) => ticket.priority.name === "CRITICAL",
-  ).length;
+  const { totalTickets, openTickets, inProgressTickets, criticalTickets } =
+    statistics;
 
   if (rol === USER_ROLES.USER) {
     return (
