@@ -81,7 +81,7 @@ export default function DashboardTicketStatistics({
         <DashboardTicketStatisticCard
           title="Total Tickets"
           value={totalTickets}
-          href=""
+          href="/tickets"
         />
 
         <DashboardTicketStatisticCard

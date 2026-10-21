@@ -471,6 +471,18 @@ public class TicketService {
                 criticalTickets);
     }
 
+    public Page<TicketResponse> getAssignedTickets(
+            Pageable pageable) {
+
+        UserModel currentUser = getAuthenticatedUser();
+
+        Page<TicketModel> tickets = ticketRepository.findByAssignedTo(
+                currentUser,
+                pageable);
+
+        return tickets.map(this::convertToResponse);
+    }
+
     private UserModel getAuthenticatedUser() {
 
         Authentication authentication = SecurityContextHolder

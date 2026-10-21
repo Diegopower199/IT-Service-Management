@@ -15,6 +15,10 @@ public interface TicketRepository extends JpaRepository<TicketModel, Long> {
             UserModel requestedFor,
             Pageable pageable);
 
+    Page<TicketModel> findByAssignedTo(
+            UserModel assignedTo,
+            Pageable pageable);
+
     // =========================================================
     // USER STATISTICS
     // =========================================================

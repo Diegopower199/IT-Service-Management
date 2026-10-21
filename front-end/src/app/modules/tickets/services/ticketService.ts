@@ -2,10 +2,18 @@ import api from "@/config/axios";
 import { PageResponse } from "@/types/pageTypes";
 import { TicketResponse, TicketStatisticsResponse } from "@/types/ticketTypes";
 
-export const getAllTickets = async (): Promise<
-  PageResponse<TicketResponse>
-> => {
-  const response = await api.get<PageResponse<TicketResponse>>("/tickets");
+export const getAllTickets = async (
+  page: number,
+  size: number,
+  sort: string,
+): Promise<PageResponse<TicketResponse>> => {
+  const response = await api.get<PageResponse<TicketResponse>>("/tickets", {
+    params: {
+      page,
+      size,
+      sort,
+    },
+  });
 
   return response.data;
 };
@@ -22,6 +30,25 @@ export const getOwnTickets = async (
       sort,
     },
   });
+
+  return response.data;
+};
+
+export const getAssignedTickets = async (
+  page: number,
+  size: number,
+  sort: string,
+): Promise<PageResponse<TicketResponse>> => {
+  const response = await api.get<PageResponse<TicketResponse>>(
+    "/tickets/assigned",
+    {
+      params: {
+        page,
+        size,
+        sort,
+      },
+    },
+  );
 
   return response.data;
 };

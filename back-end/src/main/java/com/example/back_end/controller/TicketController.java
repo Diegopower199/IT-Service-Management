@@ -123,4 +123,13 @@ public class TicketController {
         return ResponseEntity.ok(statistics);
     }
 
+    @GetMapping("/assigned")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    public ResponseEntity<Page<TicketResponse>> getAssignedTickets(
+            Pageable pageable) {
+
+        Page<TicketResponse> tickets = ticketService.getAssignedTickets(pageable);
+
+        return ResponseEntity.ok(tickets);
+    }
 }
