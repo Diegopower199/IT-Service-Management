@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { useRouter } from "next/navigation";
+import {
+  DataGrid,
+  GridActionsCellItem,
+  type GridColDef,
+} from "@mui/x-data-grid";
+import AddIcon from "@mui/icons-material/Add";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -18,9 +26,12 @@ import {
   DATA_GRID_LOCALE_TEXT,
   DEFAULT_PAGE_SIZE,
   DEFAULT_TICKET_SORT,
+  FORM_MODES,
+  FormMode,
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
-import { useRouter } from "next/navigation";
+import TicketForm from "./TicketForm";
+import Button from "@/components/ui/Button";
 
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();
@@ -29,6 +40,16 @@ export default function TicketsContent() {
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [showForm, setShowForm] = useState(false);
+
+  const [formMode, setFormMode] = useState<FormMode>(FORM_MODES.CREATE);
+
+  const [selectedTicket, setSelectedTicket] = useState<TicketResponse | null>(
+    null,
+  );
+
+  const [ticketsUpdated, setTicketsUpdated] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -81,7 +102,30 @@ export default function TicketsContent() {
     };
 
     loadTickets();
-  }, [isAuthReady, user, router, paginationModel]);
+  }, [isAuthReady, user, router, paginationModel, ticketsUpdated]);
+
+  const handleCreateTicket = () => {
+    setSelectedTicket(null);
+    setFormMode(FORM_MODES.CREATE);
+    setShowForm(true);
+  };
+
+  const handleViewTicket = (ticket: TicketResponse) => {
+    setSelectedTicket(ticket);
+    setFormMode(FORM_MODES.VIEW);
+    setShowForm(true);
+  };
+
+  const handleEditTicket = (ticket: TicketResponse) => {
+    setSelectedTicket(ticket);
+    setFormMode(FORM_MODES.EDIT);
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setSelectedTicket(null);
+  };
 
   const columns: GridColDef<TicketResponse>[] = [
     {
@@ -112,10 +156,41 @@ export default function TicketsContent() {
       headerName: "Last Updated",
       width: 190,
     },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Actions",
+      width: 120,
+      getActions: ({ row }) => [
+        <GridActionsCellItem
+          key="view"
+          icon={<VisibilityIcon />}
+          label="View"
+          onClick={() => handleViewTicket(row)}
+        />,
+        <GridActionsCellItem
+          key="edit"
+          icon={<EditIcon />}
+          label="Edit"
+          onClick={() => handleEditTicket(row)}
+        />,
+      ],
+    },
   ];
 
   if (!isAuthReady || !user) {
     return <p>Loading...</p>;
+  }
+
+  if (showForm) {
+    return (
+      <TicketForm
+        formMode={formMode}
+        selectedTicket={selectedTicket}
+        onClose={handleCloseForm}
+        onSubmitSuccess={() => setTicketsUpdated((previous) => !previous)}
+      />
+    );
   }
 
   return (
@@ -127,6 +202,10 @@ export default function TicketsContent() {
             ? "Assigned Tickets"
             : "My Tickets"}
       </h1>
+
+      <Button onClick={handleCreateTicket}>
+        Create Ticket <AddIcon />
+      </Button>
 
       <DataGrid
         rows={tickets}
