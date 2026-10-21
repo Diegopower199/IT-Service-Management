@@ -13,9 +13,14 @@ import {
 } from "@mui/material";
 
 import type { TicketResponse } from "@/types/ticketTypes";
-import { FORM_MODES, FormMode } from "@/utils/constans";
-
-//import { createTicket, updateTicket } from "../services/ticketService";
+import { FORM_MODES, type FormMode } from "@/utils/constans";
+import type { CategoryResponse } from "@/types/categoryTypes";
+import type { PriorityResponse } from "@/types/priorityTypes";
+import { getAllPriorities } from "../../priorities/services/priorityService";
+import { getAllCategories } from "../../categories/services/categoryService";
+import { UserSummaryResponse } from "@/types/userTypes";
+import { getUserOptions } from "../../users/services/userService";
+import { createTicket, updateTicket } from "../services/ticketService";
 
 interface TicketFormProps {
   formMode: FormMode;
@@ -70,9 +75,90 @@ export default function TicketForm({
     getInitialFormData(formMode, selectedTicket),
   );
 
+  const [categoriesOptions, setCategoriesOptions] = useState<
+    CategoryResponse[]
+  >([]);
+  const [prioritiesOptions, setPrioritiesOptions] = useState<
+    PriorityResponse[]
+  >([]);
+  const [usersOptions, setUsersOptions] = useState<UserSummaryResponse[]>([]);
+
   const [loading, setLoading] = useState(false);
 
+  const [requiredFieldsIncomplete, setRequiredFieldsIncomplete] = useState<
+    Partial<Record<keyof TicketFormData, string>>
+  >({});
+
   const [errorMessage, setErrorMessage] = useState("");
+
+  const fetchCategoriesOptions = async (): Promise<boolean> => {
+    try {
+      const categoriesResponse = await getAllCategories();
+
+      setCategoriesOptions(categoriesResponse);
+
+      return true;
+    } catch (error) {
+      console.error("Error loading categories:", error);
+      setErrorMessage("Error loading categories.");
+
+      return false;
+    }
+  };
+
+  const fetchPrioritiesOptions = async (): Promise<boolean> => {
+    try {
+      const prioritiesResponse = await getAllPriorities();
+
+      setPrioritiesOptions(prioritiesResponse);
+
+      return true;
+    } catch (error) {
+      console.error("Error loading priorities:", error);
+      setErrorMessage("Error loading priorities.");
+
+      return false;
+    }
+  };
+
+  const fetchUsersOptions = async (): Promise<boolean> => {
+    try {
+      const usersResponse = await getUserOptions();
+
+      setUsersOptions(usersResponse);
+
+      return true;
+    } catch (error) {
+      console.error("Error loading users:", error);
+      setErrorMessage("Error loading users.");
+
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const fetchFormOptions = async () => {
+      const categoriesLoaded = await fetchCategoriesOptions();
+
+      if (!categoriesLoaded) {
+        return;
+      }
+
+      const prioritiesLoaded = await fetchPrioritiesOptions();
+
+      if (!prioritiesLoaded) {
+        return;
+      }
+
+      const usersLoaded = await fetchUsersOptions();
+
+      if (!usersLoaded) {
+        return;
+      }
+    };
+
+    fetchFormOptions();
+  }, []);
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -88,50 +174,50 @@ export default function TicketForm({
           ? Number(value)
           : value,
     }));
+
+    setRequiredFieldsIncomplete((previousErrors) => ({
+      ...previousErrors,
+      [name]: undefined,
+    }));
   };
 
-  const validateForm = () => {
+  const validateRequiredFields = () => {
+    const errorMissingFields: Partial<Record<keyof TicketFormData, string>> =
+      {};
+
     if (!formData.title.trim()) {
-      setErrorMessage("Title is required.");
-      return false;
+      errorMissingFields.title = "Please enter a title.";
     }
 
     if (!formData.description.trim()) {
-      setErrorMessage("Description is required.");
-      return false;
+      errorMissingFields.description = "Please enter a description.";
+    }
+
+    if (!formData.categoryId) {
+      errorMissingFields.categoryId = "Please select a category.";
     }
 
     if (formMode === FORM_MODES.CREATE) {
       if (!formData.requestedForId) {
-        setErrorMessage("Requested For is required.");
-        return false;
-      }
-
-      if (!formData.categoryId) {
-        setErrorMessage("Category is required.");
-        return false;
+        errorMissingFields.requestedForId = "Please select a requested user.";
       }
 
       if (!formData.priorityId) {
-        setErrorMessage("Priority is required.");
-        return false;
+        errorMissingFields.priorityId = "Please select a priority.";
       }
     }
 
-    if (formMode === FORM_MODES.EDIT && !formData.categoryId) {
-      setErrorMessage("Category is required.");
-      return false;
-    }
+    setRequiredFieldsIncomplete(errorMissingFields);
 
-    setErrorMessage("");
-
-    return true;
+    return Object.keys(errorMissingFields).length !== 0;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!validateForm()) {
+    const requiredFieldsError = validateRequiredFields();
+
+    if (requiredFieldsError) {
       return;
     }
 
@@ -140,21 +226,21 @@ export default function TicketForm({
       setErrorMessage("");
 
       if (formMode === FORM_MODES.CREATE) {
-        /*await createTicket({
+        await createTicket({
           title: formData.title,
           description: formData.description,
           requestedForId: formData.requestedForId,
           categoryId: formData.categoryId,
           priorityId: formData.priorityId,
-        });*/
+        });
       }
 
       if (formMode === FORM_MODES.EDIT && selectedTicket) {
-        /*await updateTicket(ticket.idTicket, {
+        await updateTicket(selectedTicket.idTicket, {
           title: formData.title,
           description: formData.description,
           categoryId: formData.categoryId,
-        });*/
+        });
       }
 
       onSubmitSuccess();
@@ -197,7 +283,8 @@ export default function TicketForm({
           value={formData.title}
           onChange={handleFormChange}
           disabled={formMode === FORM_MODES.VIEW}
-          required
+          error={Boolean(requiredFieldsIncomplete.title)}
+          helperText={requiredFieldsIncomplete.title}
           fullWidth
         />
 
@@ -207,7 +294,8 @@ export default function TicketForm({
           value={formData.description}
           onChange={handleFormChange}
           disabled={formMode === FORM_MODES.VIEW}
-          required
+          error={Boolean(requiredFieldsIncomplete.description)}
+          helperText={requiredFieldsIncomplete.description}
           multiline
           minRows={4}
           fullWidth
@@ -215,14 +303,29 @@ export default function TicketForm({
 
         {formMode === FORM_MODES.CREATE && (
           <TextField
+            select
             label="Requested For"
             name="requestedForId"
-            type="number"
-            value={formData.requestedForId === 0 ? "" : formData.requestedForId}
+            value={formData.requestedForId}
             onChange={handleFormChange}
-            required
+            error={Boolean(requiredFieldsIncomplete.requestedForId)}
+            helperText={requiredFieldsIncomplete.requestedForId}
             fullWidth
-          />
+          >
+            <MenuItem value={0} disabled>
+              Select a user
+            </MenuItem>
+
+            {usersOptions.length === 0 ? (
+              <MenuItem disabled>No users available</MenuItem>
+            ) : (
+              usersOptions.map((user) => (
+                <MenuItem key={user.idUser} value={user.idUser}>
+                  {user.username}
+                </MenuItem>
+              ))
+            )}
+          </TextField>
         )}
 
         <TextField
@@ -232,14 +335,23 @@ export default function TicketForm({
           value={formData.categoryId}
           onChange={handleFormChange}
           disabled={formMode === FORM_MODES.VIEW}
-          required
+          error={Boolean(requiredFieldsIncomplete.categoryId)}
+          helperText={requiredFieldsIncomplete.categoryId}
           fullWidth
         >
           <MenuItem value={0} disabled>
             Select a category
           </MenuItem>
 
-          {/* Categories will come from backend */}
+          {categoriesOptions.length === 0 ? (
+            <MenuItem disabled>No categories available</MenuItem>
+          ) : (
+            categoriesOptions.map((category) => (
+              <MenuItem key={category.idCategory} value={category.idCategory}>
+                {category.name}
+              </MenuItem>
+            ))
+          )}
         </TextField>
 
         {(formMode === FORM_MODES.CREATE || formMode === FORM_MODES.VIEW) && (
@@ -250,14 +362,23 @@ export default function TicketForm({
             value={formData.priorityId}
             onChange={handleFormChange}
             disabled={formMode === FORM_MODES.VIEW}
-            required={formMode === FORM_MODES.CREATE}
+            error={Boolean(requiredFieldsIncomplete.priorityId)}
+            helperText={requiredFieldsIncomplete.priorityId}
             fullWidth
           >
             <MenuItem value={0} disabled>
               Select a priority
             </MenuItem>
 
-            {/* Priorities will come from backend */}
+            {prioritiesOptions.length === 0 ? (
+              <MenuItem disabled>No priorities available</MenuItem>
+            ) : (
+              prioritiesOptions.map((priority) => (
+                <MenuItem key={priority.idPriority} value={priority.idPriority}>
+                  {priority.name}
+                </MenuItem>
+              ))
+            )}
           </TextField>
         )}
 
@@ -295,7 +416,7 @@ export default function TicketForm({
 
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        <Stack spacing={3} direction={"row"} >
+        <Stack spacing={3} direction={"row"}>
           <Button variant="outlined" onClick={onClose} disabled={loading}>
             {formMode === FORM_MODES.VIEW ? "Close" : "Cancel"}
           </Button>

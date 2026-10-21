@@ -1,5 +1,7 @@
 package com.example.back_end.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,6 +12,7 @@ import com.example.back_end.dtos.rol.RolResponse;
 import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
+import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
@@ -148,6 +151,15 @@ public class UserService {
         user.setPassword(newEncodedPassword);
 
         userRepository.save(user);
+    }
+
+    public List<UserSummaryResponse> getUserOptions() {
+        return userRepository.findAllByOrderByUsernameAsc()
+                .stream()
+                .map(user -> new UserSummaryResponse(
+                        user.getIdUser(),
+                        user.getUsername()))
+                .toList();
     }
 
     private UserResponse convertToResponse(UserModel user) {

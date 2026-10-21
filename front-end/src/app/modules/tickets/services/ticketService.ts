@@ -1,6 +1,11 @@
 import api from "@/config/axios";
 import { PageResponse } from "@/types/pageTypes";
-import { TicketResponse, TicketStatisticsResponse } from "@/types/ticketTypes";
+import {
+  CreateTicketRequest,
+  TicketResponse,
+  TicketStatisticsResponse,
+  UpdateTicketRequest,
+} from "@/types/ticketTypes";
 
 export const getAllTickets = async (
   page: number,
@@ -62,74 +67,22 @@ export const getTicketStatistics =
     return response.data;
   };
 
-/*
-export const getTicketById = async (
-  ticketId: number,
-): Promise<TicketResponse> => {
-  const response = await api.get<TicketResponse>(`/tickets/${ticketId}`);
-
-  return response.data;
-};
-
-export const getOwnTickets = async (): Promise<TicketResponse[]> => {
-  const response = await api.get<TicketResponse[]>("/tickets/my");
-
-  return response.data;
-};
-
 export const createTicket = async (
-  ticketRequest: CreateTicketRequest,
+  ticketData: CreateTicketRequest,
 ): Promise<TicketResponse> => {
-  const response = await api.post<TicketResponse>("/tickets", ticketRequest);
+  const response = await api.post<TicketResponse>("/tickets", ticketData);
 
   return response.data;
 };
 
 export const updateTicket = async (
   ticketId: number,
-  ticketRequest: UpdateTicketRequest,
+  ticketData: UpdateTicketRequest,
 ): Promise<TicketResponse> => {
   const response = await api.patch<TicketResponse>(
     `/tickets/${ticketId}`,
-    ticketRequest,
+    ticketData,
   );
 
   return response.data;
 };
-
-export const assignTicket = async (
-  ticketId: number,
-  assignRequest: AssignTicketRequest,
-): Promise<TicketResponse> => {
-  const response = await api.patch<TicketResponse>(
-    `/tickets/${ticketId}/assign`,
-    assignRequest,
-  );
-
-  return response.data;
-};
-
-export const changeTicketPriority = async (
-  ticketId: number,
-  priorityRequest: ChangePriorityRequest,
-): Promise<TicketResponse> => {
-  const response = await api.patch<TicketResponse>(
-    `/tickets/${ticketId}/priority`,
-    priorityRequest,
-  );
-
-  return response.data;
-};
-
-export const changeTicketStatus = async (
-  ticketId: number,
-  statusRequest: ChangeStatusRequest,
-): Promise<TicketResponse> => {
-  const response = await api.patch<TicketResponse>(
-    `/tickets/${ticketId}/status`,
-    statusRequest,
-  );
-
-  return response.data;
-};
-*/
