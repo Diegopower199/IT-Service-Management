@@ -17,7 +17,7 @@ interface TicketCommentsProps {
 }
 
 export default function TicketComments({ ticketId }: TicketCommentsProps) {
-  const { user, isAuthReady } = useAuth();
+  
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
     [],
@@ -47,9 +47,6 @@ export default function TicketComments({ ticketId }: TicketCommentsProps) {
     loadTicketComments();
   }, [ticketId]);
 
-  if (!isAuthReady || !user) {
-    return <PageLoading />;
-  }
   return (
     <Paper
       variant="outlined"

@@ -6,6 +6,8 @@ export const DEFAULT_TICKET_SORT = "lastUpdated,desc";
 
 export const DEFAULT_TICKET_COMMENTS_SORT = "createdAt,desc";
 
+export const DEFAULT_TICKET_HISTORY_SORT = "createdAt,desc";
+
 export const DATA_GRID_LOCALE_TEXT = {
   columnMenuUnsort: "No Sort",
   columnMenuSortAsc: "Sort Ascending",

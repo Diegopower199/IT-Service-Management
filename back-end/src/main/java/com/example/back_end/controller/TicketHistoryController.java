@@ -35,12 +35,14 @@ public class TicketHistoryController {
         return ResponseEntity.ok(history);
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
-    public ResponseEntity<TicketHistoryResponse> getHistoryById(
-            @PathVariable Long id) {
+    @GetMapping("/ticket/{ticketId}")
+    public ResponseEntity<Page<TicketHistoryResponse>> getHistoryByTicketId(
+            @PathVariable Long ticketId,
+            Pageable pageable) {
 
-        TicketHistoryResponse history = ticketHistoryService.getHistoryById(id);
+        Page<TicketHistoryResponse> history = ticketHistoryService.getHistoryByTicketId(
+                ticketId,
+                pageable);
 
         return ResponseEntity.ok(history);
     }

@@ -9,7 +9,7 @@ export const getAllTicketsCommentsById = async (
   sort: string,
 ): Promise<PageResponse<TicketCommentResponse>> => {
   const response = await api.get<PageResponse<TicketCommentResponse>>(
-    `/ticket-comments/${ticketId}`,
+    `/ticket-comments/ticket/${ticketId}`,
     {
       params: {
         page,
