@@ -1,6 +1,9 @@
 import api from "@/config/axios";
 import { PageResponse } from "@/types/pageTypes";
-import { TicketCommentResponse } from "@/types/ticketCommentTypes";
+import {
+  CreateTicketCommentRequest,
+  TicketCommentResponse,
+} from "@/types/ticketCommentTypes";
 
 export const getAllTicketsCommentsById = async (
   ticketId: number,
@@ -17,6 +20,18 @@ export const getAllTicketsCommentsById = async (
         sort,
       },
     },
+  );
+
+  return response.data;
+};
+
+export const createTicketComment = async (
+  ticketId: number,
+  request: CreateTicketCommentRequest,
+): Promise<TicketCommentResponse> => {
+  const response = await api.post<TicketCommentResponse>(
+    `/ticket-comments/ticket/${ticketId}`,
+    request,
   );
 
   return response.data;

@@ -148,9 +148,11 @@ export default function LoginForm() {
       </Button>
 
       <Button
-        onClick={() => setFormData({ username: "technicial", password: "123456" })}
+        onClick={() =>
+          setFormData({ username: "technician", password: "123456" })
+        }
       >
-        TECHINICIAL
+        TECHINICIAN
       </Button>
 
       <Button
