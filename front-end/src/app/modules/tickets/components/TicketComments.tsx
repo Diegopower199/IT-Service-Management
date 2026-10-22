@@ -1,27 +1,27 @@
 "use client";
 
 import PageLoading from "@/components/ui/PageLoading";
-import { useAuth } from "@/hooks/useAuth";
 import type { TicketCommentResponse } from "@/types/ticketCommentTypes";
-import { Divider, Paper, Typography } from "@mui/material";
+import { Button, Divider, Paper, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { getAllTicketsCommentsById } from "../services/ticketCommentsService";
-import {
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_TICKET_COMMENTS_SORT,
-} from "@/utils/constans";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
+
+import { getAllTicketsCommentsById } from "../services/ticketCommentsService";
+
+import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
 
 interface TicketCommentsProps {
   ticketId: number;
 }
 
 export default function TicketComments({ ticketId }: TicketCommentsProps) {
-  
+  const router = useRouter();
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
     [],
   );
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function TicketComments({ ticketId }: TicketCommentsProps) {
         const response = await getAllTicketsCommentsById(
           ticketId,
           0,
-          DEFAULT_PAGE_SIZE,
+          5,
           DEFAULT_TICKET_COMMENTS_SORT,
         );
 
@@ -86,6 +86,15 @@ export default function TicketComments({ ticketId }: TicketCommentsProps) {
             <Typography sx={{ mt: 1 }}>{ticketComment.comment}</Typography>
           </Paper>
         ))
+      )}
+
+      {ticketComments.length > 0 && (
+        <Button
+          variant="outlined"
+          onClick={() => router.push(`/tickets/${ticketId}/comments`)}
+        >
+          View all comments
+        </Button>
       )}
     </Paper>
   );
