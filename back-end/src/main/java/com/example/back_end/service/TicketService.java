@@ -53,9 +53,13 @@ public class TicketService {
 
     private final TicketHistoryService ticketHistoryService;
 
-    public Page<TicketResponse> getAllTickets(Pageable pageable) {
+    public Page<TicketResponse> getAllTickets(String status,
+            String priority, Pageable pageable) {
 
-        Page<TicketModel> tickets = ticketRepository.findAll(pageable);
+        Page<TicketModel> tickets = ticketRepository.findAllWithFilters(
+                status,
+                priority,
+                pageable);
 
         return tickets.map(this::convertToResponse);
     }

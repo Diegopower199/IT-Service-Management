@@ -21,25 +21,25 @@ export default function DashboardTicketStatistics({
         <DashboardTicketStatisticCard
           title="My Tickets"
           value={totalTickets}
-          href=""
+          href="/tickets"
         />
 
         <DashboardTicketStatisticCard
           title="Open"
           value={openTickets}
-          href=""
+          href="tickets?status=OPEN"
         />
 
         <DashboardTicketStatisticCard
           title="In Progress"
           value={inProgressTickets}
-          href=""
+          href="/tickets?status=IN_PROGRESS"
         />
 
         <DashboardTicketStatisticCard
           title="Critical"
           value={criticalTickets}
-          href=""
+          href="/tickets?priority=CRITICAL"
         />
       </section>
     );
@@ -51,25 +51,25 @@ export default function DashboardTicketStatistics({
         <DashboardTicketStatisticCard
           title="Assigned Tickets"
           value={totalTickets}
-          href=""
+          href="/tickets"
         />
 
         <DashboardTicketStatisticCard
           title="Open"
           value={openTickets}
-          href=""
+          href="tickets?status=OPEN"
         />
 
         <DashboardTicketStatisticCard
           title="In Progress"
           value={inProgressTickets}
-          href=""
+          href="/tickets?status=IN_PROGRESS"
         />
 
         <DashboardTicketStatisticCard
           title="Critical"
           value={criticalTickets}
-          href=""
+          href="/tickets?priority=CRITICAL"
         />
       </section>
     );
@@ -87,19 +87,19 @@ export default function DashboardTicketStatistics({
         <DashboardTicketStatisticCard
           title="Open"
           value={openTickets}
-          href=""
+          href="tickets?status=OPEN"
         />
 
         <DashboardTicketStatisticCard
           title="In Progress"
           value={inProgressTickets}
-          href=""
+          href="/tickets?status=IN_PROGRESS"
         />
 
         <DashboardTicketStatisticCard
           title="Critical"
           value={criticalTickets}
-          href=""
+          href="/tickets?priority=CRITICAL"
         />
       </section>
     );

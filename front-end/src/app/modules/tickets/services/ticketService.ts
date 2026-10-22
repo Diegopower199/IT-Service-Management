@@ -11,12 +11,16 @@ export const getAllTickets = async (
   page: number,
   size: number,
   sort: string,
+  status?: string | null,
+  priority?: string | null,
 ): Promise<PageResponse<TicketResponse>> => {
   const response = await api.get<PageResponse<TicketResponse>>("/tickets", {
     params: {
       page,
       size,
       sort,
+      status,
+      priority,
     },
   });
 
@@ -27,12 +31,16 @@ export const getOwnTickets = async (
   page: number,
   size: number,
   sort: string,
+  status?: string | null,
+  priority?: string | null,
 ): Promise<PageResponse<TicketResponse>> => {
   const response = await api.get<PageResponse<TicketResponse>>("/tickets/my", {
     params: {
       page,
       size,
       sort,
+      status,
+      priority,
     },
   });
 
@@ -43,6 +51,8 @@ export const getAssignedTickets = async (
   page: number,
   size: number,
   sort: string,
+  status?: string | null,
+  priority?: string | null,
 ): Promise<PageResponse<TicketResponse>> => {
   const response = await api.get<PageResponse<TicketResponse>>(
     "/tickets/assigned",
@@ -51,6 +61,8 @@ export const getAssignedTickets = async (
         page,
         size,
         sort,
+        status,
+        priority,
       },
     },
   );

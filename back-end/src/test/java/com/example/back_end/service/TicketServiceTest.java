@@ -84,6 +84,9 @@ class TicketServiceTest {
     // =========================================================
     // GET ALL TICKETS
     // =========================================================
+    // =========================================================
+    // GET ALL TICKETS
+    // =========================================================
     @Test
     void shouldReturnAllTickets() {
 
@@ -156,10 +159,16 @@ class TicketServiceTest {
                 pageable,
                 2);
 
-        when(ticketRepository.findAll(pageable))
+        when(ticketRepository.findAllWithFilters(
+                null,
+                null,
+                pageable))
                 .thenReturn(ticketPage);
 
-        Page<TicketResponse> response = ticketService.getAllTickets(pageable);
+        Page<TicketResponse> response = ticketService.getAllTickets(
+                null,
+                null,
+                pageable);
 
         assertEquals(
                 2,
@@ -210,7 +219,10 @@ class TicketServiceTest {
                         .getName());
 
         verify(ticketRepository)
-                .findAll(pageable);
+                .findAllWithFilters(
+                        null,
+                        null,
+                        pageable);
     }
 
     @Test
@@ -218,10 +230,16 @@ class TicketServiceTest {
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        when(ticketRepository.findAll(pageable))
+        when(ticketRepository.findAllWithFilters(
+                null,
+                null,
+                pageable))
                 .thenReturn(Page.empty(pageable));
 
-        Page<TicketResponse> response = ticketService.getAllTickets(pageable);
+        Page<TicketResponse> response = ticketService.getAllTickets(
+                null,
+                null,
+                pageable);
 
         assertTrue(response.isEmpty());
 
@@ -230,7 +248,10 @@ class TicketServiceTest {
                 response.getTotalElements());
 
         verify(ticketRepository)
-                .findAll(pageable);
+                .findAllWithFilters(
+                        null,
+                        null,
+                        pageable);
     }
 
     // =========================================================

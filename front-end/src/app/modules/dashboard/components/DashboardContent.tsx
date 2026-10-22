@@ -13,6 +13,7 @@ import {
   getOwnTickets,
   getTicketStatistics,
 } from "../../tickets/services/ticketService";
+import PageLoading from "@/components/ui/PageLoading";
 
 export default function DashboardContent() {
   const { user, isAuthReady } = useAuth();
@@ -53,7 +54,7 @@ export default function DashboardContent() {
   }, [isAuthReady, user, router]);
 
   if (!isAuthReady || !user) {
-    return <p>Loading...</p>;
+    return <PageLoading />;
   }
 
   return (

@@ -19,10 +19,20 @@ public interface TicketRepository extends JpaRepository<TicketModel, Long> {
             UserModel assignedTo,
             Pageable pageable);
 
+    @Query("""
+            SELECT t
+            FROM TicketModel t
+            WHERE (:status IS NULL OR t.status.name = :status)
+              AND (:priority IS NULL OR t.priority.name = :priority)
+            """)
+    Page<TicketModel> findAllWithFilters(
+            @Param("status") String status,
+            @Param("priority") String priority,
+            Pageable pageable);
+
     // =========================================================
     // USER STATISTICS
     // =========================================================
-
     @Query("""
             SELECT COUNT(t)
             FROM TicketModel t

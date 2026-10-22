@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import {
   DataGrid,
   GridActionsCellItem,
   type GridColDef,
 } from "@mui/x-data-grid";
+
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
+
+import dayjs from "dayjs";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -27,21 +31,32 @@ import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_TICKET_SORT,
   FORM_MODES,
-  FormMode,
+  type FormMode,
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
+
 import TicketForm from "./TicketForm";
+
 import Button from "@/components/ui/Button";
+import PageLoading from "@/components/ui/PageLoading";
+import TicketDetails from "./TicketDetails";
 
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const statusFilter = searchParams.get("status");
+  const priorityFilter = searchParams.get("priority");
 
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
   const [formMode, setFormMode] = useState<FormMode>(FORM_MODES.CREATE);
 
   const [selectedTicket, setSelectedTicket] = useState<TicketResponse | null>(
@@ -76,18 +91,24 @@ export default function TicketsContent() {
             paginationModel.page,
             paginationModel.pageSize,
             DEFAULT_TICKET_SORT,
+            statusFilter,
+            priorityFilter,
           );
         } else if (user.rol === USER_ROLES.TECHNICIAN) {
           response = await getAssignedTickets(
             paginationModel.page,
             paginationModel.pageSize,
             DEFAULT_TICKET_SORT,
+            statusFilter,
+            priorityFilter,
           );
         } else {
           response = await getOwnTickets(
             paginationModel.page,
             paginationModel.pageSize,
             DEFAULT_TICKET_SORT,
+            statusFilter,
+            priorityFilter,
           );
         }
 
@@ -101,28 +122,50 @@ export default function TicketsContent() {
     };
 
     loadTickets();
-  }, [isAuthReady, user, router, paginationModel, ticketsUpdated]);
+  }, [
+    isAuthReady,
+    user,
+    router,
+    paginationModel,
+    ticketsUpdated,
+    statusFilter,
+    priorityFilter,
+  ]);
 
   const handleCreateTicket = () => {
     setSelectedTicket(null);
     setFormMode(FORM_MODES.CREATE);
+
+    setShowDetails(false);
     setShowForm(true);
   };
 
   const handleViewTicket = (ticket: TicketResponse) => {
     setSelectedTicket(ticket);
-    setFormMode(FORM_MODES.VIEW);
-    setShowForm(true);
+
+    setShowForm(false);
+    setShowDetails(true);
   };
 
   const handleEditTicket = (ticket: TicketResponse) => {
     setSelectedTicket(ticket);
     setFormMode(FORM_MODES.EDIT);
+
+    setShowDetails(false);
     setShowForm(true);
+  };
+
+  const handleSubmitSuccess = () => {
+    setTicketsUpdated((previous) => !previous);
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
+    setSelectedTicket(null);
+  };
+
+  const handleCloseDetails = () => {
+    setShowDetails(false);
     setSelectedTicket(null);
   };
 
@@ -154,6 +197,8 @@ export default function TicketsContent() {
       field: "lastUpdated",
       headerName: "Last Updated",
       width: 190,
+      valueFormatter: (value) =>
+        value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "",
     },
     {
       field: "actions",
@@ -178,7 +223,18 @@ export default function TicketsContent() {
   ];
 
   if (!isAuthReady || !user) {
-    return <p>Loading...</p>;
+    return <PageLoading />;
+  }
+
+  if (showDetails && selectedTicket) {
+    return (
+      <TicketDetails
+        ticket={selectedTicket}
+        userRole={user.rol}
+        onClose={handleCloseDetails}
+        onEdit={() => handleEditTicket(selectedTicket)}
+      />
+    );
   }
 
   if (showForm) {
@@ -187,7 +243,7 @@ export default function TicketsContent() {
         formMode={formMode}
         selectedTicket={selectedTicket}
         onClose={handleCloseForm}
-        onSubmitSuccess={() => setTicketsUpdated((previous) => !previous)}
+        onSubmitSuccess={handleSubmitSuccess}
       />
     );
   }

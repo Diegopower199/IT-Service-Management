@@ -2,6 +2,7 @@ package com.example.back_end.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,6 +105,8 @@ class TicketControllerTest {
         Page<TicketResponse> page = new PageImpl<>(List.of(ticket));
 
         when(ticketService.getAllTickets(
+                isNull(),
+                isNull(),
                 any(Pageable.class)))
                 .thenReturn(page);
 
@@ -142,7 +145,10 @@ class TicketControllerTest {
                                 .value(1));
 
         verify(ticketService)
-                .getAllTickets(any(Pageable.class));
+                .getAllTickets(
+                        isNull(),
+                        isNull(),
+                        any(Pageable.class));
     }
 
     @Test
@@ -151,6 +157,8 @@ class TicketControllerTest {
             throws Exception {
 
         when(ticketService.getAllTickets(
+                isNull(),
+                isNull(),
                 any(Pageable.class)))
                 .thenReturn(Page.empty());
 
@@ -171,7 +179,10 @@ class TicketControllerTest {
                                 .value(0));
 
         verify(ticketService)
-                .getAllTickets(any(Pageable.class));
+                .getAllTickets(
+                        isNull(),
+                        isNull(),
+                        any(Pageable.class));
     }
 
     @Test
@@ -185,7 +196,10 @@ class TicketControllerTest {
                         status().isForbidden());
 
         verify(ticketService, never())
-                .getAllTickets(any(Pageable.class));
+                .getAllTickets(
+                        any(),
+                        any(),
+                        any(Pageable.class));
     }
 
     // =========================================================

@@ -16,9 +16,10 @@ import type { TicketResponse } from "@/types/ticketTypes";
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 import type { CategoryResponse } from "@/types/categoryTypes";
 import type { PriorityResponse } from "@/types/priorityTypes";
+import type { UserSummaryResponse } from "@/types/userTypes";
+
 import { getAllPriorities } from "../../priorities/services/priorityService";
 import { getAllCategories } from "../../categories/services/categoryService";
-import { UserSummaryResponse } from "@/types/userTypes";
 import { getUserOptions } from "../../users/services/userService";
 import { createTicket, updateTicket } from "../services/ticketService";
 
@@ -49,10 +50,7 @@ const getInitialFormData = (
   formMode: FormMode,
   selectedTicket: TicketResponse | null,
 ): TicketFormData => {
-  if (
-    (formMode === FORM_MODES.EDIT || formMode === FORM_MODES.VIEW) &&
-    selectedTicket
-  ) {
+  if (formMode === FORM_MODES.EDIT && selectedTicket) {
     return {
       title: selectedTicket.title,
       description: selectedTicket.description ?? "",
@@ -78,9 +76,11 @@ export default function TicketForm({
   const [categoriesOptions, setCategoriesOptions] = useState<
     CategoryResponse[]
   >([]);
+
   const [prioritiesOptions, setPrioritiesOptions] = useState<
     PriorityResponse[]
   >([]);
+
   const [usersOptions, setUsersOptions] = useState<UserSummaryResponse[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -144,21 +144,23 @@ export default function TicketForm({
         return;
       }
 
-      const prioritiesLoaded = await fetchPrioritiesOptions();
+      if (formMode === FORM_MODES.CREATE) {
+        const prioritiesLoaded = await fetchPrioritiesOptions();
 
-      if (!prioritiesLoaded) {
-        return;
-      }
+        if (!prioritiesLoaded) {
+          return;
+        }
 
-      const usersLoaded = await fetchUsersOptions();
+        const usersLoaded = await fetchUsersOptions();
 
-      if (!usersLoaded) {
-        return;
+        if (!usersLoaded) {
+          return;
+        }
       }
     };
 
     fetchFormOptions();
-  }, []);
+  }, [formMode]);
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -263,11 +265,7 @@ export default function TicketForm({
       return "Create Ticket";
     }
 
-    if (formMode === FORM_MODES.EDIT) {
-      return "Edit Ticket";
-    }
-
-    return "Ticket Details";
+    return "Edit Ticket";
   };
 
   return (
@@ -282,7 +280,6 @@ export default function TicketForm({
           name="title"
           value={formData.title}
           onChange={handleFormChange}
-          disabled={formMode === FORM_MODES.VIEW}
           error={Boolean(requiredFieldsIncomplete.title)}
           helperText={requiredFieldsIncomplete.title}
           fullWidth
@@ -293,7 +290,6 @@ export default function TicketForm({
           name="description"
           value={formData.description}
           onChange={handleFormChange}
-          disabled={formMode === FORM_MODES.VIEW}
           error={Boolean(requiredFieldsIncomplete.description)}
           helperText={requiredFieldsIncomplete.description}
           multiline
@@ -346,7 +342,6 @@ export default function TicketForm({
               : 0
           }
           onChange={handleFormChange}
-          disabled={formMode === FORM_MODES.VIEW}
           error={Boolean(requiredFieldsIncomplete.categoryId)}
           helperText={requiredFieldsIncomplete.categoryId}
           fullWidth
@@ -366,7 +361,7 @@ export default function TicketForm({
           )}
         </TextField>
 
-        {(formMode === FORM_MODES.CREATE || formMode === FORM_MODES.VIEW) && (
+        {formMode === FORM_MODES.CREATE && (
           <TextField
             select
             label="Priority"
@@ -379,7 +374,6 @@ export default function TicketForm({
                 : 0
             }
             onChange={handleFormChange}
-            disabled={formMode === FORM_MODES.VIEW}
             error={Boolean(requiredFieldsIncomplete.priorityId)}
             helperText={requiredFieldsIncomplete.priorityId}
             fullWidth
@@ -400,54 +394,20 @@ export default function TicketForm({
           </TextField>
         )}
 
-        {formMode === FORM_MODES.VIEW && selectedTicket && (
-          <>
-            <TextField
-              label="Status"
-              value={selectedTicket.status.name}
-              disabled
-              fullWidth
-            />
-
-            <TextField
-              label="Created By"
-              value={selectedTicket.createdBy.username}
-              disabled
-              fullWidth
-            />
-
-            <TextField
-              label="Requested For"
-              value={selectedTicket.requestedFor.username}
-              disabled
-              fullWidth
-            />
-
-            <TextField
-              label="Assigned To"
-              value={selectedTicket.assignedTo?.username ?? "Unassigned"}
-              disabled
-              fullWidth
-            />
-          </>
-        )}
-
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        <Stack spacing={3} direction={"row"}>
+        <Stack spacing={3} direction="row">
           <Button variant="outlined" onClick={onClose} disabled={loading}>
-            {formMode === FORM_MODES.VIEW ? "Close" : "Cancel"}
+            Cancel
           </Button>
 
-          {formMode !== FORM_MODES.VIEW && (
-            <Button type="submit" variant="contained" disabled={loading}>
-              {loading
-                ? "Saving..."
-                : formMode === FORM_MODES.CREATE
-                  ? "Create Ticket"
-                  : "Save Changes"}
-            </Button>
-          )}
+          <Button type="submit" variant="contained" disabled={loading}>
+            {loading
+              ? "Saving..."
+              : formMode === FORM_MODES.CREATE
+                ? "Create Ticket"
+                : "Save Changes"}
+          </Button>
         </Stack>
       </Stack>
     </Box>
