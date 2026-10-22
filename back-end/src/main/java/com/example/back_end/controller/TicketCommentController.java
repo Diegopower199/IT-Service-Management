@@ -29,7 +29,7 @@ public class TicketCommentController {
 
     private final TicketCommentService ticketCommentService;
 
-    @GetMapping("/{id}")
+    @GetMapping("/ticket/{id}")
     public ResponseEntity<Page<TicketCommentResponse>> getCommentsByTicketId(
             @PathVariable Long id,
             Pageable pageable) {
@@ -41,7 +41,7 @@ public class TicketCommentController {
         return ResponseEntity.ok(comments);
     }
 
-    @PostMapping("/{id}")
+    @PostMapping("/ticket/{id}")
     public ResponseEntity<TicketCommentResponse> createCommentForTicket(
             @PathVariable Long id,
             @Valid @RequestBody TicketCommentRequest request) {

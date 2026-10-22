@@ -1,5 +1,7 @@
 package com.example.back_end.controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
+import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.service.UserService;
 import com.example.back_end.utils.GlobalConstants;
 
@@ -83,5 +86,10 @@ public class UserController {
         userService.changePassword(id, request);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/options")
+    public ResponseEntity<List<UserSummaryResponse>> getUserOptions() {
+        return ResponseEntity.ok(userService.getUserOptions());
     }
 }

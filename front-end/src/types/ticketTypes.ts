@@ -35,3 +35,17 @@ export interface TicketStatisticsResponse {
   inProgressTickets: number;
   criticalTickets: number;
 }
+
+export interface CreateTicketRequest {
+  title: string;
+  description: string;
+  requestedForId: number;
+  categoryId: number;
+  priorityId: number;
+}
+
+export interface UpdateTicketRequest {
+  title: string;
+  description: string;
+  categoryId: number;
+}

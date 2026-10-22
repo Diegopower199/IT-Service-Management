@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.back_end.dtos.ticket.AssignTicketRequest;
@@ -40,8 +41,10 @@ public class TicketController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
-    public ResponseEntity<Page<TicketResponse>> getAllTickets(Pageable pageable) {
-        Page<TicketResponse> tickets = ticketService.getAllTickets(pageable);
+    public ResponseEntity<Page<TicketResponse>> getAllTickets(@RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority, Pageable pageable) {
+        Page<TicketResponse> tickets = ticketService.getAllTickets(status,
+                priority, pageable);
 
         return ResponseEntity.ok(tickets);
     }
@@ -123,4 +126,13 @@ public class TicketController {
         return ResponseEntity.ok(statistics);
     }
 
+    @GetMapping("/assigned")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    public ResponseEntity<Page<TicketResponse>> getAssignedTickets(
+            Pageable pageable) {
+
+        Page<TicketResponse> tickets = ticketService.getAssignedTickets(pageable);
+
+        return ResponseEntity.ok(tickets);
+    }
 }

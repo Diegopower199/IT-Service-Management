@@ -38,6 +38,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (storedToken && storedUsername && storedRol) {
       setToken(storedToken);
 
+      console.log("TOKEN: ", storedToken)
+      console.log("USERNAME: ", storedUsername)
+      console.log("ROL: ", storedRol)
+
       setUser({
         username: storedUsername,
         rol: storedRol,

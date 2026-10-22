@@ -14,6 +14,7 @@ import com.example.back_end.model.TicketHistoryModel;
 import com.example.back_end.model.TicketModel;
 import com.example.back_end.model.UserModel;
 import com.example.back_end.repository.TicketHistoryRepository;
+import com.example.back_end.repository.TicketRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class TicketHistoryService {
 
     private final TicketHistoryRepository ticketHistoryRepository;
+    private final TicketRepository ticketRepository;
 
     public Page<TicketHistoryResponse> getAllHistory(
             Pageable pageable) {
@@ -31,12 +33,19 @@ public class TicketHistoryService {
         return history.map(this::convertToResponse);
     }
 
-    public TicketHistoryResponse getHistoryById(Long idHistory) {
+    public Page<TicketHistoryResponse> getHistoryByTicketId(
+            Long ticketId,
+            Pageable pageable) {
 
-        TicketHistoryModel existingHistory = ticketHistoryRepository.findById(idHistory)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket history with id " + idHistory + " not found"));
+        TicketModel ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ticket with id " + ticketId + " not found"));
 
-        return convertToResponse(existingHistory);
+        Page<TicketHistoryModel> history = ticketHistoryRepository.findByTicket(
+                ticket,
+                pageable);
+
+        return history.map(this::convertToResponse);
     }
 
     public void createHistory(

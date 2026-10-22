@@ -53,9 +53,13 @@ public class TicketService {
 
     private final TicketHistoryService ticketHistoryService;
 
-    public Page<TicketResponse> getAllTickets(Pageable pageable) {
+    public Page<TicketResponse> getAllTickets(String status,
+            String priority, Pageable pageable) {
 
-        Page<TicketModel> tickets = ticketRepository.findAll(pageable);
+        Page<TicketModel> tickets = ticketRepository.findAllWithFilters(
+                status,
+                priority,
+                pageable);
 
         return tickets.map(this::convertToResponse);
     }
@@ -469,6 +473,18 @@ public class TicketService {
                 openTickets,
                 inProgressTickets,
                 criticalTickets);
+    }
+
+    public Page<TicketResponse> getAssignedTickets(
+            Pageable pageable) {
+
+        UserModel currentUser = getAuthenticatedUser();
+
+        Page<TicketModel> tickets = ticketRepository.findByAssignedTo(
+                currentUser,
+                pageable);
+
+        return tickets.map(this::convertToResponse);
     }
 
     private UserModel getAuthenticatedUser() {
