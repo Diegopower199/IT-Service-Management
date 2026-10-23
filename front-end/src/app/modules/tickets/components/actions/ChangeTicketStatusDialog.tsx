@@ -269,7 +269,7 @@ export default function ChangeTicketStatusDialog({
             borderRadius: 2,
           }}
         >
-          {saving ? "Changing..." : "Change Status"}
+          {saving ? "Updating..." : "Update Status"}
         </Button>
       </DialogActions>
     </Dialog>
