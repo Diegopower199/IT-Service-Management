@@ -24,7 +24,7 @@ import {
   getAllTickets,
   getAssignedTickets,
   getOwnTickets,
-} from "../services/ticketService";
+} from "../../services/ticketService";
 
 import {
   DATA_GRID_LOCALE_TEXT,
@@ -35,11 +35,11 @@ import {
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
 
-import TicketForm from "./TicketForm";
+import TicketForm from "../form/TicketForm";
 
 import Button from "@/components/ui/Button";
 import PageLoading from "@/components/ui/PageLoading";
-import TicketDetails from "./TicketDetails";
+import TicketDetails from "../details/TicketDetails";
 
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();

@@ -6,8 +6,8 @@ import type { TicketResponse } from "@/types/ticketTypes";
 import type { UserRole } from "@/types/roleTypes";
 import TicketOverview from "./TicketOverview";
 import TicketActions from "./TicketActions";
-import TicketComments from "./TicketComments";
-import TicketHistory from "./TicketHistory";
+import TicketComments from "../comments/TicketComments";
+import TicketHistory from "../history/TicketHistory";
 
 interface TicketDetailsProps {
   ticket: TicketResponse;

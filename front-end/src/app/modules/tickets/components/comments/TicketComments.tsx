@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 
-import { getAllTicketsCommentsById } from "../services/ticketCommentsService";
+import { getAllTicketsCommentsById } from "../../services/ticketCommentsService";
 
 import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
 

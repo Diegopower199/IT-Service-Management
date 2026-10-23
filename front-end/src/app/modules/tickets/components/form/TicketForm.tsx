@@ -18,10 +18,10 @@ import type { CategoryResponse } from "@/types/categoryTypes";
 import type { PriorityResponse } from "@/types/priorityTypes";
 import type { UserSummaryResponse } from "@/types/userTypes";
 
-import { getAllPriorities } from "../../priorities/services/priorityService";
-import { getAllCategories } from "../../categories/services/categoryService";
-import { getUserOptions } from "../../users/services/userService";
-import { createTicket, updateTicket } from "../services/ticketService";
+import { getAllPriorities } from "../../../priorities/services/priorityService";
+import { getAllCategories } from "../../../categories/services/categoryService";
+import { getUserOptions } from "../../../users/services/userService";
+import { createTicket, updateTicket } from "../../services/ticketService";
 
 interface TicketFormProps {
   formMode: FormMode;

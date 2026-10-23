@@ -28,7 +28,7 @@ import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
 import {
   createTicketComment,
   getAllTicketsCommentsById,
-} from "../services/ticketCommentsService";
+} from "../../services/ticketCommentsService";
 
 interface TicketCommentsContentProps {
   ticketId: number;
