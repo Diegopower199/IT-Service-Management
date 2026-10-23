@@ -1,4 +1,4 @@
-import TicketCommentsContent from "@/app/modules/tickets/components/TicketCommentsContent";
+import TicketCommentsContent from "@/app/modules/tickets/components/comments/TicketCommentsContent";
 import AppLayout from "@/layouts/AppLayout";
 
 interface TicketCommentsPageProps {

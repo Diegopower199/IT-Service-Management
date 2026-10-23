@@ -12,7 +12,7 @@ import {
   DEFAULT_TICKET_HISTORY_SORT,
 } from "@/utils/constans";
 
-import { getAllTicketHistoryById } from "../services/ticketHistoryService";
+import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
 import PageLoading from "@/components/ui/PageLoading";
 
 interface TicketHistoryProps {
