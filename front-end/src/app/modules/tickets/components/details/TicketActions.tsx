@@ -30,7 +30,10 @@ export default function TicketActions({
 
   const isUser = userRole === USER_ROLES.USER;
 
-  const handleOpenChangeStatus = () => {
+  const handleOpenChangeStatus = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.currentTarget.blur();
     setOpenChangeStatus(true);
   };
 

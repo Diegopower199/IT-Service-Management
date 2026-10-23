@@ -20,7 +20,5 @@ export const getAllTicketHistoryById = async (
     },
   );
 
-  console.log(response)
-
   return response.data;
 };
