@@ -3,3 +3,7 @@ export interface StatusResponse {
   name: string;
   active: boolean;
 }
+
+export interface ChangeStatusRequest {
+  statusId: number;
+}

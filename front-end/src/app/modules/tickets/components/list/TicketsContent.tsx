@@ -24,6 +24,7 @@ import {
   getAllTickets,
   getAssignedTickets,
   getOwnTickets,
+  getTicketById,
 } from "../../services/ticketService";
 
 import {
@@ -169,6 +170,22 @@ export default function TicketsContent() {
     setSelectedTicket(null);
   };
 
+  const handleTicketUpdated = async () => {
+    if (!selectedTicket) {
+      return;
+    }
+
+    try {
+      const updatedTicket = await getTicketById(selectedTicket.idTicket);
+
+      setSelectedTicket(updatedTicket);
+
+      setTicketsUpdated((previous) => !previous);
+    } catch (error) {
+      console.error("Error updating ticket details:", error);
+    }
+  };
+
   const columns: GridColDef<TicketResponse>[] = [
     {
       field: "idTicket",
@@ -233,6 +250,7 @@ export default function TicketsContent() {
         userRole={user.rol}
         onClose={handleCloseDetails}
         onEdit={() => handleEditTicket(selectedTicket)}
+        onTicketUpdated={handleTicketUpdated}
       />
     );
   }
