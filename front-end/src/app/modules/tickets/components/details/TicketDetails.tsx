@@ -14,6 +14,7 @@ interface TicketDetailsProps {
   userRole: UserRole;
   onClose: () => void;
   onEdit: () => void;
+  onTicketUpdated: () => void;
 }
 
 export default function TicketDetails({
@@ -21,6 +22,7 @@ export default function TicketDetails({
   userRole,
   onClose,
   onEdit,
+  onTicketUpdated,
 }: TicketDetailsProps) {
   return (
     <Box>
@@ -60,7 +62,12 @@ export default function TicketDetails({
       >
         <TicketOverview ticket={ticket} />
 
-        <TicketActions ticket={ticket} userRole={userRole} onEdit={onEdit} />
+        <TicketActions
+          ticket={ticket}
+          userRole={userRole}
+          onEdit={onEdit}
+          onTicketUpdated={onTicketUpdated}
+        />
       </Box>
 
       <Box

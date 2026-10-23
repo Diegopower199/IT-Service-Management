@@ -49,3 +49,7 @@ export interface UpdateTicketRequest {
   description: string;
   categoryId: number;
 }
+
+export interface ChangeStatusRequest {
+  statusId: number;
+}
