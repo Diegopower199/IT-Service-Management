@@ -3,23 +3,23 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
-import { Box, Divider, Paper, Typography } from "@mui/material";
+import { Box, Button, Divider, Paper, Typography } from "@mui/material";
 
 import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 
-import {
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_TICKET_HISTORY_SORT,
-} from "@/utils/constans";
+import { DEFAULT_TICKET_HISTORY_SORT } from "@/utils/constans";
 
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
 import PageLoading from "@/components/ui/PageLoading";
+import { useRouter } from "next/navigation";
 
 interface TicketHistoryProps {
   ticketId: number;
 }
 
 export default function TicketHistory({ ticketId }: TicketHistoryProps) {
+  const router = useRouter();
+
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
     [],
   );
@@ -34,7 +34,7 @@ export default function TicketHistory({ ticketId }: TicketHistoryProps) {
         const response = await getAllTicketHistoryById(
           ticketId,
           0,
-          DEFAULT_PAGE_SIZE,
+          5,
           DEFAULT_TICKET_HISTORY_SORT,
         );
 
@@ -108,6 +108,15 @@ export default function TicketHistory({ ticketId }: TicketHistoryProps) {
             )}
           </Paper>
         ))
+      )}
+
+      {ticketHistory.length > 0 && (
+        <Button
+          variant="outlined"
+          onClick={() => router.push(`/tickets/${ticketId}/history`)}
+        >
+          View all comments
+        </Button>
       )}
     </Paper>
   );
