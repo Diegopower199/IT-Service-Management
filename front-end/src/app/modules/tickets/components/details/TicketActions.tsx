@@ -8,6 +8,7 @@ import type { TicketResponse } from "@/types/ticketTypes";
 import { USER_ROLES, type UserRole } from "@/types/roleTypes";
 
 import ChangeTicketStatusDialog from "../actions/ChangeTicketStatusDialog";
+import ChangeTicketPriorityDialog from "../actions/ChangeTicketPriorityDialog";
 
 interface TicketActionsProps {
   ticket: TicketResponse;
@@ -23,6 +24,7 @@ export default function TicketActions({
   onTicketUpdated,
 }: TicketActionsProps) {
   const [openChangeStatus, setOpenChangeStatus] = useState(false);
+  const [openChangePriority, setOpenChangePriority] = useState(false);
 
   const isTechnician = userRole === USER_ROLES.TECHNICIAN;
 
@@ -37,8 +39,19 @@ export default function TicketActions({
     setOpenChangeStatus(true);
   };
 
+  const handleOpenChangePriority = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.currentTarget.blur();
+    setOpenChangePriority(true);
+  };
+
   const handleCloseChangeStatus = () => {
     setOpenChangeStatus(false);
+  };
+
+  const handleCloseChangePriority = () => {
+    setOpenChangePriority(false);
   };
 
   return (
@@ -62,7 +75,9 @@ export default function TicketActions({
                 Change Status
               </Button>
 
-              <Button variant="outlined">Change Priority</Button>
+              <Button variant="outlined" onClick={handleOpenChangePriority}>
+                Change Priority
+              </Button>
             </>
           )}
 
@@ -83,6 +98,14 @@ export default function TicketActions({
         ticketId={ticket.idTicket}
         currentStatus={ticket.status}
         onClose={handleCloseChangeStatus}
+        onTicketUpdated={onTicketUpdated}
+      />
+
+      <ChangeTicketPriorityDialog
+        open={openChangePriority}
+        ticketId={ticket.idTicket}
+        currentPriority={ticket.priority}
+        onClose={handleCloseChangePriority}
         onTicketUpdated={onTicketUpdated}
       />
     </>

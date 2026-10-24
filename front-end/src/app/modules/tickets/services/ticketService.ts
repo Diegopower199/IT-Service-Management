@@ -1,5 +1,6 @@
 import api from "@/config/axios";
 import { PageResponse } from "@/types/pageTypes";
+import { ChangePriorityRequest } from "@/types/priorityTypes";
 import {
   ChangeStatusRequest,
   CreateTicketRequest,
@@ -51,9 +52,7 @@ export const getOwnTickets = async (
 export const getTicketById = async (
   ticketId: number,
 ): Promise<TicketResponse> => {
-  const response = await api.get<TicketResponse>(
-    `/tickets/${ticketId}`,
-  );
+  const response = await api.get<TicketResponse>(`/tickets/${ticketId}`);
 
   return response.data;
 };
@@ -122,3 +121,14 @@ export const changeTicketStatus = async (
   return response.data;
 };
 
+export const changeTicketPriority = async (
+  ticketId: number,
+  request: ChangePriorityRequest,
+): Promise<TicketResponse> => {
+  const response = await api.patch<TicketResponse>(
+    `/tickets/${ticketId}/priority`,
+    request,
+  );
+
+  return response.data;
+};

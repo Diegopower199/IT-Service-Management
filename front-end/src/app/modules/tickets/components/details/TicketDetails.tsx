@@ -8,6 +8,11 @@ import TicketOverview from "./TicketOverview";
 import TicketActions from "./TicketActions";
 import TicketComments from "../comments/TicketComments";
 import TicketHistory from "../history/TicketHistory";
+import {
+  formatEnumName,
+  getPriorityColor,
+  getStatusColor,
+} from "@/utils/ticketUiUtils";
 
 interface TicketDetailsProps {
   ticket: TicketResponse;
@@ -32,19 +37,21 @@ export default function TicketDetails({
         </Typography>
 
         <Stack direction="row" spacing={2}>
-          <Chip label={ticket.status.name} variant="outlined" />
+          <Chip
+            label={formatEnumName(ticket.status.name)}
+            color={getStatusColor(ticket.status.name)}
+            variant="outlined"
+            sx={{
+              fontWeight: 600,
+            }}
+          />
 
           <Chip
-            label={ticket.priority.name}
-            color={
-              ticket.priority.name === "CRITICAL"
-                ? "error"
-                : ticket.priority.name === "HIGH"
-                  ? "warning"
-                  : ticket.priority.name === "MEDIUM"
-                    ? "info"
-                    : "default"
-            }
+            label={formatEnumName(ticket.priority.name)}
+            color={getPriorityColor(ticket.priority.name)}
+            sx={{
+              fontWeight: 600,
+            }}
           />
         </Stack>
       </Stack>
