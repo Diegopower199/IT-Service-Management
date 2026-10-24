@@ -10,6 +10,7 @@ import { USER_ROLES, type UserRole } from "@/types/roleTypes";
 import ChangeTicketStatusDialog from "../actions/ChangeTicketStatusDialog";
 import ChangeTicketPriorityDialog from "../actions/ChangeTicketPriorityDialog";
 import AddTicketCommentDialog from "../actions/AddTicketCommentDialog";
+import AssignTicketTechnicianDialog from "../actions/AssignTicketTechnicianDialog";
 
 interface TicketActionsProps {
   ticket: TicketResponse;
@@ -27,6 +28,7 @@ export default function TicketActions({
   const [openChangeStatus, setOpenChangeStatus] = useState(false);
   const [openChangePriority, setOpenChangePriority] = useState(false);
   const [openAddComment, setOpenAddComment] = useState(false);
+  const [openAssignTechnician, setOpenAssignTechnician] = useState(false);
 
   const isTechnician = userRole === USER_ROLES.TECHNICIAN;
 
@@ -53,6 +55,13 @@ export default function TicketActions({
     setOpenAddComment(true);
   };
 
+  const handleOpenAssignTechnician = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.currentTarget.blur();
+    setOpenAssignTechnician(true);
+  };
+
   const handleCloseChangeStatus = () => {
     setOpenChangeStatus(false);
   };
@@ -63,6 +72,10 @@ export default function TicketActions({
 
   const handleCloseAddComment = () => {
     setOpenAddComment(false);
+  };
+
+  const handleCloseAssignTechnician = () => {
+    setOpenAssignTechnician(false);
   };
 
   return (
@@ -80,7 +93,9 @@ export default function TicketActions({
         <Stack spacing={2}>
           {(isTechnician || isAdmin) && (
             <>
-              <Button variant="contained">Assign Technician</Button>
+              <Button variant="contained" onClick={handleOpenAssignTechnician}>
+                Assign Technician
+              </Button>
 
               <Button variant="outlined" onClick={handleOpenChangeStatus}>
                 Change Status
@@ -101,6 +116,14 @@ export default function TicketActions({
           </Button>
         </Stack>
       </Paper>
+
+      <AssignTicketTechnicianDialog
+        open={openAssignTechnician}
+        ticketId={ticket.idTicket}
+        currentTechnician={ticket.assignedTo}
+        onClose={handleCloseAssignTechnician}
+        onTicketUpdated={onTicketUpdated}
+      />
 
       <ChangeTicketStatusDialog
         open={openChangeStatus}
@@ -123,6 +146,7 @@ export default function TicketActions({
         ticketId={ticket.idTicket}
         onClose={handleCloseAddComment}
         onCommentCreated={onTicketUpdated}
+        onTicketUpdated={onTicketUpdated}
       />
     </>
   );

@@ -20,8 +20,8 @@ import type { UserSummaryResponse } from "@/types/userTypes";
 
 import { getAllPriorities } from "../../../priorities/services/priorityService";
 import { getAllCategories } from "../../../categories/services/categoryService";
-import { getUserOptions } from "../../../users/services/userService";
 import { createTicket, updateTicket } from "../../services/ticketService";
+import { getAllTechnicians } from "@/app/modules/users/services/userService";
 
 interface TicketFormProps {
   formMode: FormMode;
@@ -123,7 +123,7 @@ export default function TicketForm({
 
   const fetchUsersOptions = async (): Promise<boolean> => {
     try {
-      const usersResponse = await getUserOptions();
+      const usersResponse = await getAllTechnicians();
 
       setUsersOptions(usersResponse);
 

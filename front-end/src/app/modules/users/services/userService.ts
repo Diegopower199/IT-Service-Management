@@ -1,8 +1,8 @@
 import api from "@/config/axios";
-import { UserSummaryResponse } from "@/types/userTypes";
+import type { UserSummaryResponse } from "@/types/userTypes";
 
-export const getUserOptions = async (): Promise<UserSummaryResponse[]> => {
-  const response = await api.get<UserSummaryResponse[]>("/users/options");
+export const getAllTechnicians = async (): Promise<UserSummaryResponse[]> => {
+  const response = await api.get<UserSummaryResponse[]>("/users/technicians");
 
   return response.data;
 };

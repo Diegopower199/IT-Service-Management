@@ -13,6 +13,7 @@ import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
 import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.RoleName;
 import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
@@ -153,12 +154,12 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<UserSummaryResponse> getUserOptions() {
-        return userRepository.findAllByOrderByUsernameAsc()
+    public List<UserSummaryResponse> getAllTechnicians() {
+
+        return userRepository
+                .findByRolNameAndEnabledTrue(RoleName.TECHNICIAN.name())
                 .stream()
-                .map(user -> new UserSummaryResponse(
-                        user.getIdUser(),
-                        user.getUsername()))
+                .map(this::convertToSummaryResponse)
                 .toList();
     }
 
@@ -190,5 +191,12 @@ public class UserService {
                 user.isEnabled(),
                 rolResponse,
                 departmentResponse);
+    }
+
+    private UserSummaryResponse convertToSummaryResponse(UserModel user) {
+
+        return new UserSummaryResponse(
+                user.getIdUser(),
+                user.getUsername());
     }
 }

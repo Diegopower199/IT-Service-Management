@@ -53,3 +53,7 @@ export interface UpdateTicketRequest {
 export interface ChangeStatusRequest {
   statusId: number;
 }
+
+export interface AssignTicketRequest {
+  assignedToId: number;
+}
