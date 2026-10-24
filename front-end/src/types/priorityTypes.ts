@@ -3,3 +3,7 @@ export interface PriorityResponse {
   name: string;
   active: boolean;
 }
+
+export interface ChangePriorityRequest {
+  priorityId: number;
+}

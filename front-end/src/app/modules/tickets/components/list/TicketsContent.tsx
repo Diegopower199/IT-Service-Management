@@ -41,6 +41,12 @@ import TicketForm from "../form/TicketForm";
 import Button from "@/components/ui/Button";
 import PageLoading from "@/components/ui/PageLoading";
 import TicketDetails from "../details/TicketDetails";
+import { Chip } from "@mui/material";
+import {
+  formatEnumName,
+  getPriorityColor,
+  getStatusColor,
+} from "@/utils/ticketUiUtils";
 
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();
@@ -201,14 +207,35 @@ export default function TicketsContent() {
     {
       field: "status",
       headerName: "Status",
-      width: 150,
+      width: 160,
       valueGetter: (_, row) => row.status.name,
+      renderCell: (params) => (
+        <Chip
+          label={formatEnumName(params.row.status.name)}
+          color={getStatusColor(params.row.status.name)}
+          size="small"
+          variant="outlined"
+          sx={{
+            fontWeight: 600,
+          }}
+        />
+      ),
     },
     {
       field: "priority",
       headerName: "Priority",
       width: 150,
       valueGetter: (_, row) => row.priority.name,
+      renderCell: (params) => (
+        <Chip
+          label={formatEnumName(params.row.priority.name)}
+          color={getPriorityColor(params.row.priority.name)}
+          size="small"
+          sx={{
+            fontWeight: 600,
+          }}
+        />
+      ),
     },
     {
       field: "lastUpdated",

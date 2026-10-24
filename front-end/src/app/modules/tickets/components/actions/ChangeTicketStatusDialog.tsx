@@ -25,6 +25,7 @@ import type { StatusResponse } from "@/types/statusTypes";
 
 import { getAllStatusesActives } from "../../services/statusService";
 import { changeTicketStatus } from "../../services/ticketService";
+import { formatEnumName, getStatusColor } from "@/utils/ticketUiUtils";
 
 interface ChangeTicketStatusDialogProps {
   open: boolean;
@@ -59,32 +60,6 @@ export default function ChangeTicketStatusDialog({
 
     loadStatuses();
   }, []);
-
-  const formatStatusName = (statusName: string) => {
-    return statusName.replace(/_/g, " ");
-  };
-
-  const getStatusColor = (statusName: string) => {
-    switch (statusName) {
-      case "OPEN":
-        return "info";
-
-      case "IN_PROGRESS":
-        return "warning";
-
-      case "WAITING":
-        return "secondary";
-
-      case "RESOLVED":
-        return "success";
-
-      case "CLOSED":
-        return "default";
-
-      default:
-        return "default";
-    }
-  };
 
   const handleStatusChange = (event: SelectChangeEvent) => {
     setSelectedStatusId(event.target.value);
@@ -178,7 +153,7 @@ export default function ChangeTicketStatusDialog({
             </Typography>
 
             <Chip
-              label={formatStatusName(currentStatus.name)}
+              label={formatEnumName(currentStatus.name)}
               color={getStatusColor(currentStatus.name)}
               sx={{
                 fontWeight: 600,
@@ -230,7 +205,7 @@ export default function ChangeTicketStatusDialog({
                       />
 
                       <Typography variant="body2">
-                        {formatStatusName(status.name)}
+                        {formatEnumName(status.name)}
                       </Typography>
                     </Stack>
                   </MenuItem>
