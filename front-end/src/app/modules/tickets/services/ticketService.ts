@@ -2,6 +2,7 @@ import api from "@/config/axios";
 import { PageResponse } from "@/types/pageTypes";
 import { ChangePriorityRequest } from "@/types/priorityTypes";
 import {
+  AssignTicketRequest,
   ChangeStatusRequest,
   CreateTicketRequest,
   TicketResponse,
@@ -104,6 +105,18 @@ export const updateTicket = async (
   const response = await api.patch<TicketResponse>(
     `/tickets/${ticketId}`,
     ticketData,
+  );
+
+  return response.data;
+};
+
+export const assignTicketTechnician = async (
+  ticketId: number,
+  request: AssignTicketRequest,
+): Promise<TicketResponse> => {
+  const response = await api.patch<TicketResponse>(
+    `/tickets/${ticketId}/assign`,
+    request,
   );
 
   return response.data;

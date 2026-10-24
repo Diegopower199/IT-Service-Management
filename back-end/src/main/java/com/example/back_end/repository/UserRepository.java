@@ -12,6 +12,8 @@ public interface UserRepository extends JpaRepository<UserModel, Long> {
 
     List<UserModel> findAllByOrderByUsernameAsc();
 
+    List<UserModel> findByRolNameAndEnabledTrue(String name);
+
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
