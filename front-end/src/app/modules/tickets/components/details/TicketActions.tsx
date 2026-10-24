@@ -9,6 +9,7 @@ import { USER_ROLES, type UserRole } from "@/types/roleTypes";
 
 import ChangeTicketStatusDialog from "../actions/ChangeTicketStatusDialog";
 import ChangeTicketPriorityDialog from "../actions/ChangeTicketPriorityDialog";
+import AddTicketCommentDialog from "../actions/AddTicketCommentDialog";
 
 interface TicketActionsProps {
   ticket: TicketResponse;
@@ -25,6 +26,7 @@ export default function TicketActions({
 }: TicketActionsProps) {
   const [openChangeStatus, setOpenChangeStatus] = useState(false);
   const [openChangePriority, setOpenChangePriority] = useState(false);
+  const [openAddComment, setOpenAddComment] = useState(false);
 
   const isTechnician = userRole === USER_ROLES.TECHNICIAN;
 
@@ -46,12 +48,21 @@ export default function TicketActions({
     setOpenChangePriority(true);
   };
 
+  const handleOpenAddComment = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.currentTarget.blur();
+    setOpenAddComment(true);
+  };
+
   const handleCloseChangeStatus = () => {
     setOpenChangeStatus(false);
   };
 
   const handleCloseChangePriority = () => {
     setOpenChangePriority(false);
+  };
+
+  const handleCloseAddComment = () => {
+    setOpenAddComment(false);
   };
 
   return (
@@ -85,11 +96,9 @@ export default function TicketActions({
             Edit Ticket
           </Button>
 
-          {isUser && <Button variant="outlined">Add Public Comment</Button>}
-
-          {(isTechnician || isAdmin) && (
-            <Button variant="outlined">Add Internal Comment</Button>
-          )}
+          <Button variant="outlined" onClick={handleOpenAddComment}>
+            Add Comment
+          </Button>
         </Stack>
       </Paper>
 
@@ -107,6 +116,13 @@ export default function TicketActions({
         currentPriority={ticket.priority}
         onClose={handleCloseChangePriority}
         onTicketUpdated={onTicketUpdated}
+      />
+
+      <AddTicketCommentDialog
+        open={openAddComment}
+        ticketId={ticket.idTicket}
+        onClose={handleCloseAddComment}
+        onCommentCreated={onTicketUpdated}
       />
     </>
   );
