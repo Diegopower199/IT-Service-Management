@@ -257,24 +257,6 @@ export default function UserForm({
     } catch (error) {
       console.error("Error saving user:", error);
 
-      if (axios.isAxiosError<ValidationErrors>(error)) {
-        const validationErrors = error.response?.data;
-
-        if (validationErrors) {
-          setRequiredFieldsIncomplete({
-            username: validationErrors.username,
-            email: validationErrors.email,
-            firstName: validationErrors.firstName,
-            lastName: validationErrors.lastName,
-            password: validationErrors.password,
-            rolId: validationErrors.rol,
-            departmentId: validationErrors.department,
-          });
-
-          return;
-        }
-      }
-
       setErrorMessage(
         formMode === FORM_MODES.CREATE
           ? "Error creating user."
