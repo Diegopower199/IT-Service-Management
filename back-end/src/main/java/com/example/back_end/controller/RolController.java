@@ -41,7 +41,7 @@ public class RolController {
         return ResponseEntity.ok(roles);
     }
 
-    @GetMapping("/actives")
+    @GetMapping("/active")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RolResponse>> getActiveRoles() {
 

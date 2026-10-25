@@ -41,7 +41,7 @@ public class DepartmentController {
         return ResponseEntity.ok(departments);
     }
 
-    @GetMapping("/actives")
+    @GetMapping("/active")
     public ResponseEntity<List<DepartmentResponse>> getActiveDepartments() {
 
         return ResponseEntity.ok(

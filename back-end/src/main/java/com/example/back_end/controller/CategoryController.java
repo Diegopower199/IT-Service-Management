@@ -41,7 +41,7 @@ public class CategoryController {
         return ResponseEntity.ok(allCategories);
     }
 
-    @GetMapping("/actives")
+    @GetMapping("/active")
     public ResponseEntity<List<CategoryResponse>> getActiveCategories() {
 
         return ResponseEntity.ok(

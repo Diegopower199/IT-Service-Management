@@ -23,9 +23,9 @@ import {
 
 import type { StatusResponse } from "@/types/statusTypes";
 
-import { getAllStatusesActives } from "../../services/statusService";
 import { changeTicketStatus } from "../../services/ticketService";
 import { formatEnumName, getStatusColor } from "@/utils/ticketUiUtils";
+import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 
 interface ChangeTicketStatusDialogProps {
   open: boolean;
@@ -50,7 +50,7 @@ export default function ChangeTicketStatusDialog({
   useEffect(() => {
     const loadStatuses = async () => {
       try {
-        const response = await getAllStatusesActives();
+        const response = await getAllActiveStatuses();
 
         setStatuses(response);
       } catch (error) {

@@ -6,3 +6,9 @@ export const getAllPriorities = async (): Promise<PriorityResponse[]> => {
 
   return response.data;
 };
+
+export const getAllActivePriorities = async (): Promise<PriorityResponse[]> => {
+  const response = await api.get<PriorityResponse[]>("/priorities/active");
+
+  return response.data;
+};

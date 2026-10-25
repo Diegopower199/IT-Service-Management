@@ -259,8 +259,8 @@ public class UserServiceTest {
         when(request.getFirstName()).thenReturn("Ana");
         when(request.getLastName()).thenReturn("Garcia");
         when(request.isEnabled()).thenReturn(true);
-        when(request.getRol()).thenReturn(3L);
-        when(request.getDepartment()).thenReturn(2L);
+        when(request.getRolId()).thenReturn(3L);
+        when(request.getDepartmentId()).thenReturn(2L);
 
         RolModel rol = new RolModel(3L, "USER", true);
 
@@ -371,7 +371,7 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRol())
+        when(request.getRolId())
                 .thenReturn(99L);
 
         when(userRepository.existsByUsername("ana"))
@@ -402,10 +402,10 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRol())
+        when(request.getRolId())
                 .thenReturn(3L);
 
-        when(request.getDepartment())
+        when(request.getDepartmentId())
                 .thenReturn(99L);
 
         RolModel rol = new RolModel(3L, "USER", true);
@@ -443,8 +443,8 @@ public class UserServiceTest {
         when(request.getFirstName()).thenReturn("Ana");
         when(request.getLastName()).thenReturn("Garcia");
         when(request.isEnabled()).thenReturn(true);
-        when(request.getRol()).thenReturn(3L);
-        when(request.getDepartment()).thenReturn(2L);
+        when(request.getRolId()).thenReturn(3L);
+        when(request.getDepartmentId()).thenReturn(2L);
 
         RolModel oldRol = new RolModel(1L, "ADMIN", true);
 
@@ -600,7 +600,7 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRol())
+        when(request.getRolId())
                 .thenReturn(99L);
 
         RolModel rol = new RolModel(3L, "USER", true);
@@ -643,10 +643,10 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRol())
+        when(request.getRolId())
                 .thenReturn(3L);
 
-        when(request.getDepartment())
+        when(request.getDepartmentId())
                 .thenReturn(99L);
 
         RolModel rol = new RolModel(3L, "USER", true);

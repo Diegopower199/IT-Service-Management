@@ -7,9 +7,8 @@ export const getAllStatuses = async (): Promise<StatusResponse[]> => {
   return response.data;
 };
 
-export const getAllStatusesActives = async (): Promise<StatusResponse[]> => {
-  const response = await api.get<StatusResponse[]>("/statuses/actives");
+export const getAllActiveStatuses = async (): Promise<StatusResponse[]> => {
+  const response = await api.get<StatusResponse[]>("/statuses/active");
 
   return response.data;
 };
-

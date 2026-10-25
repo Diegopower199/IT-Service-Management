@@ -214,13 +214,12 @@ export default function UsersContent() {
 
   if (showForm) {
     return (
-      <UserForm />
-      /*<UserForm
+      <UserForm
         formMode={formMode}
         selectedUser={selectedUser}
         onClose={handleCloseForm}
         onSubmitSuccess={handleSubmitSuccess}
-      />*/
+      />
     );
   }
 
