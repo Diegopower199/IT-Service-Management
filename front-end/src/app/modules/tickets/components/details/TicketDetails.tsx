@@ -13,6 +13,7 @@ import {
   getPriorityColor,
   getStatusColor,
 } from "@/utils/ticketUiUtils";
+import { useState } from "react";
 
 interface TicketDetailsProps {
   ticket: TicketResponse;
@@ -29,6 +30,12 @@ export default function TicketDetails({
   onEdit,
   onTicketUpdated,
 }: TicketDetailsProps) {
+  const [commentsUpdated, setCommentsUpdated] = useState(false);
+
+  const handleCommentsUpdated = () => {
+    setCommentsUpdated((previous) => !previous);
+  };
+
   return (
     <Box>
       <Stack spacing={2} sx={{ mb: 4 }}>
@@ -74,6 +81,7 @@ export default function TicketDetails({
           userRole={userRole}
           onEdit={onEdit}
           onTicketUpdated={onTicketUpdated}
+          onCommentsUpdated={handleCommentsUpdated}
         />
       </Box>
 
@@ -88,7 +96,10 @@ export default function TicketDetails({
           mb: 3,
         }}
       >
-        <TicketComments ticketId={ticket.idTicket} />
+        <TicketComments
+          ticketId={ticket.idTicket}
+          commentsUpdated={commentsUpdated}
+        />
 
         <TicketHistory ticketId={ticket.idTicket} />
       </Box>

@@ -17,6 +17,7 @@ interface TicketActionsProps {
   userRole: UserRole;
   onEdit: () => void;
   onTicketUpdated: () => void;
+  onCommentsUpdated: () => void;
 }
 
 export default function TicketActions({
@@ -24,6 +25,7 @@ export default function TicketActions({
   userRole,
   onEdit,
   onTicketUpdated,
+  onCommentsUpdated,
 }: TicketActionsProps) {
   const [openChangeStatus, setOpenChangeStatus] = useState(false);
   const [openChangePriority, setOpenChangePriority] = useState(false);
@@ -145,8 +147,7 @@ export default function TicketActions({
         open={openAddComment}
         ticketId={ticket.idTicket}
         onClose={handleCloseAddComment}
-        onCommentCreated={onTicketUpdated}
-        onTicketUpdated={onTicketUpdated}
+        onCommentsUpdated={onCommentsUpdated}
       />
     </>
   );
