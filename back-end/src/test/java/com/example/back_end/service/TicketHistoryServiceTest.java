@@ -2,7 +2,6 @@ package com.example.back_end.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -10,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +23,6 @@ import org.springframework.data.domain.PageRequest;
 
 import com.example.back_end.dtos.ticketHistory.TicketHistoryResponse;
 import com.example.back_end.enums.TicketHistoryAction;
-import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.RolModel;
 import com.example.back_end.model.TicketHistoryModel;
