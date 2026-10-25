@@ -31,9 +31,14 @@ export default function TicketDetails({
   onTicketUpdated,
 }: TicketDetailsProps) {
   const [commentsUpdated, setCommentsUpdated] = useState(false);
+  const [historyUpdated, setHistoryUpdated] = useState(false);
 
   const handleCommentsUpdated = () => {
     setCommentsUpdated((previous) => !previous);
+  };
+
+  const handleHistoryUpdated = () => {
+    setHistoryUpdated((previous) => !previous);
   };
 
   return (
@@ -82,6 +87,7 @@ export default function TicketDetails({
           onEdit={onEdit}
           onTicketUpdated={onTicketUpdated}
           onCommentsUpdated={handleCommentsUpdated}
+          onHistoryUpdated={handleHistoryUpdated}
         />
       </Box>
 
@@ -101,7 +107,10 @@ export default function TicketDetails({
           commentsUpdated={commentsUpdated}
         />
 
-        <TicketHistory ticketId={ticket.idTicket} />
+        <TicketHistory
+          ticketId={ticket.idTicket}
+          historyUpdated={historyUpdated}
+        />
       </Box>
 
       <Button variant="outlined" onClick={onClose}>

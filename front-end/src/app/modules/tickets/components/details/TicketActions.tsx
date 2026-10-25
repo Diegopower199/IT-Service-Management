@@ -18,6 +18,7 @@ interface TicketActionsProps {
   onEdit: () => void;
   onTicketUpdated: () => void;
   onCommentsUpdated: () => void;
+  onHistoryUpdated: () => void;
 }
 
 export default function TicketActions({
@@ -26,6 +27,7 @@ export default function TicketActions({
   onEdit,
   onTicketUpdated,
   onCommentsUpdated,
+  onHistoryUpdated,
 }: TicketActionsProps) {
   const [openChangeStatus, setOpenChangeStatus] = useState(false);
   const [openChangePriority, setOpenChangePriority] = useState(false);
@@ -80,6 +82,11 @@ export default function TicketActions({
     setOpenAssignTechnician(false);
   };
 
+  const handleTicketAndHistoryUpdated = () => {
+    onTicketUpdated();
+    onHistoryUpdated();
+  };
+
   return (
     <>
       <Paper
@@ -124,7 +131,7 @@ export default function TicketActions({
         ticketId={ticket.idTicket}
         currentTechnician={ticket.assignedTo}
         onClose={handleCloseAssignTechnician}
-        onTicketUpdated={onTicketUpdated}
+        onTicketUpdated={handleTicketAndHistoryUpdated}
       />
 
       <ChangeTicketStatusDialog
@@ -132,7 +139,7 @@ export default function TicketActions({
         ticketId={ticket.idTicket}
         currentStatus={ticket.status}
         onClose={handleCloseChangeStatus}
-        onTicketUpdated={onTicketUpdated}
+        onTicketUpdated={handleTicketAndHistoryUpdated}
       />
 
       <ChangeTicketPriorityDialog
@@ -140,7 +147,7 @@ export default function TicketActions({
         ticketId={ticket.idTicket}
         currentPriority={ticket.priority}
         onClose={handleCloseChangePriority}
-        onTicketUpdated={onTicketUpdated}
+        onTicketUpdated={handleTicketAndHistoryUpdated}
       />
 
       <AddTicketCommentDialog

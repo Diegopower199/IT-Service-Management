@@ -15,9 +15,13 @@ import { useRouter } from "next/navigation";
 
 interface TicketHistoryProps {
   ticketId: number;
+  historyUpdated: boolean;
 }
 
-export default function TicketHistory({ ticketId }: TicketHistoryProps) {
+export default function TicketHistory({
+  ticketId,
+  historyUpdated,
+}: TicketHistoryProps) {
   const router = useRouter();
 
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
@@ -47,7 +51,7 @@ export default function TicketHistory({ ticketId }: TicketHistoryProps) {
     };
 
     loadTicketHistory();
-  }, [ticketId]);
+  }, [ticketId, historyUpdated]);
 
   return (
     <Paper
