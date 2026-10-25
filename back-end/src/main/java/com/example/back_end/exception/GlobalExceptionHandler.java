@@ -21,7 +21,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
+                "RESOURCE_NOT_FOUND",
                 ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
@@ -35,7 +37,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
+                "RESOURCE_ALREADY_EXISTS",
                 ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
@@ -49,7 +53,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
+                "INVALID_ROLE",
                 ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
@@ -63,7 +69,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.FORBIDDEN.value(),
+                "ACCESS_DENIED",
                 ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
@@ -72,12 +80,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidOperationException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidOperationException(
+    public ResponseEntity<ErrorResponse> handleInvalidOperation(
             InvalidOperationException ex) {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
+                "INVALID_OPERATION",
                 ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
@@ -91,7 +101,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
+                "BAD_REQUEST",
                 ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
@@ -105,7 +117,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
+                "INVALID_PASSWORD",
                 ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
@@ -114,7 +128,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationErrors(
+    public ResponseEntity<ErrorResponse> handleValidationErrors(
             MethodArgumentNotValidException ex) {
 
         Map<String, String> errors = new HashMap<>();
@@ -125,8 +139,15 @@ public class GlobalExceptionHandler {
                         error.getField(),
                         error.getDefaultMessage()));
 
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "VALIDATION_ERROR",
+                "Validation failed",
+                errors,
+                LocalDateTime.now());
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(errors);
+                .body(errorResponse);
     }
 }
