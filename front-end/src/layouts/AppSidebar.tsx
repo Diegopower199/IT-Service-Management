@@ -21,8 +21,6 @@ export default function AppSidebar() {
 
         <Link href="/tickets">Tickets</Link>
 
-        <Link href="/tickets/new">Create Ticket</Link>
-
         {user.rol === USER_ROLES.ADMIN && (
           <>
             <Link href="/users">Users</Link>
