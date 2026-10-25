@@ -16,3 +16,24 @@ export interface UserResponse {
   rol: RoleResponse;
   department: DepartmentResponse | null;
 }
+
+export interface CreateUserRequest {
+  username: string;
+  password: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  rolId: number;
+  departmentId: number;
+  enabled: boolean;
+}
+
+export interface UpdateUserRequest {
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  rolId: number;
+  departmentId: number;
+  enabled: boolean;
+}

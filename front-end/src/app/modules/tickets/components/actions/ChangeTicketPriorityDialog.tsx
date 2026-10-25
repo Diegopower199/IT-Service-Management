@@ -22,9 +22,9 @@ import {
 } from "@mui/material";
 
 import type { PriorityResponse } from "@/types/priorityTypes";
-import { getAllPrioritiesActives } from "../../services/priorityService";
 import { changeTicketPriority } from "../../services/ticketService";
 import { formatEnumName, getPriorityColor } from "@/utils/ticketUiUtils";
+import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 
 interface ChangeTicketPriorityDialogProps {
   open: boolean;
@@ -49,7 +49,7 @@ export default function ChangeTicketPriorityDialog({
   useEffect(() => {
     const loadPriorities = async () => {
       try {
-        const response = await getAllPrioritiesActives();
+        const response = await getAllActivePriorities();
 
         setPriorities(response);
       } catch (error) {

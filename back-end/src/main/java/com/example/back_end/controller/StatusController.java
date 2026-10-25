@@ -41,7 +41,7 @@ public class StatusController {
         return ResponseEntity.ok(statuses);
     }
 
-    @GetMapping("/actives")
+    @GetMapping("/active")
     public ResponseEntity<List<StatusResponse>> getActiveStatuses() {
 
         return ResponseEntity.ok(

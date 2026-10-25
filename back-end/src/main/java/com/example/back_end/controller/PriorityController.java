@@ -41,7 +41,7 @@ public class PriorityController {
         return ResponseEntity.ok(priorities);
     }
 
-    @GetMapping("/actives")
+    @GetMapping("/active")
     public ResponseEntity<List<PriorityResponse>> getActivePriorities() {
 
         return ResponseEntity.ok(

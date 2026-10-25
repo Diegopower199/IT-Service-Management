@@ -63,13 +63,13 @@ public class UserService {
                     "Email '" + request.getEmail() + "' already exists");
         }
 
-        RolModel rol = rolRepository.findById(request.getRol())
+        RolModel rol = rolRepository.findById(request.getRolId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Role with id " + request.getRol() + " not found"));
+                        "Role with id " + request.getRolId() + " not found"));
 
-        DepartmentModel department = departmentRepository.findById(request.getDepartment())
+        DepartmentModel department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Department with id " + request.getDepartment() + " not found"));
+                        "Department with id " + request.getDepartmentId() + " not found"));
 
         UserModel newUser = new UserModel();
 
@@ -110,13 +110,13 @@ public class UserService {
                     "Email '" + request.getEmail() + "' already exists");
         }
 
-        RolModel rol = rolRepository.findById(request.getRol())
+        RolModel rol = rolRepository.findById(request.getRolId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Role with id " + request.getRol() + " not found"));
+                        "Role with id " + request.getRolId() + " not found"));
 
-        DepartmentModel department = departmentRepository.findById(request.getDepartment())
+        DepartmentModel department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Department with id " + request.getDepartment() + " not found"));
+                        "Department with id " + request.getDepartmentId() + " not found"));
 
         existingUser.setUsername(request.getUsername());
         existingUser.setEmail(request.getEmail());
