@@ -13,9 +13,13 @@ import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
 
 interface TicketCommentsProps {
   ticketId: number;
+  commentsUpdated: boolean;
 }
 
-export default function TicketComments({ ticketId }: TicketCommentsProps) {
+export default function TicketComments({
+  ticketId,
+  commentsUpdated,
+}: TicketCommentsProps) {
   const router = useRouter();
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
@@ -45,7 +49,7 @@ export default function TicketComments({ ticketId }: TicketCommentsProps) {
     };
 
     loadTicketComments();
-  }, [ticketId]);
+  }, [ticketId, commentsUpdated]);
 
   return (
     <Paper

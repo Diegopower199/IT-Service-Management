@@ -27,8 +27,7 @@ interface AddTicketCommentDialogProps {
   open: boolean;
   ticketId: number;
   onClose: () => void;
-  onCommentCreated: () => void;
-  onTicketUpdated: () => void;
+  onCommentsUpdated: () => void;
 }
 
 interface CommentForm {
@@ -40,8 +39,7 @@ export default function AddTicketCommentDialog({
   open,
   ticketId,
   onClose,
-  onCommentCreated,
-  onTicketUpdated,
+  onCommentsUpdated,
 }: AddTicketCommentDialogProps) {
   const { user } = useAuth();
 
@@ -120,8 +118,7 @@ export default function AddTicketCommentDialog({
             : false,
       });
 
-      onCommentCreated();
-      onTicketUpdated();
+      onCommentsUpdated();
 
       handleClose();
     } catch (error) {
