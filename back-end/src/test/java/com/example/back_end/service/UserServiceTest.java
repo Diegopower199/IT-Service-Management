@@ -25,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
+import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
 import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
@@ -436,7 +437,7 @@ public class UserServiceTest {
     @Test
     void shouldUpdateUserSuccessfully() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        UpdateUserRequest request = mock(UpdateUserRequest.class);
 
         when(request.getUsername()).thenReturn("ana");
         when(request.getEmail()).thenReturn("ana@example.com");
@@ -499,7 +500,7 @@ public class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistingUser() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        UpdateUserRequest request = mock(UpdateUserRequest.class);
 
         when(userRepository.findById(99L))
                 .thenReturn(Optional.empty());
@@ -515,7 +516,7 @@ public class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenUpdatingWithExistingUsername() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        UpdateUserRequest request = mock(UpdateUserRequest.class);
 
         when(request.getUsername())
                 .thenReturn("ana");
@@ -552,7 +553,7 @@ public class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenUpdatingWithExistingEmail() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        UpdateUserRequest request = mock(UpdateUserRequest.class);
 
         when(request.getUsername())
                 .thenReturn("ana");
@@ -592,7 +593,7 @@ public class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenRoleDoesNotExistOnUpdate() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        UpdateUserRequest request = mock(UpdateUserRequest.class);
 
         when(request.getUsername())
                 .thenReturn("ana");
@@ -635,7 +636,7 @@ public class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenDepartmentDoesNotExistOnUpdate() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        UpdateUserRequest request = mock(UpdateUserRequest.class);
 
         when(request.getUsername())
                 .thenReturn("ana");

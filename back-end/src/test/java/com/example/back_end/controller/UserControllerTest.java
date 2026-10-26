@@ -33,6 +33,7 @@ import com.example.back_end.dtos.department.DepartmentResponse;
 import com.example.back_end.dtos.rol.RolResponse;
 import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
+import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
 import com.example.back_end.security.JwtAuthenticationFilter;
 import com.example.back_end.security.JwtService;
@@ -253,7 +254,7 @@ class UserControllerTest {
                 "ana@example.com");
 
         when(userService.updateUser(
-                any(CreateUserRequest.class),
+                any(UpdateUserRequest.class),
                 eq(5L)))
                 .thenReturn(response);
 
@@ -268,7 +269,7 @@ class UserControllerTest {
 
         verify(userService)
                 .updateUser(
-                        any(CreateUserRequest.class),
+                        any(UpdateUserRequest.class),
                         eq(5L));
     }
 
@@ -284,7 +285,7 @@ class UserControllerTest {
 
         verify(userService, never())
                 .updateUser(
-                        any(CreateUserRequest.class),
+                        any(UpdateUserRequest.class),
                         any(Long.class));
     }
 
@@ -300,7 +301,7 @@ class UserControllerTest {
 
         verify(userService, never())
                 .updateUser(
-                        any(CreateUserRequest.class),
+                        any(UpdateUserRequest.class),
                         any(Long.class));
     }
 
