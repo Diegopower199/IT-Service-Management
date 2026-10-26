@@ -13,10 +13,13 @@ import {
 } from "@mui/material";
 
 import type { TicketResponse } from "@/types/ticketTypes";
-import { FORM_MODES, type FormMode } from "@/utils/constans";
 import type { CategoryResponse } from "@/types/categoryTypes";
 import type { PriorityResponse } from "@/types/priorityTypes";
 import type { UserSummaryResponse } from "@/types/userTypes";
+
+import { FORM_MODES, type FormMode } from "@/utils/constans";
+
+import { getApiError } from "@/utils/apiErrorUtils";
 
 import { getAllPriorities } from "../../../priorities/services/priorityService";
 import { getAllCategories } from "../../../categories/services/categoryService";
@@ -100,7 +103,10 @@ export default function TicketForm({
       return true;
     } catch (error) {
       console.error("Error loading categories:", error);
-      setErrorMessage("Error loading categories.");
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? "Error loading categories.");
 
       return false;
     }
@@ -115,7 +121,10 @@ export default function TicketForm({
       return true;
     } catch (error) {
       console.error("Error loading priorities:", error);
-      setErrorMessage("Error loading priorities.");
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? "Error loading priorities.");
 
       return false;
     }
@@ -130,7 +139,10 @@ export default function TicketForm({
       return true;
     } catch (error) {
       console.error("Error loading users:", error);
-      setErrorMessage("Error loading users.");
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? "Error loading users.");
 
       return false;
     }
@@ -138,6 +150,8 @@ export default function TicketForm({
 
   useEffect(() => {
     const fetchFormOptions = async () => {
+      setErrorMessage("");
+
       const categoriesLoaded = await fetchCategoriesOptions();
 
       if (!categoriesLoaded) {
@@ -181,6 +195,8 @@ export default function TicketForm({
       ...previousErrors,
       [name]: undefined,
     }));
+
+    setErrorMessage("");
   };
 
   const validateRequiredFields = () => {
@@ -226,6 +242,7 @@ export default function TicketForm({
     try {
       setLoading(true);
       setErrorMessage("");
+      setRequiredFieldsIncomplete({});
 
       if (formMode === FORM_MODES.CREATE) {
         await createTicket({
@@ -250,10 +267,25 @@ export default function TicketForm({
     } catch (error) {
       console.error("Error saving ticket:", error);
 
+      const apiError = getApiError(error);
+
+      if (apiError?.errors) {
+        setRequiredFieldsIncomplete({
+          title: apiError.errors.title,
+          description: apiError.errors.description,
+          requestedForId: apiError.errors.requestedForId,
+          categoryId: apiError.errors.categoryId,
+          priorityId: apiError.errors.priorityId,
+        });
+
+        return;
+      }
+
       setErrorMessage(
-        formMode === FORM_MODES.CREATE
-          ? "Error creating ticket."
-          : "Error updating ticket.",
+        apiError?.message ??
+          (formMode === FORM_MODES.CREATE
+            ? "Error creating ticket."
+            : "Error updating ticket."),
       );
     } finally {
       setLoading(false);
@@ -282,6 +314,7 @@ export default function TicketForm({
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.title)}
           helperText={requiredFieldsIncomplete.title}
+          disabled={loading}
           fullWidth
         />
 
@@ -292,6 +325,7 @@ export default function TicketForm({
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.description)}
           helperText={requiredFieldsIncomplete.description}
+          disabled={loading}
           multiline
           minRows={4}
           fullWidth
@@ -312,6 +346,7 @@ export default function TicketForm({
             onChange={handleFormChange}
             error={Boolean(requiredFieldsIncomplete.requestedForId)}
             helperText={requiredFieldsIncomplete.requestedForId}
+            disabled={loading}
             fullWidth
           >
             <MenuItem value={0} disabled>
@@ -344,6 +379,7 @@ export default function TicketForm({
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.categoryId)}
           helperText={requiredFieldsIncomplete.categoryId}
+          disabled={loading}
           fullWidth
         >
           <MenuItem value={0} disabled>
@@ -376,6 +412,7 @@ export default function TicketForm({
             onChange={handleFormChange}
             error={Boolean(requiredFieldsIncomplete.priorityId)}
             helperText={requiredFieldsIncomplete.priorityId}
+            disabled={loading}
             fullWidth
           >
             <MenuItem value={0} disabled>

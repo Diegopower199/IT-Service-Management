@@ -1,15 +1,21 @@
 "use client";
 
 import PageLoading from "@/components/ui/PageLoading";
+
 import type { TicketCommentResponse } from "@/types/ticketCommentTypes";
-import { Button, Divider, Paper, Typography } from "@mui/material";
+
+import { Alert, Button, Divider, Paper, Typography } from "@mui/material";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import dayjs from "dayjs";
 
 import { getAllTicketsCommentsById } from "../../services/ticketCommentsService";
 
 import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
+
+import { getApiError } from "@/utils/apiErrorUtils";
 
 interface TicketCommentsProps {
   ticketId: number;
@@ -28,10 +34,13 @@ export default function TicketComments({
 
   const [loading, setLoading] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState("");
+
   useEffect(() => {
     const loadTicketComments = async () => {
       try {
         setLoading(true);
+        setErrorMessage("");
 
         const response = await getAllTicketsCommentsById(
           ticketId,
@@ -43,6 +52,10 @@ export default function TicketComments({
         setTicketComments(response.content);
       } catch (error) {
         console.error("Error loading ticket comments:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading ticket comments.");
       } finally {
         setLoading(false);
       }
@@ -62,6 +75,17 @@ export default function TicketComments({
       <Typography variant="h6">Comments</Typography>
 
       <Divider sx={{ my: 2 }} />
+
+      {errorMessage && (
+        <Alert
+          severity="error"
+          sx={{
+            mb: 2,
+          }}
+        >
+          {errorMessage}
+        </Alert>
+      )}
 
       {loading ? (
         <PageLoading />

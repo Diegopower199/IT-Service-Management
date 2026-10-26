@@ -13,6 +13,7 @@ import {
   DialogTitle,
   Divider,
   FormControl,
+  FormHelperText,
   InputLabel,
   MenuItem,
   Select,
@@ -22,9 +23,13 @@ import {
 } from "@mui/material";
 
 import type { PriorityResponse } from "@/types/priorityTypes";
+
 import { changeTicketPriority } from "../../services/ticketService";
-import { formatEnumName, getPriorityColor } from "@/utils/ticketUiUtils";
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
+
+import { formatEnumName, getPriorityColor } from "@/utils/ticketUiUtils";
+
+import { getApiError } from "@/utils/apiErrorUtils";
 
 interface ChangeTicketPriorityDialogProps {
   open: boolean;
@@ -42,18 +47,28 @@ export default function ChangeTicketPriorityDialog({
   onTicketUpdated,
 }: ChangeTicketPriorityDialogProps) {
   const [priorities, setPriorities] = useState<PriorityResponse[]>([]);
+
   const [selectedPriorityId, setSelectedPriorityId] = useState("");
+
   const [saving, setSaving] = useState(false);
+
+  const [priorityError, setPriorityError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const loadPriorities = async () => {
       try {
+        setErrorMessage("");
+
         const response = await getAllActivePriorities();
 
         setPriorities(response);
       } catch (error) {
         console.error("Error loading priorities:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading priorities.");
       }
     };
 
@@ -62,12 +77,17 @@ export default function ChangeTicketPriorityDialog({
 
   const handlePriorityChange = (event: SelectChangeEvent) => {
     setSelectedPriorityId(event.target.value);
+
+    setPriorityError("");
     setErrorMessage("");
   };
 
   const handleClose = () => {
     setSelectedPriorityId("");
+
+    setPriorityError("");
     setErrorMessage("");
+
     onClose();
   };
 
@@ -81,6 +101,8 @@ export default function ChangeTicketPriorityDialog({
 
     try {
       setSaving(true);
+
+      setPriorityError("");
       setErrorMessage("");
 
       await changeTicketPriority(ticketId, {
@@ -88,11 +110,20 @@ export default function ChangeTicketPriorityDialog({
       });
 
       onTicketUpdated();
+
       handleClose();
     } catch (error) {
       console.error("Error changing ticket priority:", error);
 
-      setErrorMessage("Error changing ticket priority.");
+      const apiError = getApiError(error);
+
+      if (apiError?.errors?.priorityId) {
+        setPriorityError(apiError.errors.priorityId);
+
+        return;
+      }
+
+      setErrorMessage(apiError?.message ?? "Error changing ticket priority.");
     } finally {
       setSaving(false);
     }
@@ -112,8 +143,21 @@ export default function ChangeTicketPriorityDialog({
         },
       }}
     >
-      <DialogTitle component="div" sx={{ px: 3, pt: 3, pb: 2 }}>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+      <DialogTitle
+        component="div"
+        sx={{
+          px: 3,
+          pt: 3,
+          pb: 2,
+        }}
+      >
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            fontWeight: 600,
+          }}
+        >
           Change Ticket Priority
         </Typography>
 
@@ -121,7 +165,10 @@ export default function ChangeTicketPriorityDialog({
           variant="body2"
           component="p"
           color="text.secondary"
-          sx={{ mt: 0.5, mb: 0 }}
+          sx={{
+            mt: 0.5,
+            mb: 0,
+          }}
         >
           Update the priority for ticket #{ticketId}.
         </Typography>
@@ -171,13 +218,14 @@ export default function ChangeTicketPriorityDialog({
               Select new priority
             </Typography>
 
-            <FormControl fullWidth>
+            <FormControl fullWidth error={Boolean(priorityError)}>
               <InputLabel>Priority</InputLabel>
 
               <Select
                 value={selectedPriorityId || String(currentPriority.idPriority)}
                 label="Priority"
                 onChange={handlePriorityChange}
+                disabled={saving}
                 sx={{
                   borderRadius: 2,
                 }}
@@ -213,6 +261,10 @@ export default function ChangeTicketPriorityDialog({
                   </MenuItem>
                 ))}
               </Select>
+
+              {priorityError && (
+                <FormHelperText>{priorityError}</FormHelperText>
+              )}
             </FormControl>
           </Box>
 

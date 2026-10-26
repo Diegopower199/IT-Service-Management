@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
-import { Typography } from "@mui/material";
+import { Alert, Typography } from "@mui/material";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
 import {
   DATA_GRID_LOCALE_TEXT,
@@ -11,9 +12,11 @@ import {
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
 
-import { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
+import { getApiError } from "@/utils/apiErrorUtils";
+
+import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
+
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 interface TicketHistoryContentProps {
   ticketId: number;
@@ -35,10 +38,13 @@ export default function TicketHistoryContent({
 
   const [loading, setLoading] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState("");
+
   useEffect(() => {
     const loadTicketHistory = async () => {
       try {
         setLoading(true);
+        setErrorMessage("");
 
         const response = await getAllTicketHistoryById(
           ticketId,
@@ -51,6 +57,10 @@ export default function TicketHistoryContent({
         setTotalElements(response.totalElements);
       } catch (error) {
         console.error("Error loading ticket history:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading ticket history.");
       } finally {
         setLoading(false);
       }
@@ -108,6 +118,12 @@ export default function TicketHistoryContent({
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Ticket #{ticketId}
       </Typography>
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
 
       <DataGrid
         rows={ticketHistory}

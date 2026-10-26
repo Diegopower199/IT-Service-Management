@@ -9,7 +9,7 @@ import {
   type GridColDef,
 } from "@mui/x-data-grid";
 
-import { Chip } from "@mui/material";
+import { Alert, Chip } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -35,6 +35,8 @@ import UserForm from "../form/UserForm";
 import Button from "@/components/ui/Button";
 import PageLoading from "@/components/ui/PageLoading";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+
 export default function UsersContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
@@ -42,6 +44,8 @@ export default function UsersContent() {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [showForm, setShowForm] = useState(false);
 
@@ -74,6 +78,7 @@ export default function UsersContent() {
     const loadUsers = async () => {
       try {
         setLoading(true);
+        setErrorMessage("");
 
         const response = await getAllUsers(
           paginationModel.page,
@@ -85,6 +90,10 @@ export default function UsersContent() {
         setTotalElements(response.totalElements);
       } catch (error) {
         console.error("Error loading users:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading users.");
       } finally {
         setLoading(false);
       }
@@ -230,6 +239,17 @@ export default function UsersContent() {
       <Button onClick={handleCreateUser}>
         Create User <AddIcon />
       </Button>
+
+      {errorMessage && (
+        <Alert
+          severity="error"
+          sx={{
+            my: 2,
+          }}
+        >
+          {errorMessage}
+        </Alert>
+      )}
 
       <DataGrid
         rows={users}

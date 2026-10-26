@@ -24,6 +24,7 @@ import { USER_ROLES } from "@/types/roleTypes";
 import type { TicketCommentResponse } from "@/types/ticketCommentTypes";
 
 import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
+import { getApiError } from "@/utils/apiErrorUtils";
 
 import {
   createTicketComment,
@@ -67,6 +68,7 @@ export default function TicketCommentsContent({
     Partial<Record<keyof CommentForm, string>>
   >({});
 
+  const [loadErrorMessage, setLoadErrorMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const canCreateInternalComment =
@@ -76,6 +78,7 @@ export default function TicketCommentsContent({
     const loadTicketComments = async () => {
       try {
         setLoading(true);
+        setLoadErrorMessage("");
 
         const response = await getAllTicketsCommentsById(
           ticketId,
@@ -88,7 +91,12 @@ export default function TicketCommentsContent({
         setTotalElements(response.totalElements);
       } catch (error) {
         console.error("Error loading ticket comments:", error);
-        setErrorMessage("Error loading ticket comments.");
+
+        const apiError = getApiError(error);
+
+        setLoadErrorMessage(
+          apiError?.message ?? "Error loading ticket comments.",
+        );
       } finally {
         setLoading(false);
       }
@@ -147,6 +155,7 @@ export default function TicketCommentsContent({
     try {
       setSavingComment(true);
       setErrorMessage("");
+      setRequiredFieldsIncomplete({});
 
       await createTicketComment(ticketId, {
         comment: formData.comment,
@@ -180,24 +189,44 @@ export default function TicketCommentsContent({
       } else {
         /*
          * If we are already on the last page,
-         * paginationModel would not change.
+         * paginationModel does not change.
          *
-         * Therefore, we reload the current page manually
-         * so the new comment appears immediately.
+         * Therefore, reload the current page manually.
          */
-        const response = await getAllTicketsCommentsById(
-          ticketId,
-          lastPage,
-          paginationModel.pageSize,
-          DEFAULT_TICKET_COMMENTS_SORT,
-        );
+        try {
+          const response = await getAllTicketsCommentsById(
+            ticketId,
+            lastPage,
+            paginationModel.pageSize,
+            DEFAULT_TICKET_COMMENTS_SORT,
+          );
 
-        setTicketComments(response.content);
-        setTotalElements(response.totalElements);
+          setTicketComments(response.content);
+          setTotalElements(response.totalElements);
+        } catch (error) {
+          console.error("Error reloading ticket comments:", error);
+
+          const apiError = getApiError(error);
+
+          setLoadErrorMessage(
+            apiError?.message ?? "Error reloading ticket comments.",
+          );
+        }
       }
     } catch (error) {
       console.error("Error creating ticket comment:", error);
-      setErrorMessage("Error creating comment.");
+
+      const apiError = getApiError(error);
+
+      if (apiError?.errors?.comment) {
+        setRequiredFieldsIncomplete({
+          comment: apiError.errors.comment,
+        });
+
+        return;
+      }
+
+      setErrorMessage(apiError?.message ?? "Error creating comment.");
     } finally {
       setSavingComment(false);
     }
@@ -212,6 +241,17 @@ export default function TicketCommentsContent({
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Ticket #{ticketId}
       </Typography>
+
+      {loadErrorMessage && (
+        <Alert
+          severity="error"
+          sx={{
+            mb: 2,
+          }}
+        >
+          {loadErrorMessage}
+        </Alert>
+      )}
 
       {loading ? (
         <Typography color="text.secondary">Loading comments...</Typography>
@@ -277,6 +317,7 @@ export default function TicketCommentsContent({
             onChange={handleFormChange}
             error={Boolean(requiredFieldsIncomplete.comment)}
             helperText={requiredFieldsIncomplete.comment}
+            disabled={savingComment}
           />
 
           {canCreateInternalComment && (
@@ -286,6 +327,7 @@ export default function TicketCommentsContent({
                   name="internal"
                   checked={formData.internal}
                   onChange={handleFormChange}
+                  disabled={savingComment}
                 />
               }
               label="Internal comment"
