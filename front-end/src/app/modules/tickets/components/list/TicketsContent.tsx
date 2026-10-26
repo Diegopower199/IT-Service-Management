@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { Alert, Chip } from "@mui/material";
+
 import {
   DataGrid,
   GridActionsCellItem,
@@ -36,22 +38,24 @@ import {
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
 
-import TicketForm from "../form/TicketForm";
-
-import Button from "@/components/ui/Button";
-import PageLoading from "@/components/ui/PageLoading";
-import TicketDetails from "../details/TicketDetails";
-import { Chip } from "@mui/material";
 import {
   formatEnumName,
   getPriorityColor,
   getStatusColor,
 } from "@/utils/ticketUiUtils";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+
+import TicketForm from "../form/TicketForm";
+import TicketDetails from "../details/TicketDetails";
+
+import Button from "@/components/ui/Button";
+import PageLoading from "@/components/ui/PageLoading";
+
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();
-  const router = useRouter();
 
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const statusFilter = searchParams.get("status");
@@ -60,6 +64,8 @@ export default function TicketsContent() {
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -90,6 +96,7 @@ export default function TicketsContent() {
     const loadTickets = async () => {
       try {
         setLoading(true);
+        setErrorMessage("");
 
         let response;
 
@@ -123,6 +130,10 @@ export default function TicketsContent() {
         setTotalElements(response.totalElements);
       } catch (error) {
         console.error("Error loading tickets:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading tickets.");
       } finally {
         setLoading(false);
       }
@@ -143,12 +154,16 @@ export default function TicketsContent() {
     setSelectedTicket(null);
     setFormMode(FORM_MODES.CREATE);
 
+    setErrorMessage("");
+
     setShowDetails(false);
     setShowForm(true);
   };
 
   const handleViewTicket = (ticket: TicketResponse) => {
     setSelectedTicket(ticket);
+
+    setErrorMessage("");
 
     setShowForm(false);
     setShowDetails(true);
@@ -157,6 +172,8 @@ export default function TicketsContent() {
   const handleEditTicket = (ticket: TicketResponse) => {
     setSelectedTicket(ticket);
     setFormMode(FORM_MODES.EDIT);
+
+    setErrorMessage("");
 
     setShowDetails(false);
     setShowForm(true);
@@ -169,11 +186,13 @@ export default function TicketsContent() {
   const handleCloseForm = () => {
     setShowForm(false);
     setSelectedTicket(null);
+    setErrorMessage("");
   };
 
   const handleCloseDetails = () => {
     setShowDetails(false);
     setSelectedTicket(null);
+    setErrorMessage("");
   };
 
   const handleTicketUpdated = async () => {
@@ -182,6 +201,8 @@ export default function TicketsContent() {
     }
 
     try {
+      setErrorMessage("");
+
       const updatedTicket = await getTicketById(selectedTicket.idTicket);
 
       setSelectedTicket(updatedTicket);
@@ -189,6 +210,10 @@ export default function TicketsContent() {
       setTicketsUpdated((previous) => !previous);
     } catch (error) {
       console.error("Error updating ticket details:", error);
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? "Error updating ticket details.");
     }
   };
 
@@ -272,13 +297,21 @@ export default function TicketsContent() {
 
   if (showDetails && selectedTicket) {
     return (
-      <TicketDetails
-        ticket={selectedTicket}
-        userRole={user.rol}
-        onClose={handleCloseDetails}
-        onEdit={() => handleEditTicket(selectedTicket)}
-        onTicketUpdated={handleTicketUpdated}
-      />
+      <>
+        {errorMessage && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
+
+        <TicketDetails
+          ticket={selectedTicket}
+          userRole={user.rol}
+          onClose={handleCloseDetails}
+          onEdit={() => handleEditTicket(selectedTicket)}
+          onTicketUpdated={handleTicketUpdated}
+        />
+      </>
     );
   }
 
@@ -306,6 +339,12 @@ export default function TicketsContent() {
       <Button onClick={handleCreateTicket}>
         Create Ticket <AddIcon />
       </Button>
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ my: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
 
       <DataGrid
         rows={tickets}

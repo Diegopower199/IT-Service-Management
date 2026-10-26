@@ -13,6 +13,7 @@ import {
   DialogTitle,
   Divider,
   FormControl,
+  FormHelperText,
   InputLabel,
   MenuItem,
   Select,
@@ -24,8 +25,11 @@ import {
 import type { StatusResponse } from "@/types/statusTypes";
 
 import { changeTicketStatus } from "../../services/ticketService";
-import { formatEnumName, getStatusColor } from "@/utils/ticketUiUtils";
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
+
+import { formatEnumName, getStatusColor } from "@/utils/ticketUiUtils";
+
+import { getApiError } from "@/utils/apiErrorUtils";
 
 interface ChangeTicketStatusDialogProps {
   open: boolean;
@@ -43,18 +47,28 @@ export default function ChangeTicketStatusDialog({
   onTicketUpdated,
 }: ChangeTicketStatusDialogProps) {
   const [statuses, setStatuses] = useState<StatusResponse[]>([]);
+
   const [selectedStatusId, setSelectedStatusId] = useState("");
+
   const [saving, setSaving] = useState(false);
+
+  const [statusError, setStatusError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const loadStatuses = async () => {
       try {
+        setErrorMessage("");
+
         const response = await getAllActiveStatuses();
 
         setStatuses(response);
       } catch (error) {
         console.error("Error loading statuses:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading statuses.");
       }
     };
 
@@ -63,12 +77,17 @@ export default function ChangeTicketStatusDialog({
 
   const handleStatusChange = (event: SelectChangeEvent) => {
     setSelectedStatusId(event.target.value);
+
+    setStatusError("");
     setErrorMessage("");
   };
 
   const handleClose = () => {
     setSelectedStatusId("");
+
+    setStatusError("");
     setErrorMessage("");
+
     onClose();
   };
 
@@ -82,6 +101,8 @@ export default function ChangeTicketStatusDialog({
 
     try {
       setSaving(true);
+
+      setStatusError("");
       setErrorMessage("");
 
       await changeTicketStatus(ticketId, {
@@ -89,11 +110,20 @@ export default function ChangeTicketStatusDialog({
       });
 
       onTicketUpdated();
+
       handleClose();
     } catch (error) {
       console.error("Error changing ticket status:", error);
 
-      setErrorMessage("Error changing ticket status.");
+      const apiError = getApiError(error);
+
+      if (apiError?.errors?.statusId) {
+        setStatusError(apiError.errors.statusId);
+
+        return;
+      }
+
+      setErrorMessage(apiError?.message ?? "Error changing ticket status.");
     } finally {
       setSaving(false);
     }
@@ -113,8 +143,21 @@ export default function ChangeTicketStatusDialog({
         },
       }}
     >
-      <DialogTitle component="div" sx={{ px: 3, pt: 3, pb: 2 }}>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+      <DialogTitle
+        component="div"
+        sx={{
+          px: 3,
+          pt: 3,
+          pb: 2,
+        }}
+      >
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            fontWeight: 600,
+          }}
+        >
           Change Ticket Status
         </Typography>
 
@@ -122,7 +165,10 @@ export default function ChangeTicketStatusDialog({
           variant="body2"
           component="p"
           color="text.secondary"
-          sx={{ mt: 0.5, mb: 0 }}
+          sx={{
+            mt: 0.5,
+            mb: 0,
+          }}
         >
           Update the workflow status for ticket #{ticketId}.
         </Typography>
@@ -172,13 +218,14 @@ export default function ChangeTicketStatusDialog({
               Select new status
             </Typography>
 
-            <FormControl fullWidth>
+            <FormControl fullWidth error={Boolean(statusError)}>
               <InputLabel>Status</InputLabel>
 
               <Select
                 value={selectedStatusId || String(currentStatus.idStatus)}
                 label="Status"
                 onChange={handleStatusChange}
+                disabled={saving}
                 sx={{
                   borderRadius: 2,
                 }}
@@ -211,6 +258,8 @@ export default function ChangeTicketStatusDialog({
                   </MenuItem>
                 ))}
               </Select>
+
+              {statusError && <FormHelperText>{statusError}</FormHelperText>}
             </FormControl>
           </Box>
 

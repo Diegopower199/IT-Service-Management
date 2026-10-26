@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 
 import {
   Alert,
@@ -18,13 +17,13 @@ import {
 import type { UserResponse } from "@/types/userTypes";
 import type { RoleResponse } from "@/types/roleTypes";
 import type { DepartmentResponse } from "@/types/departmentTypes";
-import type { ValidationErrors } from "@/types/apiTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { createUser, updateUser } from "../../services/userService";
 import { getAllActiveRoles } from "@/app/modules/roles/services/rolesService";
 import { getAllActiveDepartments } from "@/app/modules/departments/services/departmentService";
+import { getApiError } from "@/utils/apiErrorUtils";
 
 interface UserFormProps {
   formMode: FormMode;
@@ -257,10 +256,19 @@ export default function UserForm({
     } catch (error) {
       console.error("Error saving user:", error);
 
+      const apiError = getApiError(error);
+
+      if (apiError?.errors) {
+        setRequiredFieldsIncomplete(apiError.errors);
+
+        return;
+      }
+
       setErrorMessage(
-        formMode === FORM_MODES.CREATE
-          ? "Error creating user."
-          : "Error updating user.",
+        apiError?.message ??
+          (formMode === FORM_MODES.CREATE
+            ? "Error creating user."
+            : "Error updating user."),
       );
     } finally {
       setLoading(false);

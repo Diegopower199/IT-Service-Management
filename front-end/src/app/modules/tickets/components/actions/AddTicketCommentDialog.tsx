@@ -23,6 +23,8 @@ import { USER_ROLES } from "@/types/roleTypes";
 
 import { createTicketComment } from "../../services/ticketCommentsService";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+
 interface AddTicketCommentDialogProps {
   open: boolean;
   ticketId: number;
@@ -109,6 +111,7 @@ export default function AddTicketCommentDialog({
     try {
       setSavingComment(true);
       setErrorMessage("");
+      setRequiredFieldsIncomplete({});
 
       await createTicketComment(ticketId, {
         comment: formData.comment,
@@ -124,7 +127,17 @@ export default function AddTicketCommentDialog({
     } catch (error) {
       console.error("Error creating ticket comment:", error);
 
-      setErrorMessage("Error creating comment.");
+      const apiError = getApiError(error);
+
+      if (apiError?.errors) {
+        setRequiredFieldsIncomplete({
+          comment: apiError.errors.comment,
+        });
+
+        return;
+      }
+
+      setErrorMessage(apiError?.message ?? "Error creating comment.");
     } finally {
       setSavingComment(false);
     }
@@ -144,7 +157,14 @@ export default function AddTicketCommentDialog({
         },
       }}
     >
-      <DialogTitle component="div" sx={{ px: 3, pt: 3, pb: 2 }}>
+      <DialogTitle
+        component="div"
+        sx={{
+          px: 3,
+          pt: 3,
+          pb: 2,
+        }}
+      >
         <Typography
           variant="h5"
           component="h2"

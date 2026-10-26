@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import dayjs from "dayjs";
 
-import { Box, Button, Divider, Paper, Typography } from "@mui/material";
+import { Alert, Box, Button, Divider, Paper, Typography } from "@mui/material";
 
 import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 
 import { DEFAULT_TICKET_HISTORY_SORT } from "@/utils/constans";
+import { getApiError } from "@/utils/apiErrorUtils";
 
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
+
 import PageLoading from "@/components/ui/PageLoading";
-import { useRouter } from "next/navigation";
 
 interface TicketHistoryProps {
   ticketId: number;
@@ -30,10 +33,13 @@ export default function TicketHistory({
 
   const [loading, setLoading] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState("");
+
   useEffect(() => {
     const loadTicketHistory = async () => {
       try {
         setLoading(true);
+        setErrorMessage("");
 
         const response = await getAllTicketHistoryById(
           ticketId,
@@ -45,6 +51,10 @@ export default function TicketHistory({
         setTicketHistory(response.content);
       } catch (error) {
         console.error("Error loading ticket history:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading ticket history.");
       } finally {
         setLoading(false);
       }
@@ -64,6 +74,17 @@ export default function TicketHistory({
       <Typography variant="h6">History</Typography>
 
       <Divider sx={{ my: 2 }} />
+
+      {errorMessage && (
+        <Alert
+          severity="error"
+          sx={{
+            mb: 2,
+          }}
+        >
+          {errorMessage}
+        </Alert>
+      )}
 
       {loading ? (
         <PageLoading />
@@ -89,7 +110,12 @@ export default function TicketHistory({
             </Typography>
 
             {history.fieldName && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 1,
+                }}
+              >
                 Field: {history.fieldName}
               </Typography>
             )}
@@ -119,7 +145,7 @@ export default function TicketHistory({
           variant="outlined"
           onClick={() => router.push(`/tickets/${ticketId}/history`)}
         >
-          View all comments
+          View all history
         </Button>
       )}
     </Paper>

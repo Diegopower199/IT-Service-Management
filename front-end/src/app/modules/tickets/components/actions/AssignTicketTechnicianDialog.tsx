@@ -13,6 +13,7 @@ import {
   DialogTitle,
   Divider,
   FormControl,
+  FormHelperText,
   InputLabel,
   MenuItem,
   Select,
@@ -22,8 +23,11 @@ import {
 } from "@mui/material";
 
 import type { UserSummaryResponse } from "@/types/userTypes";
+
 import { assignTicketTechnician } from "../../services/ticketService";
 import { getAllTechnicians } from "@/app/modules/users/services/userService";
+
+import { getApiError } from "@/utils/apiErrorUtils";
 
 interface AssignTicketTechnicianDialogProps {
   open: boolean;
@@ -41,19 +45,28 @@ export default function AssignTicketTechnicianDialog({
   onTicketUpdated,
 }: AssignTicketTechnicianDialogProps) {
   const [technicians, setTechnicians] = useState<UserSummaryResponse[]>([]);
+
   const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
+
   const [saving, setSaving] = useState(false);
+
+  const [technicianError, setTechnicianError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const loadTechnicians = async () => {
       try {
+        setErrorMessage("");
+
         const response = await getAllTechnicians();
 
         setTechnicians(response);
       } catch (error) {
         console.error("Error loading technicians:", error);
-        setErrorMessage("Error loading technicians.");
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading technicians.");
       }
     };
 
@@ -62,12 +75,17 @@ export default function AssignTicketTechnicianDialog({
 
   const handleTechnicianChange = (event: SelectChangeEvent) => {
     setSelectedTechnicianId(event.target.value);
+
+    setTechnicianError("");
     setErrorMessage("");
   };
 
   const handleClose = () => {
     setSelectedTechnicianId("");
+
+    setTechnicianError("");
     setErrorMessage("");
+
     onClose();
   };
 
@@ -81,6 +99,8 @@ export default function AssignTicketTechnicianDialog({
 
     try {
       setSaving(true);
+
+      setTechnicianError("");
       setErrorMessage("");
 
       await assignTicketTechnician(ticketId, {
@@ -88,11 +108,20 @@ export default function AssignTicketTechnicianDialog({
       });
 
       onTicketUpdated();
+
       handleClose();
     } catch (error) {
       console.error("Error assigning technician:", error);
 
-      setErrorMessage("Error assigning technician.");
+      const apiError = getApiError(error);
+
+      if (apiError?.errors?.assignedToId) {
+        setTechnicianError(apiError.errors.assignedToId);
+
+        return;
+      }
+
+      setErrorMessage(apiError?.message ?? "Error assigning technician.");
     } finally {
       setSaving(false);
     }
@@ -112,8 +141,21 @@ export default function AssignTicketTechnicianDialog({
         },
       }}
     >
-      <DialogTitle component="div" sx={{ px: 3, pt: 3, pb: 2 }}>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+      <DialogTitle
+        component="div"
+        sx={{
+          px: 3,
+          pt: 3,
+          pb: 2,
+        }}
+      >
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{
+            fontWeight: 600,
+          }}
+        >
           Assign Technician
         </Typography>
 
@@ -121,7 +163,10 @@ export default function AssignTicketTechnicianDialog({
           variant="body2"
           component="p"
           color="text.secondary"
-          sx={{ mt: 0.5, mb: 0 }}
+          sx={{
+            mt: 0.5,
+            mb: 0,
+          }}
         >
           Assign a technician to ticket #{ticketId}.
         </Typography>
@@ -178,7 +223,7 @@ export default function AssignTicketTechnicianDialog({
               Select technician
             </Typography>
 
-            <FormControl fullWidth>
+            <FormControl fullWidth error={Boolean(technicianError)}>
               <InputLabel>Technician</InputLabel>
 
               <Select
@@ -188,6 +233,7 @@ export default function AssignTicketTechnicianDialog({
                 }
                 label="Technician"
                 onChange={handleTechnicianChange}
+                disabled={saving}
                 sx={{
                   borderRadius: 2,
                 }}
@@ -198,6 +244,10 @@ export default function AssignTicketTechnicianDialog({
                   </MenuItem>
                 ))}
               </Select>
+
+              {technicianError && (
+                <FormHelperText>{technicianError}</FormHelperText>
+              )}
             </FormControl>
           </Box>
 
