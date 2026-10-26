@@ -11,6 +11,7 @@ import com.example.back_end.dtos.department.DepartmentResponse;
 import com.example.back_end.dtos.rol.RolResponse;
 import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
+import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
 import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.enums.RoleName;
@@ -89,7 +90,7 @@ public class UserService {
     }
 
     public UserResponse updateUser(
-            CreateUserRequest request,
+            UpdateUserRequest request,
             Long userId) {
 
         UserModel existingUser = userRepository.findById(userId)
