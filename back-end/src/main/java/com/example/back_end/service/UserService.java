@@ -11,6 +11,7 @@ import com.example.back_end.dtos.department.DepartmentResponse;
 import com.example.back_end.dtos.rol.RolResponse;
 import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
+import com.example.back_end.dtos.user.UpdateProfileRequest;
 import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
 import com.example.back_end.dtos.user.UserSummaryResponse;
@@ -48,6 +49,15 @@ public class UserService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User with id " + userId + " not found"));
+
+        return convertToResponse(user);
+    }
+
+    public UserResponse getCurrentUser(String username) {
+
+        UserModel user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User with username '" + username + "' not found"));
 
         return convertToResponse(user);
     }
@@ -132,13 +142,37 @@ public class UserService {
         return convertToResponse(updatedUser);
     }
 
+    public UserResponse updateCurrentUser(
+            String username,
+            UpdateProfileRequest request) {
+
+        UserModel existingUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User with username '" + username + "' not found"));
+
+        if (!existingUser.getEmail().equals(request.getEmail())
+                && userRepository.existsByEmail(request.getEmail())) {
+
+            throw new ResourceAlreadyExistsException(
+                    "Email '" + request.getEmail() + "' already exists");
+        }
+
+        existingUser.setEmail(request.getEmail());
+        existingUser.setFirstName(request.getFirstName());
+        existingUser.setLastName(request.getLastName());
+
+        UserModel updatedUser = userRepository.save(existingUser);
+
+        return convertToResponse(updatedUser);
+    }
+
     public void changePassword(
-            Long userId,
+            String username,
             ChangePasswordRequest request) {
 
-        UserModel user = userRepository.findById(userId)
+        UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "User with id " + userId + " not found"));
+                        "User with username '" + username + "' not found"));
 
         if (!passwordEncoder.matches(
                 request.getCurrentPassword(),
@@ -148,9 +182,8 @@ public class UserService {
                     "Current password is incorrect");
         }
 
-        String newEncodedPassword = passwordEncoder.encode(request.getNewPassword());
-
-        user.setPassword(newEncodedPassword);
+        user.setPassword(
+                passwordEncoder.encode(request.getNewPassword()));
 
         userRepository.save(user);
     }

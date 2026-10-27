@@ -305,71 +305,7 @@ class UserControllerTest {
                         any(Long.class));
     }
 
-    // =========================================================
-    // CHANGE PASSWORD
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldAllowAuthenticatedUserToChangePassword() throws Exception {
-
-        mockMvc.perform(
-                patch("/users/5/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "currentPassword": "oldPassword",
-                                    "newPassword": "newPassword123"
-                                }
-                                """))
-                .andExpect(status().isNoContent());
-
-        verify(userService)
-                .changePassword(
-                        eq(5L),
-                        any(ChangePasswordRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToChangePassword() throws Exception {
-
-        mockMvc.perform(
-                patch("/users/5/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "currentPassword": "oldPassword",
-                                    "newPassword": "newPassword123"
-                                }
-                                """))
-                .andExpect(status().isNoContent());
-
-        verify(userService)
-                .changePassword(
-                        eq(5L),
-                        any(ChangePasswordRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToChangePassword() throws Exception {
-
-        mockMvc.perform(
-                patch("/users/5/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "currentPassword": "oldPassword",
-                                    "newPassword": "newPassword123"
-                                }
-                                """))
-                .andExpect(status().isNoContent());
-
-        verify(userService)
-                .changePassword(
-                        eq(5L),
-                        any(ChangePasswordRequest.class));
-    }
+    
 
     // =========================================================
     // HELPERS

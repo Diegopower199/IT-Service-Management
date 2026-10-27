@@ -1,9 +1,29 @@
-import { DepartmentResponse } from "./departmentTypes";
-import { RoleResponse } from "./roleTypes";
+import type { DepartmentResponse } from "./departmentTypes";
+import type { RoleResponse } from "./roleTypes";
 
-export interface UserSummaryResponse {
-  idUser: number;
+export interface CreateUserRequest {
   username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  idRol: number;
+  idDepartment: number;
+}
+
+export interface UpdateUserRequest {
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  idRol: number;
+  idDepartment: number;
+  enabled: boolean;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface UserResponse {
@@ -14,26 +34,16 @@ export interface UserResponse {
   lastName: string;
   enabled: boolean;
   rol: RoleResponse;
-  department: DepartmentResponse | null;
+  department: DepartmentResponse;
 }
 
-export interface CreateUserRequest {
+export interface UserSummaryResponse {
+  idUser: number;
   username: string;
-  password: string;
+}
+
+export interface UpdateProfileRequest {
   email: string;
   firstName: string;
   lastName: string;
-  rolId: number;
-  departmentId: number;
-  enabled: boolean;
-}
-
-export interface UpdateUserRequest {
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  rolId: number;
-  departmentId: number;
-  enabled: boolean;
 }
