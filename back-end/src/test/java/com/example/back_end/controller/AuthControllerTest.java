@@ -19,9 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.auth.AuthLoginResponse;
-import com.example.back_end.dtos.auth.AuthRegisterResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
-import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.security.JwtAuthenticationFilter;
 import com.example.back_end.security.JwtService;
 import com.example.back_end.service.AuthService;
@@ -92,44 +90,4 @@ class AuthControllerTest {
                         any(LoginRequest.class));
     }
 
-    // =========================================================
-    // REGISTER
-    // =========================================================
-    @Test
-    void shouldRegisterSuccessfully()
-            throws Exception {
-
-        AuthRegisterResponse response = new AuthRegisterResponse(
-                "jwt-token");
-
-        when(authService.register(
-                any(RegisterRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                post("/api/v1/auth/register")
-                        .servletPath("/api/v1")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "username": "ana",
-                                    "email": "ana@example.com",
-                                    "password": "password123",
-                                    "firstName": "Ana",
-                                    "lastName": "Garcia",
-                                    "rol": 3,
-                                    "department": 1
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.token")
-                                .value("jwt-token"));
-
-        verify(authService)
-                .register(
-                        any(RegisterRequest.class));
-    }
 }

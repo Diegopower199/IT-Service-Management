@@ -10,13 +10,3 @@ export interface AuthResponse {
   username: string;
   rol: UserRole;
 }
-
-export interface RegisterRequest {
-  username: string;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  rol: number;
-  department: number;
-}

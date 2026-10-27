@@ -13,19 +13,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.back_end.repository.UserRepository;
 
-
 /**
- * Configuracion de los componentes utilizados durante la autenticacion.
+ * Configures the authentication-related components used by Spring Security.
  *
  * <p>
- * Aqui se registran como beans:
+ * This configuration registers the main authentication beans required by
+ * the application:
  * </p>
+ *
  * <ul>
- * <li>{@link AuthenticationManager}: inicia el proceso de autenticacion.</li>
- * <li>{@link AuthenticationProvider}: comprueba usuario y password.</li>
- * <li>{@link PasswordEncoder}: cifra y compara passwords con BCrypt.</li>
- * <li>{@link UserDetailsService}: carga usuarios desde la base de datos.</li>
- * 
+ * <li>{@link AuthenticationManager}: coordinates the authentication
+ * process.</li>
+ * <li>{@link AuthenticationProvider}: validates user credentials.</li>
+ * <li>{@link PasswordEncoder}: hashes and verifies passwords using BCrypt.</li>
+ * <li>{@link UserDetailsService}: loads users from the database.</li>
+ * </ul>
  */
 @Configuration
 public class ApplicationConfig {
@@ -37,32 +39,54 @@ public class ApplicationConfig {
     }
 
     /**
-     * Obtiene el AuthenticationManager creado por Spring Security.
+     * Provides the {@link AuthenticationManager} configured by Spring Security.
+     *
+     * <p>
+     * The authentication manager coordinates the available authentication
+     * providers when authenticating a user.
+     * </p>
+     *
+     * @param config the Spring Security authentication configuration
+     * @return the configured {@link AuthenticationManager}
+     * @throws Exception if the authentication manager cannot be created
      */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+
         return config.getAuthenticationManager();
     }
 
     /**
-     * Configura un proveedor de autenticacion basado en base de datos.
+     * Configures the authentication provider used to validate user credentials.
      *
      * <p>
-     * DaoAuthenticationProvider utiliza el UserDetailsService para encontrar
-     * al usuario y PasswordEncoder para comparar la password recibida con la
-     * password cifrada almacenada.
+     * {@link DaoAuthenticationProvider} uses the configured
+     * {@link UserDetailsService} to retrieve the user and the
+     * {@link PasswordEncoder} to compare the submitted password with the
+     * encrypted password stored in the database.
      * </p>
+     *
+     * @return the configured {@link AuthenticationProvider}
      */
     @Bean
     public AuthenticationProvider authenticationProvider() {
+
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(userDetailsService());
 
         authenticationProvider.setPasswordEncoder(passwordEncoder());
+
         return authenticationProvider;
     }
 
     /**
-     * Bean responsable de cifrar las passwords mediante BCrypt.
+     * Provides the password encoder used by the application.
+     *
+     * <p>
+     * Passwords are hashed and verified using the BCrypt algorithm.
+     * </p>
+     *
+     * @return the configured {@link PasswordEncoder}
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -70,11 +94,21 @@ public class ApplicationConfig {
     }
 
     /**
-     * Indica a Spring Security como localizar un usuario por username.
+     * Provides the service used by Spring Security to load users by username.
+     *
+     * <p>
+     * Users are retrieved from the application's user repository. If the
+     * username does not exist, Spring Security receives a
+     * {@link UsernameNotFoundException}.
+     * </p>
+     *
+     * @return the configured {@link UserDetailsService}
      */
     @Bean
     public UserDetailsService userDetailsService() {
+
         return username -> userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User with username '" + username + "' not found"));
     }
 }
