@@ -9,4 +9,5 @@ export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 export interface RoleResponse {
   idRol: number;
   name: string;
+  active: boolean;
 }
