@@ -23,8 +23,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -48,7 +47,6 @@ import {
 import { getApiError } from "@/utils/apiErrorUtils";
 
 import PageLoading from "@/components/ui/PageLoading";
-
 import DepartmentForm from "../form/DepartmentForm";
 
 export default function DepartmentsContent() {
@@ -234,13 +232,7 @@ export default function DepartmentsContent() {
 
         <GridActionsCellItem
           key="status"
-          icon={
-            row.active ? (
-              <ToggleOffIcon color="error" />
-            ) : (
-              <ToggleOnIcon color="success" />
-            )
-          }
+          icon={<ChangeCircleIcon />}
           label={row.active ? "Deactivate" : "Activate"}
           onClick={() => handleOpenStatusDialog(row)}
         />,
@@ -271,7 +263,7 @@ export default function DepartmentsContent() {
     <main>
       <h1>Departments</h1>
 
-      <Button onClick={handleCreateDepartment}>
+      <Button variant="contained" onClick={handleCreateDepartment}>
         Create Department <AddIcon />
       </Button>
 
