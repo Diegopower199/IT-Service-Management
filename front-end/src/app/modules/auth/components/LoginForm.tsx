@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { ApiErrorResponse } from "@/types/apiTypes";
 
 import { login } from "../services/authService";
-import type { LoginRequest } from "../types/authTypes";
+import type { LoginRequest } from "../../../../types/authTypes";
 
 interface RequiredFieldsErrors {
   username?: string;

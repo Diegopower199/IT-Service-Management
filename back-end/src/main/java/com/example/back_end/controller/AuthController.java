@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.back_end.dtos.auth.AuthLoginResponse;
-import com.example.back_end.dtos.auth.AuthRegisterResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
-import com.example.back_end.dtos.auth.RegisterRequest;
 import com.example.back_end.service.AuthService;
 import com.example.back_end.utils.GlobalConstants;
 
@@ -47,19 +45,4 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    /**
-     * Registra un nuevo usuario y devuelve su primer JWT.
-     *
-     * <p>
-     * Se mantiene tambien la ruta antigua {@code /registrer} para no romper
-     * clientes existentes, aunque la forma recomendada es {@code /register}.
-     * </p>
-     *
-     * @param request datos necesarios para crear el usuario
-     * @return token JWT
-     */
-    @PostMapping("/register")
-    public ResponseEntity<AuthRegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
-    }
 }

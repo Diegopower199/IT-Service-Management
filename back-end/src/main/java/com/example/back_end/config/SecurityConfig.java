@@ -23,11 +23,12 @@ import static org.springframework.security.web.servlet.util.matcher.PathPatternR
 import lombok.RequiredArgsConstructor;
 
 /**
- * Configuracion principal de seguridad HTTP.
+ * Main HTTP security configuration for the application.
  *
  * <p>
- * Define que endpoints son publicos, cuales requieren autenticacion y donde
- * se coloca el filtro JWT dentro de la cadena de filtros de Spring Security.
+ * Defines public and protected endpoints, configures stateless authentication
+ * using JWT, and registers the JWT authentication filter in the Spring Security
+ * filter chain.
  * </p>
  */
 @Configuration
@@ -40,32 +41,41 @@ public class SecurityConfig {
     private final AuthenticationProvider authProvider;
 
     /**
-     * Construye la cadena de seguridad aplicada a las peticiones HTTP.
+     * Configures the security filter chain applied to HTTP requests.
      *
      * <p>
-     * Configuracion actual:
+     * The current security configuration:
      * </p>
+     *
      * <ul>
-     * <li>CSRF desactivado, habitual en una API REST stateless con JWT.</li>
-     * <li>{@code /auth/**} es publico.</li>
-     * <li>Cualquier otra ruta requiere un usuario autenticado.</li>
-     * <li>No se mantienen sesiones HTTP en el servidor.</li>
-     * <li>El filtro JWT se ejecuta antes del filtro tradicional de
-     * usuario/password.</li>
+     * <li>Disables CSRF protection because the API uses stateless JWT
+     * authentication.</li>
+     * <li>Allows unauthenticated access only to {@code /auth/login}.</li>
+     * <li>Requires authentication for every other endpoint.</li>
+     * <li>Uses stateless session management, so no HTTP session is stored on the
+     * server.</li>
+     * <li>Registers the custom JWT authentication filter before
+     * {@link UsernamePasswordAuthenticationFilter}.</li>
      * </ul>
+     *
+     * @param http the {@link HttpSecurity} instance used to configure web security
+     * @return the configured {@link SecurityFilterChain}
+     * @throws Exception if the security configuration cannot be built
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        PathPatternRequestMatcher.Builder mvc = withDefaults().basePath("/api/v1");
+        PathPatternRequestMatcher.Builder mvc = withDefaults()
+                .basePath("/api/v1");
 
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authRequest -> authRequest
                         .requestMatchers(
-                                mvc.matcher("/auth/**"))
+                                mvc.matcher("/auth/login"))
                         .permitAll()
-                        .anyRequest().authenticated())
+                        .anyRequest()
+                        .authenticated())
                 .sessionManagement(sessionManager -> sessionManager
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
@@ -76,7 +86,15 @@ public class SecurityConfig {
     }
 
     /**
-     * Configura CORS para permitir peticiones desde el front-end.
+     * Configures Cross-Origin Resource Sharing (CORS) for the application.
+     *
+     * <p>
+     * Requests are allowed only from the configured front-end origin.
+     * The configuration permits the HTTP methods and headers required by the
+     * REST API and JWT authentication.
+     * </p>
+     *
+     * @return the configured {@link UrlBasedCorsConfigurationSource}
      */
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {

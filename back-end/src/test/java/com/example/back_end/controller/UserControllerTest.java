@@ -6,7 +6,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,7 +30,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.department.DepartmentResponse;
 import com.example.back_end.dtos.rol.RolResponse;
-import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
@@ -304,8 +302,6 @@ class UserControllerTest {
                         any(UpdateUserRequest.class),
                         any(Long.class));
     }
-
-    
 
     // =========================================================
     // HELPERS
