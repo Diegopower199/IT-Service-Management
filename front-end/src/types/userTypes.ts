@@ -7,8 +7,9 @@ export interface CreateUserRequest {
   password: string;
   firstName: string;
   lastName: string;
-  idRol: number;
-  idDepartment: number;
+  rolId: number;
+  departmentId: number;
+  enabled: boolean;
 }
 
 export interface UpdateUserRequest {
@@ -16,8 +17,8 @@ export interface UpdateUserRequest {
   email: string;
   firstName: string;
   lastName: string;
-  idRol: number;
-  idDepartment: number;
+  rolId: number;
+  departmentId: number;
   enabled: boolean;
 }
 
