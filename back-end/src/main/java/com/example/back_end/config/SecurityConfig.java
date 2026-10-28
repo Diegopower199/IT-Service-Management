@@ -78,7 +78,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(authRequest -> authRequest
                         .requestMatchers(
-                                mvc.matcher("/auth/login"))
+                                mvc.matcher("/auth/login"),
+                                mvc.matcher("/auth/refresh"))
                         .permitAll()
                         .anyRequest()
                         .authenticated())

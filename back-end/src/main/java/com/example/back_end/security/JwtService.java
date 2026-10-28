@@ -32,21 +32,33 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private final String secretKey;
+    private final long accessTokenExpirationMinutes;
 
     /**
-     * Creates the JWT service using the configured signing key.
+     * Creates the JWT service using the configured signing key and access token
+     * expiration time.
      *
      * <p>
-     * The key is injected from the {@code jwt.secret} application property,
-     * which is expected to be provided through the {@code JWT_SECRET}
-     * environment variable.
+     * The signing key is injected from the {@code jwt.secret} application
+     * property, which is expected to be provided through the
+     * {@code JWT_SECRET} environment variable.
      * </p>
      *
-     * @param secretKey the Base64-encoded secret key used for JWT signing
+     * <p>
+     * The access token expiration time is injected from the
+     * {@code jwt.access-token-expiration-minutes} application property.
+     * </p>
+     *
+     * @param secretKey                    the Base64-encoded secret key used for
+     *                                     JWT signing
+     * @param accessTokenExpirationMinutes the access token lifetime in minutes
      */
     public JwtService(
-            @Value("${jwt.secret}") String secretKey) {
+            @Value("${jwt.secret}") String secretKey,
+            @Value("${jwt.access-token-expiration-minutes}") long accessTokenExpirationMinutes) {
+
         this.secretKey = secretKey;
+        this.accessTokenExpirationMinutes = accessTokenExpirationMinutes;
     }
 
     /**
@@ -81,8 +93,8 @@ public class JwtService {
                 .setExpiration(
                         Date.from(
                                 Instant.now().plus(
-                                        1,
-                                        ChronoUnit.HOURS)))
+                                        accessTokenExpirationMinutes,
+                                        ChronoUnit.MINUTES)))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
