@@ -100,7 +100,7 @@ export default function TicketsContent() {
 
         let response;
 
-        if (user.rol === USER_ROLES.ADMIN) {
+        if (user.role === USER_ROLES.ADMIN) {
           response = await getAllTickets(
             paginationModel.page,
             paginationModel.pageSize,
@@ -108,7 +108,7 @@ export default function TicketsContent() {
             statusFilter,
             priorityFilter,
           );
-        } else if (user.rol === USER_ROLES.TECHNICIAN) {
+        } else if (user.role === USER_ROLES.TECHNICIAN) {
           response = await getAssignedTickets(
             paginationModel.page,
             paginationModel.pageSize,
@@ -306,7 +306,7 @@ export default function TicketsContent() {
 
         <TicketDetails
           ticket={selectedTicket}
-          userRole={user.rol}
+          userRole={user.role}
           onClose={handleCloseDetails}
           onEdit={() => handleEditTicket(selectedTicket)}
           onTicketUpdated={handleTicketUpdated}
@@ -329,9 +329,9 @@ export default function TicketsContent() {
   return (
     <main>
       <h1>
-        {user.rol === USER_ROLES.ADMIN
+        {user.role === USER_ROLES.ADMIN
           ? "All Tickets"
-          : user.rol === USER_ROLES.TECHNICIAN
+          : user.role === USER_ROLES.TECHNICIAN
             ? "Assigned Tickets"
             : "My Tickets"}
       </h1>

@@ -7,7 +7,7 @@ export interface CreateUserRequest {
   password: string;
   firstName: string;
   lastName: string;
-  rolId: number;
+  roleId: number;
   departmentId: number;
   enabled: boolean;
 }
@@ -17,7 +17,7 @@ export interface UpdateUserRequest {
   email: string;
   firstName: string;
   lastName: string;
-  rolId: number;
+  roleId: number;
   departmentId: number;
   enabled: boolean;
 }
@@ -34,7 +34,7 @@ export interface UserResponse {
   firstName: string;
   lastName: string;
   enabled: boolean;
-  rol: RoleResponse;
+  role: RoleResponse;
   department: DepartmentResponse;
 }
 

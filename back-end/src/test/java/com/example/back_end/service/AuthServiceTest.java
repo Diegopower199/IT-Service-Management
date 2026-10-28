@@ -22,10 +22,10 @@ import com.example.back_end.dtos.auth.AuthLoginResponse;
 import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
-import com.example.back_end.model.RolModel;
+import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.UserModel;
 import com.example.back_end.repository.DepartmentRepository;
-import com.example.back_end.repository.RolRepository;
+import com.example.back_end.repository.RoleRepository;
 import com.example.back_end.repository.UserRepository;
 import com.example.back_end.security.JwtService;
 
@@ -36,7 +36,7 @@ public class AuthServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private RolRepository rolRepository;
+    private RoleRepository rolRepository;
 
     @Mock
     private DepartmentRepository departmentRepository;
@@ -67,7 +67,7 @@ public class AuthServiceTest {
         when(request.getPassword())
                 .thenReturn("password123");
 
-        RolModel rol = new RolModel(
+        RoleModel role = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -85,7 +85,7 @@ public class AuthServiceTest {
                 "Ana",
                 "Garcia",
                 true,
-                rol,
+                role,
                 department);
 
         when(userRepository.findByUsername("ana"))
@@ -106,7 +106,7 @@ public class AuthServiceTest {
 
         assertEquals(
                 "USER",
-                response.getRol());
+                response.getRole());
 
         verify(authenticationManager)
                 .authenticate(

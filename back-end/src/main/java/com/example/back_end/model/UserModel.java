@@ -53,8 +53,8 @@ public class UserModel implements UserDetails {
     private boolean enabled;
 
     @ManyToOne
-    @JoinColumn(name = "id_rol", nullable = false, foreignKey = @ForeignKey(name = "FK_users_roles"))
-    private RolModel rol;
+    @JoinColumn(name = "id_role", nullable = false, foreignKey = @ForeignKey(name = "FK_users_roles"))
+    private RoleModel role;
 
     @ManyToOne
     @JoinColumn(name = "id_department", nullable = false, foreignKey = @ForeignKey(name = "FK_users_departments"))
@@ -63,6 +63,6 @@ public class UserModel implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(
-                new SimpleGrantedAuthority("ROLE_" + rol.getName()));
+                new SimpleGrantedAuthority("ROLE_" + role.getName()));
     }
 }

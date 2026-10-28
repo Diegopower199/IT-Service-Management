@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.department.DepartmentResponse;
-import com.example.back_end.dtos.rol.RolResponse;
+import com.example.back_end.dtos.role.RoleResponse;
 import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
@@ -142,7 +142,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.username").value("admin"))
                 .andExpect(jsonPath("$.email").value("admin@example.com"))
                 .andExpect(jsonPath("$.enabled").value(true))
-                .andExpect(jsonPath("$.rol.name").value("ADMIN"))
+                .andExpect(jsonPath("$.role.name").value("ADMIN"))
                 .andExpect(jsonPath("$.department.name").value("IT"));
 
         verify(userService)
@@ -198,7 +198,7 @@ class UserControllerTest {
                                     "firstName": "Ana",
                                     "lastName": "Garcia",
                                     "enabled": true,
-                                    "rol": 3,
+                                    "role": 3,
                                     "department": 2
                                 }
                                 """))
@@ -311,7 +311,7 @@ class UserControllerTest {
             String username,
             String email) {
 
-        RolResponse rol = new RolResponse(
+        RoleResponse role = new RoleResponse(
                 1L,
                 "ADMIN",
                 true);
@@ -328,7 +328,7 @@ class UserControllerTest {
                 "Test",
                 "User",
                 true,
-                rol,
+                role,
                 department);
     }
 
@@ -342,7 +342,7 @@ class UserControllerTest {
                     "firstName": "Ana",
                     "lastName": "Garcia",
                     "enabled": true,
-                    "rol": 3,
+                    "role": 3,
                     "department": 2
                 }
                 """;

@@ -16,7 +16,7 @@ export default function AppHeader() {
         <div className={styles.userSection}>
           <span>{user.username}</span>
 
-          <span className={styles.rol}>{user.rol}</span>
+          <span className={styles.role}>{user.role}</span>
 
           <Button
             type="button"

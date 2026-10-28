@@ -83,7 +83,7 @@ export default function DepartmentsContent() {
       return;
     }
 
-    if (user.rol !== USER_ROLES.ADMIN) {
+    if (user.role !== USER_ROLES.ADMIN) {
       router.replace("/403");
       return;
     }
@@ -244,7 +244,7 @@ export default function DepartmentsContent() {
     return <PageLoading />;
   }
 
-  if (user.rol !== USER_ROLES.ADMIN) {
+  if (user.role !== USER_ROLES.ADMIN) {
     return <PageLoading />;
   }
 

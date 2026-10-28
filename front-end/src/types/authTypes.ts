@@ -8,5 +8,5 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string;
   username: string;
-  rol: UserRole;
+  role: UserRole;
 }

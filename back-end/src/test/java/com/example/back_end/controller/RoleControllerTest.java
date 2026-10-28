@@ -26,24 +26,24 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.back_end.config.SecurityConfig;
-import com.example.back_end.dtos.rol.RolRequest;
-import com.example.back_end.dtos.rol.RolResponse;
+import com.example.back_end.dtos.role.RoleRequest;
+import com.example.back_end.dtos.role.RoleResponse;
 import com.example.back_end.security.JwtAuthenticationFilter;
 import com.example.back_end.security.JwtService;
-import com.example.back_end.service.RolService;
+import com.example.back_end.service.RoleService;
 
-@WebMvcTest(RolController.class)
+@WebMvcTest(RoleController.class)
 @Import({
         SecurityConfig.class,
         JwtAuthenticationFilter.class
 })
-class RolControllerTest {
+class RoleControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private RolService rolService;
+    private RoleService roleService;
 
     @MockitoBean
     private JwtService jwtService;
@@ -57,28 +57,29 @@ class RolControllerTest {
     // =========================================================
     // GET ALL ROLES
     // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldReturnAllRoles() throws Exception {
 
-        List<RolResponse> roles = List.of(
-                new RolResponse(1L, "ADMIN", true),
-                new RolResponse(2L, "TECHNICIAN", true));
+        List<RoleResponse> roles = List.of(
+                new RoleResponse(1L, "ADMIN", true),
+                new RoleResponse(2L, "TECHNICIAN", true));
 
-        when(rolService.getAllRoles())
+        when(roleService.getAllRoles())
                 .thenReturn(roles);
 
         mockMvc.perform(get("/roles"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].idRol").value(1))
+                .andExpect(jsonPath("$[0].idRole").value(1))
                 .andExpect(jsonPath("$[0].name").value("ADMIN"))
                 .andExpect(jsonPath("$[0].active").value(true))
-                .andExpect(jsonPath("$[1].idRol").value(2))
+                .andExpect(jsonPath("$[1].idRole").value(2))
                 .andExpect(jsonPath("$[1].name").value("TECHNICIAN"))
                 .andExpect(jsonPath("$[1].active").value(true));
 
-        verify(rolService).getAllRoles();
+        verify(roleService).getAllRoles();
     }
 
     @Test
@@ -88,7 +89,7 @@ class RolControllerTest {
         mockMvc.perform(get("/roles"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
+        verify(roleService, never())
                 .getAllRoles();
     }
 
@@ -99,25 +100,26 @@ class RolControllerTest {
         mockMvc.perform(get("/roles"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
+        verify(roleService, never())
                 .getAllRoles();
     }
 
     // =========================================================
     // GET ACTIVE ROLES
     // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldReturnActiveRoles() throws Exception {
 
-        List<RolResponse> roles = List.of(
-                new RolResponse(1L, "ADMIN", true),
-                new RolResponse(2L, "TECHNICIAN", true));
+        List<RoleResponse> roles = List.of(
+                new RoleResponse(1L, "ADMIN", true),
+                new RoleResponse(2L, "TECHNICIAN", true));
 
-        when(rolService.getActiveRoles())
+        when(roleService.getActiveRoles())
                 .thenReturn(roles);
 
-        mockMvc.perform(get("/roles/actives"))
+        mockMvc.perform(get("/roles/active"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].name").value("ADMIN"))
@@ -125,31 +127,31 @@ class RolControllerTest {
                 .andExpect(jsonPath("$[1].name").value("TECHNICIAN"))
                 .andExpect(jsonPath("$[1].active").value(true));
 
-        verify(rolService).getActiveRoles();
+        verify(roleService).getActiveRoles();
     }
 
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void shouldReturnEmptyListWhenNoActiveRolesExist() throws Exception {
 
-        when(rolService.getActiveRoles())
+        when(roleService.getActiveRoles())
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/roles/actives"))
+        mockMvc.perform(get("/roles/active"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
-        verify(rolService).getActiveRoles();
+        verify(roleService).getActiveRoles();
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
     void shouldForbidUserFromGettingActiveRoles() throws Exception {
 
-        mockMvc.perform(get("/roles/actives"))
+        mockMvc.perform(get("/roles/active"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
+        verify(roleService, never())
                 .getActiveRoles();
     }
 
@@ -157,66 +159,68 @@ class RolControllerTest {
     @WithMockUser(username = "technician", roles = "TECHNICIAN")
     void shouldForbidTechnicianFromGettingActiveRoles() throws Exception {
 
-        mockMvc.perform(get("/roles/actives"))
+        mockMvc.perform(get("/roles/active"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
+        verify(roleService, never())
                 .getActiveRoles();
     }
 
     // =========================================================
-    // GET ROL BY ID
+    // GET ROLE BY ID
     // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldReturnRolById() throws Exception {
+    void shouldReturnRoleById() throws Exception {
 
-        RolResponse rol = new RolResponse(1L, "ADMIN", true);
+        RoleResponse role = new RoleResponse(1L, "ADMIN", true);
 
-        when(rolService.getRolById(1L))
-                .thenReturn(rol);
+        when(roleService.getRoleById(1L))
+                .thenReturn(role);
 
         mockMvc.perform(get("/roles/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idRol").value(1))
+                .andExpect(jsonPath("$.idRole").value(1))
                 .andExpect(jsonPath("$.name").value("ADMIN"))
                 .andExpect(jsonPath("$.active").value(true));
 
-        verify(rolService).getRolById(1L);
+        verify(roleService).getRoleById(1L);
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromGettingRolById() throws Exception {
+    void shouldForbidUserFromGettingRoleById() throws Exception {
 
         mockMvc.perform(get("/roles/1"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .getRolById(1L);
+        verify(roleService, never())
+                .getRoleById(1L);
     }
 
     @Test
     @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromGettingRolById() throws Exception {
+    void shouldForbidTechnicianFromGettingRoleById() throws Exception {
 
         mockMvc.perform(get("/roles/1"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .getRolById(1L);
+        verify(roleService, never())
+                .getRoleById(1L);
     }
 
     // =========================================================
-    // CREATE ROL
+    // CREATE ROLE
     // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToCreateRol() throws Exception {
+    void shouldAllowAdminToCreateRole() throws Exception {
 
-        RolResponse response = new RolResponse(4L, "MANAGER", true);
+        RoleResponse response = new RoleResponse(4L, "MANAGER", true);
 
-        when(rolService.createRol(any(RolRequest.class)))
+        when(roleService.createRole(any(RoleRequest.class)))
                 .thenReturn(response);
 
         mockMvc.perform(
@@ -228,17 +232,17 @@ class RolControllerTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idRol").value(4))
+                .andExpect(jsonPath("$.idRole").value(4))
                 .andExpect(jsonPath("$.name").value("MANAGER"))
                 .andExpect(jsonPath("$.active").value(true));
 
-        verify(rolService)
-                .createRol(any(RolRequest.class));
+        verify(roleService)
+                .createRole(any(RoleRequest.class));
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromCreatingRol() throws Exception {
+    void shouldForbidUserFromCreatingRole() throws Exception {
 
         mockMvc.perform(
                 post("/roles")
@@ -250,13 +254,13 @@ class RolControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .createRol(any(RolRequest.class));
+        verify(roleService, never())
+                .createRole(any(RoleRequest.class));
     }
 
     @Test
     @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromCreatingRol() throws Exception {
+    void shouldForbidTechnicianFromCreatingRole() throws Exception {
 
         mockMvc.perform(
                 post("/roles")
@@ -268,21 +272,22 @@ class RolControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .createRol(any(RolRequest.class));
+        verify(roleService, never())
+                .createRole(any(RoleRequest.class));
     }
 
     // =========================================================
-    // UPDATE ROL
+    // UPDATE ROLE
     // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToUpdateRol() throws Exception {
+    void shouldAllowAdminToUpdateRole() throws Exception {
 
-        RolResponse response = new RolResponse(4L, "MANAGER", true);
+        RoleResponse response = new RoleResponse(4L, "MANAGER", true);
 
-        when(rolService.updateRol(
-                any(RolRequest.class),
+        when(roleService.updateRole(
+                any(RoleRequest.class),
                 eq(4L)))
                 .thenReturn(response);
 
@@ -295,19 +300,19 @@ class RolControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idRol").value(4))
+                .andExpect(jsonPath("$.idRole").value(4))
                 .andExpect(jsonPath("$.name").value("MANAGER"))
                 .andExpect(jsonPath("$.active").value(true));
 
-        verify(rolService)
-                .updateRol(
-                        any(RolRequest.class),
+        verify(roleService)
+                .updateRole(
+                        any(RoleRequest.class),
                         eq(4L));
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromUpdatingRol() throws Exception {
+    void shouldForbidUserFromUpdatingRole() throws Exception {
 
         mockMvc.perform(
                 put("/roles/4")
@@ -319,15 +324,15 @@ class RolControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .updateRol(
-                        any(RolRequest.class),
+        verify(roleService, never())
+                .updateRole(
+                        any(RoleRequest.class),
                         any(Long.class));
     }
 
     @Test
     @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromUpdatingRol() throws Exception {
+    void shouldForbidTechnicianFromUpdatingRole() throws Exception {
 
         mockMvc.perform(
                 put("/roles/4")
@@ -339,87 +344,89 @@ class RolControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .updateRol(
-                        any(RolRequest.class),
+        verify(roleService, never())
+                .updateRole(
+                        any(RoleRequest.class),
                         any(Long.class));
     }
 
     // =========================================================
-    // DEACTIVATE ROL
+    // DEACTIVATE ROLE
     // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToDeactivateRol() throws Exception {
+    void shouldAllowAdminToDeactivateRole() throws Exception {
 
         mockMvc.perform(
                 patch("/roles/4/deactivate"))
                 .andExpect(status().isNoContent());
 
-        verify(rolService)
-                .deactivateRol(4L);
+        verify(roleService)
+                .deactivateRole(4L);
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromDeactivatingRol() throws Exception {
+    void shouldForbidUserFromDeactivatingRole() throws Exception {
 
         mockMvc.perform(
                 patch("/roles/4/deactivate"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .deactivateRol(4L);
+        verify(roleService, never())
+                .deactivateRole(4L);
     }
 
     @Test
     @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromDeactivatingRol() throws Exception {
+    void shouldForbidTechnicianFromDeactivatingRole() throws Exception {
 
         mockMvc.perform(
                 patch("/roles/4/deactivate"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .deactivateRol(4L);
+        verify(roleService, never())
+                .deactivateRole(4L);
     }
 
     // =========================================================
-    // ACTIVATE ROL
+    // ACTIVATE ROLE
     // =========================================================
+
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToActivateRol() throws Exception {
+    void shouldAllowAdminToActivateRole() throws Exception {
 
         mockMvc.perform(
                 patch("/roles/4/activate"))
                 .andExpect(status().isNoContent());
 
-        verify(rolService)
-                .activateRol(4L);
+        verify(roleService)
+                .activateRole(4L);
     }
 
     @Test
     @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromActivatingRol() throws Exception {
+    void shouldForbidUserFromActivatingRole() throws Exception {
 
         mockMvc.perform(
                 patch("/roles/4/activate"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .activateRol(4L);
+        verify(roleService, never())
+                .activateRole(4L);
     }
 
     @Test
     @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromActivatingRol() throws Exception {
+    void shouldForbidTechnicianFromActivatingRole() throws Exception {
 
         mockMvc.perform(
                 patch("/roles/4/activate"))
                 .andExpect(status().isForbidden());
 
-        verify(rolService, never())
-                .activateRol(4L);
+        verify(roleService, never())
+                .activateRole(4L);
     }
 }

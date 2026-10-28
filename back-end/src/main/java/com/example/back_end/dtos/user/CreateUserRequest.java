@@ -30,10 +30,10 @@ public class CreateUserRequest {
     @NotBlank(message = "The 'lastName' field is required")
     private String lastName;
 
-    @NotNull(message = "The 'rol' field is required")
-    private Long rolId;
+    @NotNull(message = "The 'roleId' field is required")
+    private Long roleId;
 
-    @NotNull(message = "The 'department' field is required")
+    @NotNull(message = "The 'departmentId' field is required")
     private Long departmentId;
 
     private boolean enabled;

@@ -41,7 +41,7 @@ public class TicketCommentService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        String role = currentUser.getRol().getName();
+        String role = currentUser.getRole().getName();
 
         Page<TicketCommentModel> ticketComments;
 
@@ -85,7 +85,7 @@ public class TicketCommentService {
         UserModel currentUser = getAuthenticatedUser();
 
         // Validate whether the current user can comment on this ticket.
-        String role = currentUser.getRol().getName();
+        String role = currentUser.getRole().getName();
 
         if (role.equalsIgnoreCase(RoleName.USER.name())) {
             boolean isCreatedBy = existingTicket.getCreatedBy().getIdUser()

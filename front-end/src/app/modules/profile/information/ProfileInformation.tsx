@@ -57,7 +57,7 @@ export default function ProfileInformation({
       <Stack spacing={2} sx={{ mt: 3 }}>
         <ProfileRow label="Username" value={profile.username} />
 
-        <ProfileRow label="Role" value={profile.rol.name} />
+        <ProfileRow label="Role" value={profile.role.name} />
 
         <ProfileRow label="First name" value={profile.firstName} />
 

@@ -42,7 +42,7 @@ export default function RolesContent() {
       return;
     }
 
-    if (user.rol !== USER_ROLES.ADMIN) {
+    if (user.role !== USER_ROLES.ADMIN) {
       router.replace("/403");
       return;
     }
@@ -103,7 +103,7 @@ export default function RolesContent() {
     return <PageLoading />;
   }
 
-  if (user.rol !== USER_ROLES.ADMIN) {
+  if (user.role !== USER_ROLES.ADMIN) {
     return <PageLoading />;
   }
 
@@ -125,7 +125,7 @@ export default function RolesContent() {
       <DataGrid
         rows={roles}
         columns={columns}
-        getRowId={(row) => row.idRol}
+        getRowId={(row) => row.idRole}
         loading={loading}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         initialState={{

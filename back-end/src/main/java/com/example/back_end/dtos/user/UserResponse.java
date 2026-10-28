@@ -1,7 +1,7 @@
 package com.example.back_end.dtos.user;
 
 import com.example.back_end.dtos.department.DepartmentResponse;
-import com.example.back_end.dtos.rol.RolResponse;
+import com.example.back_end.dtos.role.RoleResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +18,6 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private boolean enabled;
-    private RolResponse rol;
+    private RoleResponse role;
     private DepartmentResponse department;
 }

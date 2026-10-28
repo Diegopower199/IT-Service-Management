@@ -68,7 +68,7 @@ const getInitialFormData = (
       firstName: selectedUser.firstName,
       lastName: selectedUser.lastName,
       password: "",
-      rolId: selectedUser.rol.idRol,
+      rolId: selectedUser.role.idRole,
       departmentId: selectedUser.department?.idDepartment ?? 0,
       enabled: selectedUser.enabled,
     };
@@ -233,7 +233,7 @@ export default function UserForm({
           firstName: formData.firstName,
           lastName: formData.lastName,
           password: formData.password,
-          rolId: formData.rolId,
+          roleId: formData.rolId,
           departmentId: formData.departmentId,
           enabled: formData.enabled,
         });
@@ -245,7 +245,7 @@ export default function UserForm({
           email: formData.email,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          rolId: formData.rolId,
+          roleId: formData.rolId,
           departmentId: formData.departmentId,
           enabled: formData.enabled,
         });
@@ -344,7 +344,7 @@ export default function UserForm({
           label="Role"
           name="rolId"
           value={
-            rolesOptions.some((role) => role.idRol === formData.rolId)
+            rolesOptions.some((role) => role.idRole === formData.rolId)
               ? formData.rolId
               : 0
           }
@@ -362,7 +362,7 @@ export default function UserForm({
             <MenuItem disabled>No roles available</MenuItem>
           ) : (
             rolesOptions.map((role) => (
-              <MenuItem key={role.idRol} value={role.idRol}>
+              <MenuItem key={role.idRole} value={role.idRole}>
                 {role.name}
               </MenuItem>
             ))

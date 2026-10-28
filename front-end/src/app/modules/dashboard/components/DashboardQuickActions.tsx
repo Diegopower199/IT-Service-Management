@@ -4,17 +4,17 @@ import Link from "next/link";
 import styles from "../styles/dashboard.module.css";
 
 interface DashboardQuickActionsProps {
-  rol: UserRole;
+  role: UserRole;
 }
 
 export default function DashboardQuickActions({
-  rol,
+  role,
 }: DashboardQuickActionsProps) {
-  if (rol === USER_ROLES.USER) {
+  if (role === USER_ROLES.USER) {
     return null;
   }
 
-  if (rol === USER_ROLES.TECHNICIAN) {
+  if (role === USER_ROLES.TECHNICIAN) {
     return (
       <section className={styles.quickActions}>
         <h2 className={styles.sectionTitle}>Quick Actions</h2>
@@ -38,7 +38,7 @@ export default function DashboardQuickActions({
     );
   }
 
-  if (rol === USER_ROLES.ADMIN) {
+  if (role === USER_ROLES.ADMIN) {
     return (
       <section className={styles.quickActions}>
         <h2 className={styles.sectionTitle}>Quick Actions</h2>

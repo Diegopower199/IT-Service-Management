@@ -72,7 +72,7 @@ export default function TicketCommentsContent({
   const [errorMessage, setErrorMessage] = useState("");
 
   const canCreateInternalComment =
-    user?.rol === USER_ROLES.ADMIN || user?.rol === USER_ROLES.TECHNICIAN;
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TECHNICIAN;
 
   useEffect(() => {
     const loadTicketComments = async () => {
