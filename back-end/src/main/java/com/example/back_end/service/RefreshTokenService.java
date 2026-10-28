@@ -9,11 +9,12 @@ import java.util.HexFormat;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.example.back_end.dtos.auth.RefreshTokenRotationResult;
+import com.example.back_end.exception.InvalidRefreshTokenException;
 import com.example.back_end.model.RefreshTokenModel;
 import com.example.back_end.model.UserModel;
 import com.example.back_end.repository.RefreshTokenRepository;
@@ -78,36 +79,43 @@ public class RefreshTokenService {
     /**
      * Validates a refresh token and returns its stored representation.
      *
+     * <p>
+     * A refresh token is considered valid only when it exists, has not been
+     * revoked, has not expired, and belongs to an enabled user.
+     * </p>
+     *
      * @param refreshToken the plain-text refresh token received from the client
      * @return the corresponding valid refresh token entity
-     * @throws BadCredentialsException if the token does not exist, is revoked,
-     *                                 has expired, or belongs to a disabled user
+     * @throws InvalidRefreshTokenException if the token is missing, invalid,
+     *                                      revoked, expired, or belongs to a
+     *                                      disabled user
      */
     public RefreshTokenModel validateRefreshToken(
             String refreshToken) {
+
+        if (!StringUtils.hasText(refreshToken)) {
+            throw new InvalidRefreshTokenException();
+        }
 
         String tokenHash = hashToken(refreshToken);
 
         RefreshTokenModel storedToken = refreshTokenRepository
                 .findByTokenHash(tokenHash)
-                .orElseThrow(() -> new BadCredentialsException(
-                        "Invalid refresh token"));
+                .orElseThrow(
+                        InvalidRefreshTokenException::new);
 
         if (storedToken.isRevoked()) {
-            throw new BadCredentialsException(
-                    "Invalid refresh token");
+            throw new InvalidRefreshTokenException();
         }
 
         if (storedToken.getExpiresAt()
                 .isBefore(LocalDateTime.now())) {
 
-            throw new BadCredentialsException(
-                    "Invalid refresh token");
+            throw new InvalidRefreshTokenException();
         }
 
         if (!storedToken.getUser().isEnabled()) {
-            throw new BadCredentialsException(
-                    "Invalid refresh token");
+            throw new InvalidRefreshTokenException();
         }
 
         return storedToken;

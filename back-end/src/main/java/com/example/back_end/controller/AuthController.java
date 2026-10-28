@@ -4,7 +4,6 @@ import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -92,12 +91,6 @@ public class AuthController {
     public ResponseEntity<RefreshTokenResponse> refresh(
             @CookieValue(name = "refreshToken", required = false) String refreshToken) {
 
-        if (!StringUtils.hasText(refreshToken)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .build();
-        }
-
         RefreshTokenResult result = authService.refresh(refreshToken);
 
         ResponseCookie refreshTokenCookie = createRefreshTokenCookie(
@@ -108,6 +101,34 @@ public class AuthController {
                         HttpHeaders.SET_COOKIE,
                         refreshTokenCookie.toString())
                 .body(result.getResponse());
+    }
+
+    /**
+     * Logs out the current authenticated session.
+     *
+     * <p>
+     * If a refresh token cookie is present, the corresponding refresh token is
+     * revoked. The cookie is then removed from the client.
+     * </p>
+     *
+     * @param refreshToken refresh token received from the HttpOnly cookie
+     * @return an empty HTTP 204 response
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken) {
+
+        if (StringUtils.hasText(refreshToken)) {
+            authService.logout(refreshToken);
+        }
+
+        ResponseCookie expiredRefreshTokenCookie = createExpiredRefreshTokenCookie();
+
+        return ResponseEntity.noContent()
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        expiredRefreshTokenCookie.toString())
+                .build();
     }
 
     /**
@@ -132,6 +153,25 @@ public class AuthController {
                 .sameSite("Strict")
                 .path("/api/v1/auth")
                 .maxAge(Duration.ofDays(refreshTokenExpirationDays))
+                .build();
+    }
+
+    /**
+     * Creates an expired refresh token cookie so the client removes the existing
+     * refresh token.
+     *
+     * @return expired refresh token cookie
+     */
+    private ResponseCookie createExpiredRefreshTokenCookie() {
+
+        return ResponseCookie.from(
+                "refreshToken",
+                "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path("/api/v1/auth")
+                .maxAge(Duration.ZERO)
                 .build();
     }
 }

@@ -104,4 +104,19 @@ public class AuthService {
                 response,
                 rotationResult.getRefreshToken());
     }
+
+    /**
+     * Logs out the current user session by revoking its refresh token.
+     *
+     * <p>
+     * Revoking the refresh token prevents it from being used to generate new
+     * access tokens. The refresh token cookie is removed separately by the
+     * controller.
+     * </p>
+     *
+     * @param refreshToken the refresh token associated with the current session
+     */
+    public void logout(String refreshToken) {
+        refreshTokenService.revokeRefreshToken(refreshToken);
+    }
 }
