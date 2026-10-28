@@ -70,7 +70,7 @@ export default function UsersContent() {
       return;
     }
 
-    if (user.rol !== USER_ROLES.ADMIN) {
+    if (user.role !== USER_ROLES.ADMIN) {
       router.replace("/403");
       return;
     }
@@ -153,13 +153,13 @@ export default function UsersContent() {
       minWidth: 220,
     },
     {
-      field: "rol",
+      field: "role",
       headerName: "Role",
       width: 150,
-      valueGetter: (_, row) => row.rol.name,
+      valueGetter: (_, row) => row.role.name,
       renderCell: (params) => (
         <Chip
-          label={params.row.rol.name}
+          label={params.row.role.name}
           size="small"
           variant="outlined"
           sx={{
@@ -217,7 +217,7 @@ export default function UsersContent() {
     return <PageLoading />;
   }
 
-  if (user.rol !== USER_ROLES.ADMIN) {
+  if (user.role !== USER_ROLES.ADMIN) {
     return <PageLoading />;
   }
 

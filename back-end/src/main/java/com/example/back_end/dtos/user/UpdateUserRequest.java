@@ -26,8 +26,8 @@ public class UpdateUserRequest {
     @NotBlank(message = "The 'lastName' field is required")
     private String lastName;
 
-    @NotNull(message = "The 'rolId' field is required")
-    private Long rolId;
+    @NotNull(message = "The 'roleId' field is required")
+    private Long roleId;
 
     @NotNull(message = "The 'departmentId' field is required")
     private Long departmentId;

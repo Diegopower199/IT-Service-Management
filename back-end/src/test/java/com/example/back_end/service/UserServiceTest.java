@@ -31,10 +31,10 @@ import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
-import com.example.back_end.model.RolModel;
+import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.UserModel;
 import com.example.back_end.repository.DepartmentRepository;
-import com.example.back_end.repository.RolRepository;
+import com.example.back_end.repository.RoleRepository;
 import com.example.back_end.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +44,7 @@ public class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private RolRepository rolRepository;
+    private RoleRepository rolRepository;
 
     @Mock
     private DepartmentRepository departmentRepository;
@@ -61,7 +61,7 @@ public class UserServiceTest {
     @Test
     void shouldReturnAllUsers() {
 
-        RolModel adminRol = new RolModel(1L, "ADMIN", true);
+        RoleModel adminRol = new RoleModel(1L, "ADMIN", true);
 
         DepartmentModel itDepartment = new DepartmentModel(1L, "IT", true);
 
@@ -76,7 +76,7 @@ public class UserServiceTest {
                 adminRol,
                 itDepartment);
 
-        RolModel technicianRol = new RolModel(2L, "TECHNICIAN", true);
+        RoleModel technicianRol = new RoleModel(2L, "TECHNICIAN", true);
 
         DepartmentModel supportDepartment = new DepartmentModel(2L, "Support", true);
 
@@ -133,7 +133,7 @@ public class UserServiceTest {
                 "ADMIN",
                 response.getContent()
                         .get(0)
-                        .getRol()
+                        .getRole()
                         .getName());
 
         assertEquals(
@@ -165,7 +165,7 @@ public class UserServiceTest {
                 "TECHNICIAN",
                 response.getContent()
                         .get(1)
-                        .getRol()
+                        .getRole()
                         .getName());
 
         assertEquals(
@@ -205,7 +205,7 @@ public class UserServiceTest {
     @Test
     void shouldReturnUserById() {
 
-        RolModel rol = new RolModel(1L, "ADMIN", true);
+        RoleModel role = new RoleModel(1L, "ADMIN", true);
 
         DepartmentModel department = new DepartmentModel(1L, "IT", true);
 
@@ -217,7 +217,7 @@ public class UserServiceTest {
                 "Admin",
                 "User",
                 true,
-                rol,
+                role,
                 department);
 
         when(userRepository.findById(1L))
@@ -231,7 +231,7 @@ public class UserServiceTest {
         assertEquals("Admin", response.getFirstName());
         assertEquals("User", response.getLastName());
         assertTrue(response.isEnabled());
-        assertEquals("ADMIN", response.getRol().getName());
+        assertEquals("ADMIN", response.getRole().getName());
         assertEquals("IT", response.getDepartment().getName());
     }
 
@@ -260,10 +260,10 @@ public class UserServiceTest {
         when(request.getFirstName()).thenReturn("Ana");
         when(request.getLastName()).thenReturn("Garcia");
         when(request.isEnabled()).thenReturn(true);
-        when(request.getRolId()).thenReturn(3L);
+        when(request.getRoleId()).thenReturn(3L);
         when(request.getDepartmentId()).thenReturn(2L);
 
-        RolModel rol = new RolModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER", true);
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -275,7 +275,7 @@ public class UserServiceTest {
                 "Ana",
                 "Garcia",
                 true,
-                rol,
+                role,
                 department);
 
         when(userRepository.existsByUsername("ana"))
@@ -285,7 +285,7 @@ public class UserServiceTest {
                 .thenReturn(false);
 
         when(rolRepository.findById(3L))
-                .thenReturn(Optional.of(rol));
+                .thenReturn(Optional.of(role));
 
         when(departmentRepository.findById(2L))
                 .thenReturn(Optional.of(department));
@@ -301,7 +301,7 @@ public class UserServiceTest {
         assertEquals(1L, response.getIdUser());
         assertEquals("ana", response.getUsername());
         assertEquals("ana@example.com", response.getEmail());
-        assertEquals("USER", response.getRol().getName());
+        assertEquals("USER", response.getRole().getName());
         assertEquals("Finance", response.getDepartment().getName());
 
         verify(passwordEncoder)
@@ -372,7 +372,7 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRolId())
+        when(request.getRoleId())
                 .thenReturn(99L);
 
         when(userRepository.existsByUsername("ana"))
@@ -403,13 +403,13 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRolId())
+        when(request.getRoleId())
                 .thenReturn(3L);
 
         when(request.getDepartmentId())
                 .thenReturn(99L);
 
-        RolModel rol = new RolModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER", true);
 
         when(userRepository.existsByUsername("ana"))
                 .thenReturn(false);
@@ -418,7 +418,7 @@ public class UserServiceTest {
                 .thenReturn(false);
 
         when(rolRepository.findById(3L))
-                .thenReturn(Optional.of(rol));
+                .thenReturn(Optional.of(role));
 
         when(departmentRepository.findById(99L))
                 .thenReturn(Optional.empty());
@@ -444,10 +444,10 @@ public class UserServiceTest {
         when(request.getFirstName()).thenReturn("Ana");
         when(request.getLastName()).thenReturn("Garcia");
         when(request.isEnabled()).thenReturn(true);
-        when(request.getRolId()).thenReturn(3L);
+        when(request.getRoleId()).thenReturn(3L);
         when(request.getDepartmentId()).thenReturn(2L);
 
-        RolModel oldRol = new RolModel(1L, "ADMIN", true);
+        RoleModel oldRol = new RoleModel(1L, "ADMIN", true);
 
         DepartmentModel oldDepartment = new DepartmentModel(1L, "IT", true);
 
@@ -462,7 +462,7 @@ public class UserServiceTest {
                 oldRol,
                 oldDepartment);
 
-        RolModel newRol = new RolModel(3L, "USER", true);
+        RoleModel newRol = new RoleModel(3L, "USER", true);
 
         DepartmentModel newDepartment = new DepartmentModel(2L, "Finance", true);
 
@@ -490,7 +490,7 @@ public class UserServiceTest {
         assertEquals("ana@example.com", response.getEmail());
         assertEquals("Ana", response.getFirstName());
         assertEquals("Garcia", response.getLastName());
-        assertEquals("USER", response.getRol().getName());
+        assertEquals("USER", response.getRole().getName());
         assertEquals("Finance", response.getDepartment().getName());
 
         verify(userRepository)
@@ -521,7 +521,7 @@ public class UserServiceTest {
         when(request.getUsername())
                 .thenReturn("ana");
 
-        RolModel rol = new RolModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER", true);
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -533,7 +533,7 @@ public class UserServiceTest {
                 "Old",
                 "User",
                 true,
-                rol,
+                role,
                 department);
 
         when(userRepository.findById(1L))
@@ -561,7 +561,7 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        RolModel rol = new RolModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER", true);
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -573,7 +573,7 @@ public class UserServiceTest {
                 "Ana",
                 "Garcia",
                 true,
-                rol,
+                role,
                 department);
 
         when(userRepository.findById(1L))
@@ -601,10 +601,10 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRolId())
+        when(request.getRoleId())
                 .thenReturn(99L);
 
-        RolModel rol = new RolModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER", true);
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -616,7 +616,7 @@ public class UserServiceTest {
                 "Ana",
                 "Garcia",
                 true,
-                rol,
+                role,
                 department);
 
         when(userRepository.findById(1L))
@@ -644,13 +644,13 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        when(request.getRolId())
+        when(request.getRoleId())
                 .thenReturn(3L);
 
         when(request.getDepartmentId())
                 .thenReturn(99L);
 
-        RolModel rol = new RolModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER", true);
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -662,14 +662,14 @@ public class UserServiceTest {
                 "Ana",
                 "Garcia",
                 true,
-                rol,
+                role,
                 department);
 
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(existingUser));
 
         when(rolRepository.findById(3L))
-                .thenReturn(Optional.of(rol));
+                .thenReturn(Optional.of(role));
 
         when(departmentRepository.findById(99L))
                 .thenReturn(Optional.empty());

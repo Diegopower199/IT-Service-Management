@@ -4,18 +4,18 @@ import styles from "../styles/dashboard.module.css";
 import { TicketStatisticsResponse } from "@/types/ticketTypes";
 
 interface DashboardTicketStatisticsProps {
-  rol: UserRole;
+  role: UserRole;
   statistics: TicketStatisticsResponse;
 }
 
 export default function DashboardTicketStatistics({
-  rol,
+  role,
   statistics,
 }: DashboardTicketStatisticsProps) {
   const { totalTickets, openTickets, inProgressTickets, criticalTickets } =
     statistics;
 
-  if (rol === USER_ROLES.USER) {
+  if (role === USER_ROLES.USER) {
     return (
       <section className={styles.statistics}>
         <DashboardTicketStatisticCard
@@ -45,7 +45,7 @@ export default function DashboardTicketStatistics({
     );
   }
 
-  if (rol === USER_ROLES.TECHNICIAN) {
+  if (role === USER_ROLES.TECHNICIAN) {
     return (
       <section className={styles.statistics}>
         <DashboardTicketStatisticCard
@@ -75,7 +75,7 @@ export default function DashboardTicketStatistics({
     );
   }
 
-  if (rol === USER_ROLES.ADMIN) {
+  if (role === USER_ROLES.ADMIN) {
     return (
       <section className={styles.statistics}>
         <DashboardTicketStatisticCard

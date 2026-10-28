@@ -24,7 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import com.example.back_end.dtos.ticketHistory.TicketHistoryResponse;
 import com.example.back_end.enums.TicketHistoryAction;
 import com.example.back_end.model.DepartmentModel;
-import com.example.back_end.model.RolModel;
+import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.TicketHistoryModel;
 import com.example.back_end.model.TicketModel;
 import com.example.back_end.model.UserModel;
@@ -49,7 +49,7 @@ class TicketHistoryServiceTest {
     @Test
     void shouldReturnAllHistory() {
 
-        RolModel adminRole = new RolModel(
+        RoleModel adminRole = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
@@ -201,7 +201,7 @@ class TicketHistoryServiceTest {
     @Test
     void shouldCreateHistorySuccessfully() {
 
-        RolModel adminRole = new RolModel(
+        RoleModel adminRole = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
@@ -276,7 +276,7 @@ class TicketHistoryServiceTest {
     @Test
     void shouldCreateTicketCreatedHistory() {
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);

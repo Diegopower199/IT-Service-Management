@@ -31,7 +31,7 @@ import com.example.back_end.dtos.ticketComment.TicketCommentResponse;
 import com.example.back_end.exception.AccessDeniedException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
-import com.example.back_end.model.RolModel;
+import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.TicketCommentModel;
 import com.example.back_end.model.TicketModel;
 import com.example.back_end.model.UserModel;
@@ -69,7 +69,7 @@ class TicketCommentServiceTest {
     @Test
     void shouldReturnPublicCommentsWhenUserIsRelatedToTicket() {
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -178,7 +178,7 @@ class TicketCommentServiceTest {
     @Test
     void shouldReturnEmptyPageWhenRelatedUserTicketHasNoPublicComments() {
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -239,7 +239,7 @@ class TicketCommentServiceTest {
     @Test
     void shouldThrowAccessDeniedWhenUserIsNotRelatedToTicket() {
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -307,12 +307,12 @@ class TicketCommentServiceTest {
     @Test
     void shouldReturnAllCommentsWhenUserIsTechnician() {
 
-        RolModel technicianRole = new RolModel(
+        RoleModel technicianRole = new RoleModel(
                 2L,
                 "TECHNICIAN",
                 true);
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -420,7 +420,7 @@ class TicketCommentServiceTest {
     @Test
     void shouldReturnAllCommentsWhenUserIsAdmin() {
 
-        RolModel adminRole = new RolModel(
+        RoleModel adminRole = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
@@ -570,7 +570,7 @@ class TicketCommentServiceTest {
         when(request.isInternal())
                 .thenReturn(false);
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -648,7 +648,7 @@ class TicketCommentServiceTest {
         TicketCommentRequest request = org.mockito.Mockito.mock(
                 TicketCommentRequest.class);
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -713,7 +713,7 @@ class TicketCommentServiceTest {
         when(request.isInternal())
                 .thenReturn(true);
 
-        RolModel userRole = new RolModel(
+        RoleModel userRole = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -770,7 +770,7 @@ class TicketCommentServiceTest {
         when(request.isInternal())
                 .thenReturn(true);
 
-        RolModel technicianRole = new RolModel(
+        RoleModel technicianRole = new RoleModel(
                 2L,
                 "TECHNICIAN",
                 true);
@@ -844,7 +844,7 @@ class TicketCommentServiceTest {
         when(request.isInternal())
                 .thenReturn(true);
 
-        RolModel adminRole = new RolModel(
+        RoleModel adminRole = new RoleModel(
                 1L,
                 "ADMIN",
                 true);

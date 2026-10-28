@@ -49,7 +49,7 @@ public class TicketHistoryService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        String role = currentUser.getRol().getName();
+        String role = currentUser.getRole().getName();
 
         if (role.equalsIgnoreCase(RoleName.USER.name())) {
 

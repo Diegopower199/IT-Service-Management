@@ -72,7 +72,7 @@ public class TicketService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        String role = currentUser.getRol().getName();
+        String role = currentUser.getRole().getName();
 
         if (role.equalsIgnoreCase(RoleName.USER.name())) {
 
@@ -164,7 +164,7 @@ public class TicketService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        String role = currentUser.getRol().getName();
+        String role = currentUser.getRole().getName();
 
         if (role.equalsIgnoreCase(RoleName.USER.name())) {
 
@@ -281,7 +281,7 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User with id " + request.getAssignedToId() + " not found"));
 
-        if (!assignedTo.getRol().getName()
+        if (!assignedTo.getRole().getName()
                 .equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
 
             throw new InvalidRoleException(
@@ -412,7 +412,7 @@ public class TicketService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        String role = currentUser.getRol().getName();
+        String role = currentUser.getRole().getName();
 
         long totalTickets;
         long openTickets;

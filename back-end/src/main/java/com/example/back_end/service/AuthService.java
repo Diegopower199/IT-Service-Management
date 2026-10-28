@@ -22,18 +22,18 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     /**
-     * Autentica a un usuario con username y password.
+     * Authenticates a user using their username and password.
      *
      * <p>
-     * {@link AuthenticationManager} comprueba las credenciales utilizando
-     * el AuthenticationProvider configurado en {@code ApplicationConfig}.
-     * Si la autenticacion falla, Spring lanza una excepcion. Si es correcta,
-     * se recupera el usuario, se genera su JWT y se devuelve junto con su
-     * username y rol.
+     * {@link AuthenticationManager} validates the provided credentials using
+     * the AuthenticationProvider configured in {@code ApplicationConfig}.
+     * If authentication fails, Spring throws an exception. If authentication
+     * succeeds, the user is retrieved, a JWT is generated, and the token is
+     * returned along with the user's username and role.
      * </p>
      *
-     * @param request credenciales recibidas desde la API
-     * @return respuesta que contiene el JWT, username y rol del usuario
+     * @param request credentials received from the API
+     * @return response containing the JWT, username, and user role
      */
     public AuthLoginResponse login(LoginRequest request) {
         authenticationManager.authenticate(
@@ -49,7 +49,7 @@ public class AuthService {
         return new AuthLoginResponse(
                 token,
                 user.getUsername(),
-                user.getRol().getName());
+                user.getRole().getName());
     }
 
 }

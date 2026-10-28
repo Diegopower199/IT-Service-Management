@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.back_end.dtos.department.DepartmentResponse;
-import com.example.back_end.dtos.rol.RolResponse;
+import com.example.back_end.dtos.role.RoleResponse;
 import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UpdateProfileRequest;
@@ -20,10 +20,10 @@ import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
-import com.example.back_end.model.RolModel;
+import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.UserModel;
 import com.example.back_end.repository.DepartmentRepository;
-import com.example.back_end.repository.RolRepository;
+import com.example.back_end.repository.RoleRepository;
 import com.example.back_end.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final RolRepository rolRepository;
+    private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -74,9 +74,9 @@ public class UserService {
                     "Email '" + request.getEmail() + "' already exists");
         }
 
-        RolModel rol = rolRepository.findById(request.getRolId())
+        RoleModel role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Role with id " + request.getRolId() + " not found"));
+                        "Role with id " + request.getRoleId() + " not found"));
 
         DepartmentModel department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -91,7 +91,7 @@ public class UserService {
         newUser.setFirstName(request.getFirstName());
         newUser.setLastName(request.getLastName());
         newUser.setEnabled(request.isEnabled());
-        newUser.setRol(rol);
+        newUser.setRole(role);
         newUser.setDepartment(department);
 
         UserModel savedUser = userRepository.save(newUser);
@@ -121,9 +121,9 @@ public class UserService {
                     "Email '" + request.getEmail() + "' already exists");
         }
 
-        RolModel rol = rolRepository.findById(request.getRolId())
+        RoleModel role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Role with id " + request.getRolId() + " not found"));
+                        "Role with id " + request.getRoleId() + " not found"));
 
         DepartmentModel department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -134,7 +134,7 @@ public class UserService {
         existingUser.setFirstName(request.getFirstName());
         existingUser.setLastName(request.getLastName());
         existingUser.setEnabled(request.isEnabled());
-        existingUser.setRol(rol);
+        existingUser.setRole(role);
         existingUser.setDepartment(department);
 
         UserModel updatedUser = userRepository.save(existingUser);
@@ -191,7 +191,7 @@ public class UserService {
     public List<UserSummaryResponse> getAllTechnicians() {
 
         return userRepository
-                .findByRolNameAndEnabledTrue(RoleName.TECHNICIAN.name())
+                .findByRoleNameAndEnabledTrue(RoleName.TECHNICIAN.name())
                 .stream()
                 .map(this::convertToSummaryResponse)
                 .toList();
@@ -199,14 +199,14 @@ public class UserService {
 
     private UserResponse convertToResponse(UserModel user) {
 
-        RolResponse rolResponse = null;
+        RoleResponse rolResponse = null;
         DepartmentResponse departmentResponse = null;
 
-        if (user.getRol() != null) {
-            rolResponse = new RolResponse(
-                    user.getRol().getIdRol(),
-                    user.getRol().getName(),
-                    user.getRol().isActive());
+        if (user.getRole() != null) {
+            rolResponse = new RoleResponse(
+                    user.getRole().getIdRole(),
+                    user.getRole().getName(),
+                    user.getRole().isActive());
         }
 
         if (user.getDepartment() != null) {

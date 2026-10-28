@@ -42,7 +42,7 @@ import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.CategoryModel;
 import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.PriorityModel;
-import com.example.back_end.model.RolModel;
+import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.StatusModel;
 import com.example.back_end.model.TicketModel;
 import com.example.back_end.model.UserModel;
@@ -90,7 +90,7 @@ class TicketServiceTest {
     @Test
     void shouldReturnAllTickets() {
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -260,7 +260,7 @@ class TicketServiceTest {
     @Test
     void shouldReturnTicketByIdWhenUserIsRelatedToTicket() {
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -350,7 +350,7 @@ class TicketServiceTest {
     @Test
     void shouldThrowAccessDeniedWhenUserIsNotRelatedToTicket() {
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -407,12 +407,12 @@ class TicketServiceTest {
     @Test
     void shouldAllowAdminToGetAnyTicket() {
 
-        RolModel adminRol = new RolModel(
+        RoleModel adminRol = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -493,7 +493,7 @@ class TicketServiceTest {
     @Test
     void shouldReturnMyTickets() {
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -586,7 +586,7 @@ class TicketServiceTest {
     @Test
     void shouldReturnEmptyPageWhenUserHasNoTickets() {
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -663,7 +663,7 @@ class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(2L);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -804,7 +804,7 @@ class TicketServiceTest {
         when(request.getRequestedForId())
                 .thenReturn(99L);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -866,7 +866,7 @@ class TicketServiceTest {
         when(request.getCategoryId())
                 .thenReturn(99L);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -946,7 +946,7 @@ class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(99L);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -1035,7 +1035,7 @@ class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(2L);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -1136,7 +1136,7 @@ class TicketServiceTest {
         when(request.getCategoryId())
                 .thenReturn(2L);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -1263,7 +1263,7 @@ class TicketServiceTest {
         UpdateTicketRequest request = org.mockito.Mockito.mock(
                 UpdateTicketRequest.class);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -1346,12 +1346,12 @@ class TicketServiceTest {
         when(request.getCategoryId())
                 .thenReturn(2L);
 
-        RolModel technicianRol = new RolModel(
+        RoleModel technicianRol = new RoleModel(
                 2L,
                 "TECHNICIAN",
                 true);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -1487,7 +1487,7 @@ class TicketServiceTest {
         UpdateTicketRequest request = org.mockito.Mockito.mock(
                 UpdateTicketRequest.class);
 
-        RolModel technicianRol = new RolModel(
+        RoleModel technicianRol = new RoleModel(
                 2L,
                 "TECHNICIAN",
                 true);
@@ -1555,12 +1555,12 @@ class TicketServiceTest {
         when(request.getAssignedToId())
                 .thenReturn(2L);
 
-        RolModel adminRol = new RolModel(
+        RoleModel adminRol = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
 
-        RolModel technicianRol = new RolModel(
+        RoleModel technicianRol = new RoleModel(
                 2L,
                 "TECHNICIAN",
                 true);
@@ -1663,12 +1663,12 @@ class TicketServiceTest {
         when(request.getAssignedToId())
                 .thenReturn(3L);
 
-        RolModel adminRol = new RolModel(
+        RoleModel adminRol = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
 
-        RolModel technicianRol = new RolModel(
+        RoleModel technicianRol = new RoleModel(
                 2L,
                 "TECHNICIAN",
                 true);
@@ -1817,7 +1817,7 @@ class TicketServiceTest {
         when(request.getAssignedToId())
                 .thenReturn(2L);
 
-        RolModel userRol = new RolModel(
+        RoleModel userRol = new RoleModel(
                 3L,
                 "USER",
                 true);
@@ -1878,7 +1878,7 @@ class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(3L);
 
-        RolModel adminRol = new RolModel(
+        RoleModel adminRol = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
@@ -2001,7 +2001,7 @@ class TicketServiceTest {
         when(request.getPriorityId())
                 .thenReturn(2L);
 
-        RolModel adminRol = new RolModel(
+        RoleModel adminRol = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
@@ -2078,7 +2078,7 @@ class TicketServiceTest {
         when(request.getStatusId())
                 .thenReturn(2L);
 
-        RolModel adminRol = new RolModel(
+        RoleModel adminRol = new RoleModel(
                 1L,
                 "ADMIN",
                 true);
@@ -2201,7 +2201,7 @@ class TicketServiceTest {
         when(request.getStatusId())
                 .thenReturn(1L);
 
-        RolModel adminRol = new RolModel(
+        RoleModel adminRol = new RoleModel(
                 1L,
                 "ADMIN",
                 true);

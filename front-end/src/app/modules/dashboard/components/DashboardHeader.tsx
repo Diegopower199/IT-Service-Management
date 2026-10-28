@@ -1,14 +1,14 @@
 interface DashboardHeaderProps {
   username: string;
-  rol: string;
+  role: string;
 }
 
 export default function DashboardHeader({
   username,
-  rol,
+  role,
 }: DashboardHeaderProps) {
   const getDescription = () => {
-    switch (rol) {
+    switch (role) {
       case "ADMIN":
         return "System overview and help desk activity.";
 

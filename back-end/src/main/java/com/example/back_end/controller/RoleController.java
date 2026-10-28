@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.back_end.dtos.rol.RolRequest;
-import com.example.back_end.dtos.rol.RolResponse;
-import com.example.back_end.service.RolService;
+import com.example.back_end.dtos.role.RoleRequest;
+import com.example.back_end.dtos.role.RoleResponse;
+import com.example.back_end.service.RoleService;
 import com.example.back_end.utils.GlobalConstants;
 
 import jakarta.validation.Valid;
@@ -29,73 +29,75 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/roles")
 @RequiredArgsConstructor
-public class RolController {
+public class RoleController {
 
-    private final RolService rolService;
+    private final RoleService roleService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<RolResponse>> getAllRoles() {
-        List<RolResponse> roles = rolService.getAllRoles();
+    public ResponseEntity<List<RoleResponse>> getAllRoles() {
 
-        return ResponseEntity.ok(roles);
+        return ResponseEntity.ok(
+                roleService.getAllRoles());
     }
 
     @GetMapping("/active")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<RolResponse>> getActiveRoles() {
+    public ResponseEntity<List<RoleResponse>> getActiveRoles() {
 
         return ResponseEntity.ok(
-                rolService.getActiveRoles());
+                roleService.getActiveRoles());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RolResponse> getRolById(
+    public ResponseEntity<RoleResponse> getRoleById(
             @PathVariable Long id) {
 
-        RolResponse rol = rolService.getRolById(id);
+        RoleResponse role = roleService.getRoleById(id);
 
-        return ResponseEntity.ok(rol);
+        return ResponseEntity.ok(role);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RolResponse> createRol(
-            @Valid @RequestBody RolRequest request) {
+    public ResponseEntity<RoleResponse> createRole(
+            @Valid @RequestBody RoleRequest request) {
 
-        RolResponse savedRol = rolService.createRol(request);
+        RoleResponse savedRole = roleService.createRole(request);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedRol);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedRole);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RolResponse> updateRol(
+    public ResponseEntity<RoleResponse> updateRole(
             @PathVariable Long id,
-            @Valid @RequestBody RolRequest request) {
+            @Valid @RequestBody RoleRequest request) {
 
-        RolResponse updatedRol = rolService.updateRol(request, id);
+        RoleResponse updatedRole = roleService.updateRole(request, id);
 
-        return ResponseEntity.ok(updatedRol);
+        return ResponseEntity.ok(updatedRole);
     }
 
     @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deactivateRol(
+    public ResponseEntity<Void> deactivateRole(
             @PathVariable Long id) {
 
-        rolService.deactivateRol(id);
+        roleService.deactivateRole(id);
 
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/activate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> activateRol(
+    public ResponseEntity<Void> activateRole(
             @PathVariable Long id) {
 
-        rolService.activateRol(id);
+        roleService.activateRole(id);
 
         return ResponseEntity.noContent().build();
     }

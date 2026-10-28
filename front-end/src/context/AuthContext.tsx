@@ -1,11 +1,11 @@
 "use client";
 
-import { UserRole } from "@/types/roleTypes";
+import type { UserRole } from "@/types/roleTypes";
 import { createContext, useEffect, useState, type ReactNode } from "react";
 
 interface AuthUser {
   username: string;
-  rol: UserRole;
+  role: UserRole;
 }
 
 interface AuthContextType {
@@ -13,7 +13,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isAuthReady: boolean;
-  setAuthentication: (token: string, username: string, rol: UserRole) => void;
+  setAuthentication: (token: string, username: string, role: UserRole) => void;
   logout: () => void;
 }
 
@@ -33,18 +33,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUsername = localStorage.getItem("username");
-    const storedRol = localStorage.getItem("rol") as UserRole | null;
+    const storedRole = localStorage.getItem("role") as UserRole | null;
 
-    if (storedToken && storedUsername && storedRol) {
+    if (storedToken && storedUsername && storedRole) {
       setToken(storedToken);
-
-      console.log("TOKEN: ", storedToken)
-      console.log("USERNAME: ", storedUsername)
-      console.log("ROL: ", storedRol)
 
       setUser({
         username: storedUsername,
-        rol: storedRol,
+        role: storedRole,
       });
     }
 
@@ -54,24 +50,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const setAuthentication = (
     newToken: string,
     username: string,
-    rol: UserRole,
+    role: UserRole,
   ) => {
     localStorage.setItem("token", newToken);
     localStorage.setItem("username", username);
-    localStorage.setItem("rol", rol);
+    localStorage.setItem("role", role);
 
     setToken(newToken);
 
     setUser({
       username,
-      rol,
+      role,
     });
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
-    localStorage.removeItem("rol");
+    localStorage.removeItem("role");
 
     setToken(null);
     setUser(null);

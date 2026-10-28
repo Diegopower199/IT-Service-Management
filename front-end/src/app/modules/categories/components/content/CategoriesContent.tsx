@@ -82,7 +82,7 @@ export default function CategoriesContent() {
       return;
     }
 
-    if (user.rol !== USER_ROLES.ADMIN) {
+    if (user.role !== USER_ROLES.ADMIN) {
       router.replace("/403");
       return;
     }
@@ -243,7 +243,7 @@ export default function CategoriesContent() {
     return <PageLoading />;
   }
 
-  if (user.rol !== USER_ROLES.ADMIN) {
+  if (user.role !== USER_ROLES.ADMIN) {
     return <PageLoading />;
   }
 

@@ -116,7 +116,7 @@ export default function AddTicketCommentDialog({
       await createTicketComment(ticketId, {
         comment: formData.comment,
         internal:
-          user?.rol === USER_ROLES.ADMIN || user?.rol === USER_ROLES.TECHNICIAN
+          user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TECHNICIAN
             ? formData.internal
             : false,
       });
@@ -205,8 +205,8 @@ export default function AddTicketCommentDialog({
             disabled={savingComment}
           />
 
-          {(user?.rol === USER_ROLES.ADMIN ||
-            user?.rol === USER_ROLES.TECHNICIAN) && (
+          {(user?.role === USER_ROLES.ADMIN ||
+            user?.role === USER_ROLES.TECHNICIAN) && (
             <FormControlLabel
               control={
                 <Checkbox
