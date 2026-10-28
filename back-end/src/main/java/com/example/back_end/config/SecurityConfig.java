@@ -15,6 +15,7 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.example.back_end.security.JwtAuthenticationEntryPoint;
 import com.example.back_end.security.JwtAuthenticationFilter;
 import com.example.back_end.utils.GlobalConstants;
 
@@ -27,8 +28,8 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>
  * Defines public and protected endpoints, configures stateless authentication
- * using JWT, and registers the JWT authentication filter in the Spring Security
- * filter chain.
+ * using JWT, handles authentication failures, and registers the JWT
+ * authentication filter in the Spring Security filter chain.
  * </p>
  */
 @Configuration
@@ -38,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final AuthenticationProvider authProvider;
 
     /**
@@ -52,6 +54,7 @@ public class SecurityConfig {
      * authentication.</li>
      * <li>Allows unauthenticated access only to {@code /auth/login}.</li>
      * <li>Requires authentication for every other endpoint.</li>
+     * <li>Returns a standardized HTTP 401 response when authentication fails.</li>
      * <li>Uses stateless session management, so no HTTP session is stored on the
      * server.</li>
      * <li>Registers the custom JWT authentication filter before
@@ -63,25 +66,37 @@ public class SecurityConfig {
      * @throws Exception if the security configuration cannot be built
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http)
+            throws Exception {
 
         PathPatternRequestMatcher.Builder mvc = withDefaults()
                 .basePath("/api/v1");
 
         return http
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(authRequest -> authRequest
                         .requestMatchers(
                                 mvc.matcher("/auth/login"))
                         .permitAll()
                         .anyRequest()
                         .authenticated())
+
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(
+                                jwtAuthenticationEntryPoint))
+
                 .sessionManagement(sessionManager -> sessionManager
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
+
                 .authenticationProvider(authProvider)
+
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class)
+
                 .build();
     }
 
@@ -120,7 +135,9 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration(
+                "/**",
+                configuration);
 
         return source;
     }

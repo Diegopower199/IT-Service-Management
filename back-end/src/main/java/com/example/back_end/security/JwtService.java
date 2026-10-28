@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -30,16 +31,23 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
+    private final String secretKey;
+
     /**
-     * Secret key used to sign and verify JWTs.
+     * Creates the JWT service using the configured signing key.
      *
      * <p>
-     * This value should not be stored directly in the source code in a
-     * production environment. It should be provided through an environment
-     * variable or a secrets management system.
+     * The key is injected from the {@code jwt.secret} application property,
+     * which is expected to be provided through the {@code JWT_SECRET}
+     * environment variable.
      * </p>
+     *
+     * @param secretKey the Base64-encoded secret key used for JWT signing
      */
-    private static final String SECRET_KEY = "Q9mR7xT4vN2kL8pS6dF3hJ1cW5zB7yU9eA4gH8qK2mP6rV3t";
+    public JwtService(
+            @Value("${jwt.secret}") String secretKey) {
+        this.secretKey = secretKey;
+    }
 
     /**
      * Generates a JWT for the specified user without additional claims.
@@ -87,7 +95,7 @@ public class JwtService {
      */
     private Key getKey() {
 
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
 
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -103,11 +111,13 @@ public class JwtService {
     }
 
     /**
-     * Validates that the token belongs to the expected user and has not expired.
+     * Validates that the token belongs to the expected user, the user is enabled,
+     * and the token has not expired.
      *
      * @param token       the JWT to validate
      * @param userDetails the user loaded from the application
-     * @return {@code true} if the token is valid; {@code false} otherwise
+     * @return {@code true} if the token is valid and the user is enabled;
+     *         {@code false} otherwise
      */
     public boolean isTokenValid(
             String token,
@@ -116,6 +126,7 @@ public class JwtService {
         final String username = getUsernameFromToken(token);
 
         return userDetails.getUsername().equals(username)
+                && userDetails.isEnabled()
                 && !isTokenExpired(token);
     }
 
