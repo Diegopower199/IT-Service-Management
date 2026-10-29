@@ -41,12 +41,11 @@ export default function TicketHistory({
         setLoading(true);
         setErrorMessage("");
 
-        const response = await getAllTicketHistoryById(
-          ticketId,
-          0,
-          5,
-          DEFAULT_TICKET_HISTORY_SORT,
-        );
+        const response = await getAllTicketHistoryById(ticketId, {
+          page: 0,
+          size: 5,
+          sort: DEFAULT_TICKET_HISTORY_SORT,
+        });
 
         setTicketHistory(response.content);
       } catch (error) {

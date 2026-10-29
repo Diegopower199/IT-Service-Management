@@ -1,5 +1,5 @@
 import api from "@/config/axios";
-import { PageResponse } from "@/types/pageTypes";
+import { PageResponse, PaginationParams } from "@/types/paginationTypes";
 import {
   CreateTicketCommentRequest,
   TicketCommentResponse,
@@ -7,18 +7,12 @@ import {
 
 export const getAllTicketsCommentsById = async (
   ticketId: number,
-  page: number,
-  size: number,
-  sort: string,
+  pagination: PaginationParams,
 ): Promise<PageResponse<TicketCommentResponse>> => {
   const response = await api.get<PageResponse<TicketCommentResponse>>(
     `/ticket-comments/ticket/${ticketId}`,
     {
-      params: {
-        page,
-        size,
-        sort,
-      },
+      params: pagination,
     },
   );
 

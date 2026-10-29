@@ -42,12 +42,11 @@ export default function TicketComments({
         setLoading(true);
         setErrorMessage("");
 
-        const response = await getAllTicketsCommentsById(
-          ticketId,
-          0,
-          5,
-          DEFAULT_TICKET_COMMENTS_SORT,
-        );
+        const response = await getAllTicketsCommentsById(ticketId, {
+          page: 0,
+          size: 5,
+          sort: DEFAULT_TICKET_COMMENTS_SORT,
+        });
 
         setTicketComments(response.content);
       } catch (error) {
