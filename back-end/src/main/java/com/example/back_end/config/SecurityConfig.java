@@ -28,8 +28,8 @@ import lombok.RequiredArgsConstructor;
  *
  * <p>
  * Defines public and protected endpoints, configures stateless authentication
- * using JWT, handles authentication failures, and registers the JWT
- * authentication filter in the Spring Security filter chain.
+ * using JWT, handles authentication failures, configures CORS, and registers
+ * the JWT authentication filter in the Spring Security filter chain.
  * </p>
  */
 @Configuration
@@ -52,7 +52,8 @@ public class SecurityConfig {
      * <ul>
      * <li>Disables CSRF protection because the API uses stateless JWT
      * authentication.</li>
-     * <li>Allows unauthenticated access only to {@code /auth/login}.</li>
+     * <li>Allows unauthenticated access to the login, refresh, and logout
+     * authentication endpoints.</li>
      * <li>Requires authentication for every other endpoint.</li>
      * <li>Returns a standardized HTTP 401 response when authentication fails.</li>
      * <li>Uses stateless session management, so no HTTP session is stored on the
@@ -78,7 +79,9 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(authRequest -> authRequest
                         .requestMatchers(
-                                mvc.matcher("/auth/login"))
+                                mvc.matcher("/auth/login"),
+                                mvc.matcher("/auth/refresh"),
+                                mvc.matcher("/auth/logout"))
                         .permitAll()
                         .anyRequest()
                         .authenticated())
@@ -109,6 +112,11 @@ public class SecurityConfig {
      * REST API and JWT authentication.
      * </p>
      *
+     * <p>
+     * Credentials are enabled so the browser can send the HttpOnly refresh
+     * token cookie between the front-end and back-end applications.
+     * </p>
+     *
      * @return the configured {@link UrlBasedCorsConfigurationSource}
      */
     @Bean
@@ -132,6 +140,8 @@ public class SecurityConfig {
                 List.of(
                         "Authorization",
                         "Content-Type"));
+
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 

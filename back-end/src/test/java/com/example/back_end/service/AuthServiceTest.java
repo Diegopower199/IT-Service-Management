@@ -16,36 +16,27 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.example.back_end.dtos.auth.AuthLoginResponse;
+import com.example.back_end.dtos.auth.AuthLoginResult;
 import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.UserModel;
-import com.example.back_end.repository.DepartmentRepository;
-import com.example.back_end.repository.RoleRepository;
 import com.example.back_end.repository.UserRepository;
 import com.example.back_end.security.JwtService;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthServiceTest {
+class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
 
     @Mock
-    private RoleRepository rolRepository;
-
-    @Mock
-    private DepartmentRepository departmentRepository;
-
-    @Mock
     private JwtService jwtService;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private RefreshTokenService refreshTokenService;
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -56,10 +47,12 @@ public class AuthServiceTest {
     // =========================================================
     // LOGIN
     // =========================================================
+
     @Test
     void shouldLoginSuccessfully() {
 
-        LoginRequest request = org.mockito.Mockito.mock(LoginRequest.class);
+        LoginRequest request = org.mockito.Mockito.mock(
+                LoginRequest.class);
 
         when(request.getUsername())
                 .thenReturn("ana");
@@ -89,40 +82,59 @@ public class AuthServiceTest {
                 department);
 
         when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(user));
+                .thenReturn(
+                        Optional.of(user));
 
         when(jwtService.getToken(user))
-                .thenReturn("jwt-token");
+                .thenReturn(
+                        "jwt-token");
 
-        AuthLoginResponse response = authService.login(request);
+        when(refreshTokenService
+                .createRefreshToken(user))
+                .thenReturn(
+                        "refresh-token");
+
+        AuthLoginResult result = authService.login(request);
 
         assertEquals(
                 "jwt-token",
-                response.getToken());
+                result.getAuthLoginResponse()
+                        .getToken());
 
         assertEquals(
                 "ana",
-                response.getUsername());
+                result.getAuthLoginResponse()
+                        .getUsername());
 
         assertEquals(
                 "USER",
-                response.getRole());
+                result.getAuthLoginResponse()
+                        .getRole());
+
+        assertEquals(
+                "refresh-token",
+                result.getRefreshToken());
 
         verify(authenticationManager)
                 .authenticate(
-                        any(UsernamePasswordAuthenticationToken.class));
+                        any(
+                                UsernamePasswordAuthenticationToken.class));
 
         verify(userRepository)
                 .findByUsername("ana");
 
         verify(jwtService)
                 .getToken(user);
+
+        verify(refreshTokenService)
+                .createRefreshToken(user);
     }
 
     @Test
     void shouldThrowExceptionWhenUserDoesNotExistAfterAuthentication() {
 
-        LoginRequest request = org.mockito.Mockito.mock(LoginRequest.class);
+        LoginRequest request = org.mockito.Mockito.mock(
+                LoginRequest.class);
 
         when(request.getUsername())
                 .thenReturn("ana");
@@ -131,7 +143,8 @@ public class AuthServiceTest {
                 .thenReturn("password123");
 
         when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.empty());
+                .thenReturn(
+                        Optional.empty());
 
         assertThrows(
                 ResourceNotFoundException.class,
@@ -139,13 +152,16 @@ public class AuthServiceTest {
 
         verify(authenticationManager)
                 .authenticate(
-                        any(UsernamePasswordAuthenticationToken.class));
+                        any(
+                                UsernamePasswordAuthenticationToken.class));
 
         verify(userRepository)
                 .findByUsername("ana");
 
         verify(jwtService, never())
                 .getToken(any());
-    }
 
+        verify(refreshTokenService, never())
+                .createRefreshToken(any());
+    }
 }

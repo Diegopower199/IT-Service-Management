@@ -6,7 +6,7 @@ import styles from "./appHeader.module.css";
 import Button from "@/components/ui/Button";
 
 export default function AppHeader() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <header className={styles.header}>
@@ -21,7 +21,7 @@ export default function AppHeader() {
           <Button
             type="button"
             variant="logout"
-            onClick={logout}
+            onClick={signOut}
             className={styles.logout}
           >
             Logout

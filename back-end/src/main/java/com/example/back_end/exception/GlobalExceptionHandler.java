@@ -15,6 +15,44 @@ import com.example.back_end.exception.response.ErrorResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // =========================================================
+    // AUTHENTICATION / AUTHORIZATION
+    // =========================================================
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(
+            InvalidRefreshTokenException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "INVALID_REFRESH_TOKEN",
+                ex.getMessage(),
+                null,
+                LocalDateTime.now());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            AccessDeniedException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "ACCESS_DENIED",
+                ex.getMessage(),
+                null,
+                LocalDateTime.now());
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(errorResponse);
+    }
+
+    // =========================================================
+    // RESOURCES
+    // =========================================================
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(
             ResourceNotFoundException ex) {
@@ -47,6 +85,9 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    // =========================================================
+    // BUSINESS RULES
+    // =========================================================
     @ExceptionHandler(InvalidRoleException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRole(
             InvalidRoleException ex) {
@@ -63,22 +104,6 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(
-            AccessDeniedException ex) {
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
-                "ACCESS_DENIED",
-                ex.getMessage(),
-                null,
-                LocalDateTime.now());
-
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(errorResponse);
-    }
-
     @ExceptionHandler(InvalidOperationException.class)
     public ResponseEntity<ErrorResponse> handleInvalidOperation(
             InvalidOperationException ex) {
@@ -86,22 +111,6 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "INVALID_OPERATION",
-                ex.getMessage(),
-                null,
-                LocalDateTime.now());
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(
-            IllegalArgumentException ex) {
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "BAD_REQUEST",
                 ex.getMessage(),
                 null,
                 LocalDateTime.now());
@@ -127,6 +136,9 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    // =========================================================
+    // VALIDATION
+    // =========================================================
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(
             MethodArgumentNotValidException ex) {
@@ -144,6 +156,25 @@ public class GlobalExceptionHandler {
                 "VALIDATION_ERROR",
                 "Validation failed",
                 errors,
+                LocalDateTime.now());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
+    // =========================================================
+    // GENERIC BAD REQUEST
+    // =========================================================
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(
+            IllegalArgumentException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "BAD_REQUEST",
+                ex.getMessage(),
+                null,
                 LocalDateTime.now());
 
         return ResponseEntity
