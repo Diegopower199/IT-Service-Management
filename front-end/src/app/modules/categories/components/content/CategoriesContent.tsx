@@ -39,13 +39,16 @@ import {
 } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
+
 import {
   activateCategory,
   deactivateCategory,
   getAllCategories,
 } from "../../services/categoryService";
+
 import CategoryForm from "../form/CategoryForm";
 
 export default function CategoriesContent() {
@@ -96,7 +99,10 @@ export default function CategoriesContent() {
 
         setCategories(response);
       } catch (error) {
-        console.error("Error loading categories:", error);
+        logger.error("Failed to load categories", error, {
+          component: "CategoriesContent",
+          action: "loadCategories",
+        });
 
         const apiError = getApiError(error);
 
@@ -160,7 +166,11 @@ export default function CategoriesContent() {
 
       setCategoriesUpdated((previous) => !previous);
     } catch (error) {
-      console.error("Error changing category status:", error);
+      logger.error("Failed to change category status", error, {
+        component: "CategoriesContent",
+        action: "handleChangeCategoryStatus",
+        categoryId: categoryStatusToChange.idCategory,
+      });
 
       const apiError = getApiError(error);
 

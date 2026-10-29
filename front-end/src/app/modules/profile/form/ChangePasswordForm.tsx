@@ -14,6 +14,7 @@ import {
 import { changePassword } from "@/app/modules/users/services/userService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 interface ChangePasswordFormData {
   currentPassword: string;
@@ -109,7 +110,10 @@ export default function ChangePasswordForm() {
 
       setSuccessMessage("Password changed successfully.");
     } catch (error) {
-      console.error("Error changing password:", error);
+      logger.error("Failed to change password", error, {
+        component: "ChangePasswordForm",
+        action: "handleSubmit",
+      });
 
       const apiError = getApiError(error);
 

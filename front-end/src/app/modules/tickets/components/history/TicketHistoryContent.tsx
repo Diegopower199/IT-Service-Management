@@ -13,6 +13,7 @@ import {
 } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 
@@ -55,7 +56,11 @@ export default function TicketHistoryContent({
         setTicketHistory(response.content);
         setTotalElements(response.totalElements);
       } catch (error) {
-        console.error("Error loading ticket history:", error);
+        logger.error("Failed to load ticket history", error, {
+          component: "TicketHistoryContent",
+          action: "loadTicketHistory",
+          ticketId,
+        });
 
         const apiError = getApiError(error);
 

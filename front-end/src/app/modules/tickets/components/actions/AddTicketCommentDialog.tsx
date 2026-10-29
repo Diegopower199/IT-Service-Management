@@ -21,9 +21,10 @@ import { useAuth } from "@/hooks/useAuth";
 
 import { USER_ROLES } from "@/types/roleTypes";
 
-import { createTicketComment } from "../../services/ticketCommentsService";
-
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
+import { createTicketComment } from "../../services/ticketCommentsService";
 
 interface AddTicketCommentDialogProps {
   open: boolean;
@@ -116,7 +117,8 @@ export default function AddTicketCommentDialog({
       await createTicketComment(ticketId, {
         comment: formData.comment,
         internal:
-          user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TECHNICIAN
+          user?.role === USER_ROLES.ADMIN ||
+          user?.role === USER_ROLES.TECHNICIAN
             ? formData.internal
             : false,
       });
@@ -125,17 +127,21 @@ export default function AddTicketCommentDialog({
 
       handleClose();
     } catch (error) {
-      console.error("Error creating ticket comment:", error);
-
       const apiError = getApiError(error);
 
-      if (apiError?.errors) {
+      if (apiError?.errors?.comment) {
         setRequiredFieldsIncomplete({
           comment: apiError.errors.comment,
         });
 
         return;
       }
+
+      logger.error("Failed to create ticket comment", error, {
+        component: "AddTicketCommentDialog",
+        action: "handleConfirm",
+        ticketId,
+      });
 
       setErrorMessage(apiError?.message ?? "Error creating comment.");
     } finally {

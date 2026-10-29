@@ -14,6 +14,8 @@ import {
 import type { UpdateProfileRequest, UserResponse } from "@/types/userTypes";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
 import { updateCurrentUser } from "../../users/services/userService";
 
 interface ProfileFormProps {
@@ -107,8 +109,6 @@ export default function ProfileForm({
 
       onSubmitSuccess();
     } catch (error) {
-      console.error("Error updating profile:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors) {
@@ -120,6 +120,11 @@ export default function ProfileForm({
 
         return;
       }
+
+      logger.error("Failed to update profile", error, {
+        component: "ProfileForm",
+        action: "handleSubmit",
+      });
 
       setErrorMessage(apiError?.message ?? "Error updating profile.");
     } finally {

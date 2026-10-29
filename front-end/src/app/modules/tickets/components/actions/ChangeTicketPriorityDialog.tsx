@@ -24,12 +24,13 @@ import {
 
 import type { PriorityResponse } from "@/types/priorityTypes";
 
-import { changeTicketPriority } from "../../services/ticketService";
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 import { formatEnumName, getPriorityColor } from "@/utils/ticketUiUtils";
 
-import { getApiError } from "@/utils/apiErrorUtils";
+import { changeTicketPriority } from "../../services/ticketService";
 
 interface ChangeTicketPriorityDialogProps {
   open: boolean;
@@ -64,7 +65,11 @@ export default function ChangeTicketPriorityDialog({
 
         setPriorities(response);
       } catch (error) {
-        console.error("Error loading priorities:", error);
+        logger.error("Failed to load priorities", error, {
+          component: "ChangeTicketPriorityDialog",
+          action: "loadPriorities",
+          ticketId,
+        });
 
         const apiError = getApiError(error);
 
@@ -113,8 +118,6 @@ export default function ChangeTicketPriorityDialog({
 
       handleClose();
     } catch (error) {
-      console.error("Error changing ticket priority:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.priorityId) {
@@ -122,6 +125,13 @@ export default function ChangeTicketPriorityDialog({
 
         return;
       }
+
+      logger.error("Failed to change ticket priority", error, {
+        component: "ChangeTicketPriorityDialog",
+        action: "handleConfirm",
+        ticketId,
+        priorityId: Number(selectedPriorityId),
+      });
 
       setErrorMessage(apiError?.message ?? "Error changing ticket priority.");
     } finally {

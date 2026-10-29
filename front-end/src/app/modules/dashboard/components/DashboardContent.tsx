@@ -18,6 +18,7 @@ import {
 } from "../../tickets/services/ticketService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -63,7 +64,10 @@ export default function DashboardContent() {
 
         setTickets(response.content);
       } catch (error) {
-        console.error("Error loading tickets:", error);
+        logger.error("Failed to load dashboard tickets", error, {
+          component: "DashboardContent",
+          action: "loadTickets",
+        });
 
         const apiError = getApiError(error);
 
@@ -79,7 +83,10 @@ export default function DashboardContent() {
 
         setStatistics(response);
       } catch (error) {
-        console.error("Error loading statistics:", error);
+        logger.error("Failed to load dashboard statistics", error, {
+          component: "DashboardContent",
+          action: "loadStatistics",
+        });
 
         const apiError = getApiError(error);
 

@@ -16,8 +16,9 @@ import type { CategoryResponse } from "@/types/categoryTypes";
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
-import { createCategory, updateCategory } from "../../services/categoryService";
+import { logger } from "@/utils/logger";
 
+import { createCategory, updateCategory } from "../../services/categoryService";
 
 interface CategoryFormProps {
   formMode: FormMode;
@@ -134,8 +135,6 @@ export default function CategoryForm({
       onSubmitSuccess();
       onClose();
     } catch (error) {
-      console.error("Error saving category:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.name) {
@@ -145,6 +144,21 @@ export default function CategoryForm({
 
         return;
       }
+
+      logger.error(
+        formMode === FORM_MODES.CREATE
+          ? "Failed to create category"
+          : "Failed to update category",
+        error,
+        {
+          component: "CategoryForm",
+          action: "handleSubmit",
+          formMode,
+          ...(selectedCategory && {
+            categoryId: selectedCategory.idCategory,
+          }),
+        },
+      );
 
       setErrorMessage(
         apiError?.message ??

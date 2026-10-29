@@ -12,6 +12,7 @@ import type { UserResponse } from "@/types/userTypes";
 import { getCurrentUser } from "../../users/services/userService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -49,7 +50,10 @@ export default function ProfileContent() {
 
         setProfile(response);
       } catch (error) {
-        console.error("Error loading profile:", error);
+        logger.error("Failed to load profile", error, {
+          component: "ProfileContent",
+          action: "loadProfile",
+        });
 
         const apiError = getApiError(error);
 

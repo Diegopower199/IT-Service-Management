@@ -50,6 +50,7 @@ import {
 } from "@/utils/ticketUiUtils";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import TicketForm from "../form/TicketForm";
 import TicketDetails from "../details/TicketDetails";
@@ -57,6 +58,7 @@ import TicketFiltersBar from "./TicketFiltersBar";
 
 import Button from "@/components/ui/Button";
 import PageLoading from "@/components/ui/PageLoading";
+
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 import { getAllActiveCategories } from "@/app/modules/categories/services/categoryService";
@@ -116,7 +118,10 @@ export default function TicketsContent() {
 
         setStatuses(response);
       } catch (error) {
-        console.error("Error loading statuses:", error);
+        logger.error("Failed to load statuses", error, {
+          component: "TicketsContent",
+          action: "loadStatuses",
+        });
 
         const apiError = getApiError(error);
 
@@ -130,7 +135,10 @@ export default function TicketsContent() {
 
         setPriorities(response);
       } catch (error) {
-        console.error("Error loading priorities:", error);
+        logger.error("Failed to load priorities", error, {
+          component: "TicketsContent",
+          action: "loadPriorities",
+        });
 
         const apiError = getApiError(error);
 
@@ -144,7 +152,10 @@ export default function TicketsContent() {
 
         setCategories(response);
       } catch (error) {
-        console.error("Error loading categories:", error);
+        logger.error("Failed to load categories", error, {
+          component: "TicketsContent",
+          action: "loadCategories",
+        });
 
         const apiError = getApiError(error);
 
@@ -209,7 +220,10 @@ export default function TicketsContent() {
         setTickets(response.content);
         setTotalElements(response.totalElements);
       } catch (error) {
-        console.error("Error loading tickets:", error);
+        logger.error("Failed to load tickets", error, {
+          component: "TicketsContent",
+          action: "loadTickets",
+        });
 
         const apiError = getApiError(error);
 
@@ -328,7 +342,11 @@ export default function TicketsContent() {
 
       setTicketsUpdated((previous) => !previous);
     } catch (error) {
-      console.error("Error updating ticket details:", error);
+      logger.error("Failed to refresh ticket details", error, {
+        component: "TicketsContent",
+        action: "handleTicketUpdated",
+        ticketId: selectedTicket.idTicket,
+      });
 
       const apiError = getApiError(error);
 

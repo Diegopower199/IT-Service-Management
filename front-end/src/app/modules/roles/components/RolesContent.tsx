@@ -9,7 +9,8 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
 import { useAuth } from "@/hooks/useAuth";
 
-import { RoleResponse, USER_ROLES } from "@/types/roleTypes";
+import type { RoleResponse } from "@/types/roleTypes";
+import { USER_ROLES } from "@/types/roleTypes";
 
 import {
   DATA_GRID_LOCALE_TEXT,
@@ -18,8 +19,10 @@ import {
 } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
+
 import { getAllRoles } from "../services/rolesService";
 
 export default function RolesContent() {
@@ -56,7 +59,10 @@ export default function RolesContent() {
 
         setRoles(response);
       } catch (error) {
-        console.error("Error loading roles:", error);
+        logger.error("Failed to load roles", error, {
+          component: "RolesContent",
+          action: "loadRoles",
+        });
 
         const apiError = getApiError(error);
 

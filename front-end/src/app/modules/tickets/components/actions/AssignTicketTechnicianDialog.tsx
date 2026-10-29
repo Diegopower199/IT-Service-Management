@@ -24,10 +24,12 @@ import {
 
 import type { UserSummaryResponse } from "@/types/userTypes";
 
-import { assignTicketTechnician } from "../../services/ticketService";
 import { getAllTechnicians } from "@/app/modules/users/services/userService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
+import { assignTicketTechnician } from "../../services/ticketService";
 
 interface AssignTicketTechnicianDialogProps {
   open: boolean;
@@ -62,7 +64,11 @@ export default function AssignTicketTechnicianDialog({
 
         setTechnicians(response);
       } catch (error) {
-        console.error("Error loading technicians:", error);
+        logger.error("Failed to load technicians", error, {
+          component: "AssignTicketTechnicianDialog",
+          action: "loadTechnicians",
+          ticketId,
+        });
 
         const apiError = getApiError(error);
 
@@ -71,7 +77,7 @@ export default function AssignTicketTechnicianDialog({
     };
 
     loadTechnicians();
-  }, []);
+  }, [ticketId]);
 
   const handleTechnicianChange = (event: SelectChangeEvent) => {
     setSelectedTechnicianId(event.target.value);
@@ -111,8 +117,6 @@ export default function AssignTicketTechnicianDialog({
 
       handleClose();
     } catch (error) {
-      console.error("Error assigning technician:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.assignedToId) {
@@ -120,6 +124,13 @@ export default function AssignTicketTechnicianDialog({
 
         return;
       }
+
+      logger.error("Failed to assign technician", error, {
+        component: "AssignTicketTechnicianDialog",
+        action: "handleConfirm",
+        ticketId,
+        technicianId: Number(selectedTechnicianId),
+      });
 
       setErrorMessage(apiError?.message ?? "Error assigning technician.");
     } finally {

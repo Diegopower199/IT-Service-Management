@@ -38,15 +38,17 @@ import {
   type FormMode,
 } from "@/utils/constans";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
+import PageLoading from "@/components/ui/PageLoading";
+
 import {
   activateStatus,
   deactivateStatus,
   getAllStatuses,
 } from "../../services/statusService";
 
-import { getApiError } from "@/utils/apiErrorUtils";
-
-import PageLoading from "@/components/ui/PageLoading";
 import StatusForm from "../form/StatusForm";
 
 export default function StatusesContent() {
@@ -99,7 +101,10 @@ export default function StatusesContent() {
 
         setStatuses(response);
       } catch (error) {
-        console.error("Error loading statuses:", error);
+        logger.error("Failed to load statuses", error, {
+          component: "StatusesContent",
+          action: "loadStatuses",
+        });
 
         const apiError = getApiError(error);
 
@@ -163,7 +168,11 @@ export default function StatusesContent() {
 
       setStatusesUpdated((previous) => !previous);
     } catch (error) {
-      console.error("Error changing status:", error);
+      logger.error("Failed to change status", error, {
+        component: "StatusesContent",
+        action: "handleChangeStatus",
+        statusId: statusToChange.idStatus,
+      });
 
       const apiError = getApiError(error);
 

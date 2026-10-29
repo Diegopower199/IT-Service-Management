@@ -1,21 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { Alert, Button, Divider, Paper, Typography } from "@mui/material";
+
+import dayjs from "dayjs";
+
 import PageLoading from "@/components/ui/PageLoading";
 
 import type { TicketCommentResponse } from "@/types/ticketCommentTypes";
 
-import { Alert, Button, Divider, Paper, Typography } from "@mui/material";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
-import dayjs from "dayjs";
+import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import { getAllTicketsCommentsById } from "../../services/ticketCommentsService";
-
-import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
-
-import { getApiError } from "@/utils/apiErrorUtils";
 
 interface TicketCommentsProps {
   ticketId: number;
@@ -50,7 +50,11 @@ export default function TicketComments({
 
         setTicketComments(response.content);
       } catch (error) {
-        console.error("Error loading ticket comments:", error);
+        logger.error("Failed to load ticket comments", error, {
+          component: "TicketComments",
+          action: "loadTicketComments",
+          ticketId,
+        });
 
         const apiError = getApiError(error);
 

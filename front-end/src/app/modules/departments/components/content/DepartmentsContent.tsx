@@ -38,15 +38,17 @@ import {
   type FormMode,
 } from "@/utils/constans";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
+import PageLoading from "@/components/ui/PageLoading";
+
 import {
   activateDepartment,
   deactivateDepartment,
   getAllDepartments,
 } from "../../services/departmentService";
 
-import { getApiError } from "@/utils/apiErrorUtils";
-
-import PageLoading from "@/components/ui/PageLoading";
 import DepartmentForm from "../form/DepartmentForm";
 
 export default function DepartmentsContent() {
@@ -97,7 +99,10 @@ export default function DepartmentsContent() {
 
         setDepartments(response);
       } catch (error) {
-        console.error("Error loading departments:", error);
+        logger.error("Failed to load departments", error, {
+          component: "DepartmentsContent",
+          action: "loadDepartments",
+        });
 
         const apiError = getApiError(error);
 
@@ -161,7 +166,11 @@ export default function DepartmentsContent() {
 
       setDepartmentsUpdated((previous) => !previous);
     } catch (error) {
-      console.error("Error changing department status:", error);
+      logger.error("Failed to change department status", error, {
+        component: "DepartmentsContent",
+        action: "handleChangeDepartmentStatus",
+        departmentId: departmentStatusToChange.idDepartment,
+      });
 
       const apiError = getApiError(error);
 
