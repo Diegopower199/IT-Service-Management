@@ -10,3 +10,7 @@ export interface AuthResponse {
   username: string;
   role: UserRole;
 }
+
+export interface RefreshTokenResponse {
+  token: string;
+}
