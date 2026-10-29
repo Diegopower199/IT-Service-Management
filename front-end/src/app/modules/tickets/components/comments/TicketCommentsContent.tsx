@@ -25,6 +25,7 @@ import type { TicketCommentResponse } from "@/types/ticketCommentTypes";
 
 import { DEFAULT_TICKET_COMMENTS_SORT } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import {
   createTicketComment,
@@ -89,7 +90,11 @@ export default function TicketCommentsContent({
         setTicketComments(response.content);
         setTotalElements(response.totalElements);
       } catch (error) {
-        console.error("Error loading ticket comments:", error);
+        logger.error("Failed to load ticket comments", error, {
+          component: "TicketCommentsContent",
+          action: "loadTicketComments",
+          ticketId,
+        });
 
         const apiError = getApiError(error);
 
@@ -202,7 +207,11 @@ export default function TicketCommentsContent({
           setTicketComments(response.content);
           setTotalElements(response.totalElements);
         } catch (error) {
-          console.error("Error reloading ticket comments:", error);
+          logger.error("Failed to reload ticket comments", error, {
+            component: "TicketCommentsContent",
+            action: "reloadTicketComments",
+            ticketId,
+          });
 
           const apiError = getApiError(error);
 
@@ -212,8 +221,6 @@ export default function TicketCommentsContent({
         }
       }
     } catch (error) {
-      console.error("Error creating ticket comment:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.comment) {
@@ -223,6 +230,12 @@ export default function TicketCommentsContent({
 
         return;
       }
+
+      logger.error("Failed to create ticket comment", error, {
+        component: "TicketCommentsContent",
+        action: "handleSubmit",
+        ticketId,
+      });
 
       setErrorMessage(apiError?.message ?? "Error creating comment.");
     } finally {

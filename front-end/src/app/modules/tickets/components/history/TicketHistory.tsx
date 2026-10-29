@@ -11,6 +11,7 @@ import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 
 import { DEFAULT_TICKET_HISTORY_SORT } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
 
@@ -49,7 +50,11 @@ export default function TicketHistory({
 
         setTicketHistory(response.content);
       } catch (error) {
-        console.error("Error loading ticket history:", error);
+        logger.error("Failed to load ticket history", error, {
+          component: "TicketHistory",
+          action: "loadTicketHistory",
+          ticketId,
+        });
 
         const apiError = getApiError(error);
 

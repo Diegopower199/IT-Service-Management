@@ -24,12 +24,13 @@ import {
 
 import type { StatusResponse } from "@/types/statusTypes";
 
-import { changeTicketStatus } from "../../services/ticketService";
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 import { formatEnumName, getStatusColor } from "@/utils/ticketUiUtils";
 
-import { getApiError } from "@/utils/apiErrorUtils";
+import { changeTicketStatus } from "../../services/ticketService";
 
 interface ChangeTicketStatusDialogProps {
   open: boolean;
@@ -64,7 +65,11 @@ export default function ChangeTicketStatusDialog({
 
         setStatuses(response);
       } catch (error) {
-        console.error("Error loading statuses:", error);
+        logger.error("Failed to load statuses", error, {
+          component: "ChangeTicketStatusDialog",
+          action: "loadStatuses",
+          ticketId,
+        });
 
         const apiError = getApiError(error);
 
@@ -113,8 +118,6 @@ export default function ChangeTicketStatusDialog({
 
       handleClose();
     } catch (error) {
-      console.error("Error changing ticket status:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.statusId) {
@@ -122,6 +125,13 @@ export default function ChangeTicketStatusDialog({
 
         return;
       }
+
+      logger.error("Failed to change ticket status", error, {
+        component: "ChangeTicketStatusDialog",
+        action: "handleConfirm",
+        ticketId,
+        statusId: Number(selectedStatusId),
+      });
 
       setErrorMessage(apiError?.message ?? "Error changing ticket status.");
     } finally {

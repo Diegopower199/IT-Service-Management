@@ -28,14 +28,15 @@ import {
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
 import { getAllUsers } from "../../services/userService";
 
 import UserForm from "../form/UserForm";
 
 import Button from "@/components/ui/Button";
 import PageLoading from "@/components/ui/PageLoading";
-
-import { getApiError } from "@/utils/apiErrorUtils";
 
 export default function UsersContent() {
   const { user, isAuthReady } = useAuth();
@@ -89,7 +90,10 @@ export default function UsersContent() {
         setUsers(response.content);
         setTotalElements(response.totalElements);
       } catch (error) {
-        console.error("Error loading users:", error);
+        logger.error("Failed to load users", error, {
+          component: "UsersContent",
+          action: "loadUsers",
+        });
 
         const apiError = getApiError(error);
 

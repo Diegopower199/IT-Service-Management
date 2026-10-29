@@ -38,15 +38,17 @@ import {
   type FormMode,
 } from "@/utils/constans";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
+import PageLoading from "@/components/ui/PageLoading";
+
 import {
   activatePriority,
   deactivatePriority,
   getAllPriorities,
 } from "../../services/priorityService";
 
-import { getApiError } from "@/utils/apiErrorUtils";
-
-import PageLoading from "@/components/ui/PageLoading";
 import PriorityForm from "../form/PriorityForm";
 
 export default function PrioritiesContent() {
@@ -97,7 +99,10 @@ export default function PrioritiesContent() {
 
         setPriorities(response);
       } catch (error) {
-        console.error("Error loading priorities:", error);
+        logger.error("Failed to load priorities", error, {
+          component: "PrioritiesContent",
+          action: "loadPriorities",
+        });
 
         const apiError = getApiError(error);
 
@@ -161,7 +166,11 @@ export default function PrioritiesContent() {
 
       setPrioritiesUpdated((previous) => !previous);
     } catch (error) {
-      console.error("Error changing priority status:", error);
+      logger.error("Failed to change priority status", error, {
+        component: "PrioritiesContent",
+        action: "handleChangePriorityStatus",
+        priorityId: priorityStatusToChange.idPriority,
+      });
 
       const apiError = getApiError(error);
 

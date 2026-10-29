@@ -14,8 +14,8 @@ import {
 import type { StatusResponse } from "@/types/statusTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
-
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import { createStatus, updateStatus } from "../../services/statusService";
 
@@ -134,8 +134,6 @@ export default function StatusForm({
       onSubmitSuccess();
       onClose();
     } catch (error) {
-      console.error("Error saving status:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.name) {
@@ -145,6 +143,21 @@ export default function StatusForm({
 
         return;
       }
+
+      logger.error(
+        formMode === FORM_MODES.CREATE
+          ? "Failed to create status"
+          : "Failed to update status",
+        error,
+        {
+          component: "StatusForm",
+          action: "handleSubmit",
+          formMode,
+          ...(selectedStatus && {
+            statusId: selectedStatus.idStatus,
+          }),
+        },
+      );
 
       setErrorMessage(
         apiError?.message ??

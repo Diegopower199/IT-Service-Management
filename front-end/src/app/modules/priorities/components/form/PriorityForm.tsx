@@ -14,8 +14,8 @@ import {
 import type { PriorityResponse } from "@/types/priorityTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
-
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import { createPriority, updatePriority } from "../../services/priorityService";
 
@@ -134,8 +134,6 @@ export default function PriorityForm({
       onSubmitSuccess();
       onClose();
     } catch (error) {
-      console.error("Error saving priority:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.name) {
@@ -145,6 +143,21 @@ export default function PriorityForm({
 
         return;
       }
+
+      logger.error(
+        formMode === FORM_MODES.CREATE
+          ? "Failed to create priority"
+          : "Failed to update priority",
+        error,
+        {
+          component: "PriorityForm",
+          action: "handleSubmit",
+          formMode,
+          ...(selectedPriority && {
+            priorityId: selectedPriority.idPriority,
+          }),
+        },
+      );
 
       setErrorMessage(
         apiError?.message ??

@@ -20,6 +20,7 @@ import type { UserSummaryResponse } from "@/types/userTypes";
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import { getAllPriorities } from "../../../priorities/services/priorityService";
 import { getAllCategories } from "../../../categories/services/categoryService";
@@ -102,7 +103,10 @@ export default function TicketForm({
 
       return true;
     } catch (error) {
-      console.error("Error loading categories:", error);
+      logger.error("Failed to load ticket categories", error, {
+        component: "TicketForm",
+        action: "fetchCategoriesOptions",
+      });
 
       const apiError = getApiError(error);
 
@@ -120,7 +124,10 @@ export default function TicketForm({
 
       return true;
     } catch (error) {
-      console.error("Error loading priorities:", error);
+      logger.error("Failed to load ticket priorities", error, {
+        component: "TicketForm",
+        action: "fetchPrioritiesOptions",
+      });
 
       const apiError = getApiError(error);
 
@@ -138,7 +145,10 @@ export default function TicketForm({
 
       return true;
     } catch (error) {
-      console.error("Error loading users:", error);
+      logger.error("Failed to load ticket user options", error, {
+        component: "TicketForm",
+        action: "fetchUsersOptions",
+      });
 
       const apiError = getApiError(error);
 
@@ -265,8 +275,6 @@ export default function TicketForm({
       onSubmitSuccess();
       onClose();
     } catch (error) {
-      console.error("Error saving ticket:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors) {
@@ -280,6 +288,21 @@ export default function TicketForm({
 
         return;
       }
+
+      logger.error(
+        formMode === FORM_MODES.CREATE
+          ? "Failed to create ticket"
+          : "Failed to update ticket",
+        error,
+        {
+          component: "TicketForm",
+          action: "handleSubmit",
+          formMode,
+          ...(selectedTicket && {
+            ticketId: selectedTicket.idTicket,
+          }),
+        },
+      );
 
       setErrorMessage(
         apiError?.message ??

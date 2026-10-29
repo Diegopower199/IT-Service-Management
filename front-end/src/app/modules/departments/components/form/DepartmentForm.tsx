@@ -14,8 +14,8 @@ import {
 import type { DepartmentResponse } from "@/types/departmentTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
-
 import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import {
   createDepartment,
@@ -138,8 +138,6 @@ export default function DepartmentForm({
       onSubmitSuccess();
       onClose();
     } catch (error) {
-      console.error("Error saving department:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors?.name) {
@@ -149,6 +147,21 @@ export default function DepartmentForm({
 
         return;
       }
+
+      logger.error(
+        formMode === FORM_MODES.CREATE
+          ? "Failed to create department"
+          : "Failed to update department",
+        error,
+        {
+          component: "DepartmentForm",
+          action: "handleSubmit",
+          formMode,
+          ...(selectedDepartment && {
+            departmentId: selectedDepartment.idDepartment,
+          }),
+        },
+      );
 
       setErrorMessage(
         apiError?.message ??

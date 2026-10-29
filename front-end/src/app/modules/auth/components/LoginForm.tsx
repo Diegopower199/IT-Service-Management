@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
 
 import { useAuth } from "@/hooks/useAuth";
-import type { ApiErrorResponse } from "@/types/apiTypes";
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
 
 import { login } from "../services/authService";
 import type { LoginRequest } from "../../../../types/authTypes";
@@ -81,19 +81,19 @@ export default function LoginForm() {
 
       router.replace("/dashboard");
     } catch (error) {
-      // Checks if the error comes from Axios and types the API error response.
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        if (error.response?.status === 403) {
-          setError("Invalid username or password");
-          return;
-        }
+      const apiError = getApiError(error);
 
-        setError(
-          error.response?.data.message ?? "Unable to connect to the server",
-        );
-      } else {
-        setError("An unexpected error occurred");
+      if (apiError?.status === 403) {
+        setError("Invalid username or password");
+        return;
       }
+
+      logger.error("Login request failed", error, {
+        component: "LoginForm",
+        action: "handleSubmit",
+      });
+
+      setError(apiError?.message ?? "Unable to connect to the server");
     } finally {
       setIsLoading(false);
     }
@@ -140,21 +140,34 @@ export default function LoginForm() {
       </Button>
 
       <Button
-        onClick={() => setFormData({ username: "admin", password: "123456" })}
+        onClick={() =>
+          setFormData({
+            username: "admin",
+            password: "123456",
+          })
+        }
       >
         ADMIN
       </Button>
 
       <Button
         onClick={() =>
-          setFormData({ username: "technician", password: "123456" })
+          setFormData({
+            username: "technician",
+            password: "123456",
+          })
         }
       >
-        TECHINICIAN
+        TECHNICIAN
       </Button>
 
       <Button
-        onClick={() => setFormData({ username: "user", password: "123456" })}
+        onClick={() =>
+          setFormData({
+            username: "user",
+            password: "123456",
+          })
+        }
       >
         USER
       </Button>

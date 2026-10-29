@@ -20,10 +20,12 @@ import type { DepartmentResponse } from "@/types/departmentTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 
+import { getApiError } from "@/utils/apiErrorUtils";
+import { logger } from "@/utils/logger";
+
 import { createUser, updateUser } from "../../services/userService";
 import { getAllActiveRoles } from "@/app/modules/roles/services/rolesService";
 import { getAllActiveDepartments } from "@/app/modules/departments/services/departmentService";
-import { getApiError } from "@/utils/apiErrorUtils";
 
 interface UserFormProps {
   formMode: FormMode;
@@ -109,9 +111,14 @@ export default function UserForm({
 
       return true;
     } catch (error) {
-      console.error("Error loading roles:", error);
+      logger.error("Failed to load user roles", error, {
+        component: "UserForm",
+        action: "fetchRolesOptions",
+      });
 
-      setErrorMessage("Error loading roles.");
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? "Error loading roles.");
 
       return false;
     }
@@ -125,9 +132,14 @@ export default function UserForm({
 
       return true;
     } catch (error) {
-      console.error("Error loading departments:", error);
+      logger.error("Failed to load user departments", error, {
+        component: "UserForm",
+        action: "fetchDepartmentsOptions",
+      });
 
-      setErrorMessage("Error loading departments.");
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? "Error loading departments.");
 
       return false;
     }
@@ -135,6 +147,8 @@ export default function UserForm({
 
   useEffect(() => {
     const fetchFormOptions = async () => {
+      setErrorMessage("");
+
       const rolesLoaded = await fetchRolesOptions();
 
       if (!rolesLoaded) {
@@ -170,6 +184,8 @@ export default function UserForm({
       ...previousErrors,
       [name]: undefined,
     }));
+
+    setErrorMessage("");
   };
 
   const validateRequiredFields = () => {
@@ -254,8 +270,6 @@ export default function UserForm({
       onSubmitSuccess();
       onClose();
     } catch (error) {
-      console.error("Error saving user:", error);
-
       const apiError = getApiError(error);
 
       if (apiError?.errors) {
@@ -263,6 +277,21 @@ export default function UserForm({
 
         return;
       }
+
+      logger.error(
+        formMode === FORM_MODES.CREATE
+          ? "Failed to create user"
+          : "Failed to update user",
+        error,
+        {
+          component: "UserForm",
+          action: "handleSubmit",
+          formMode,
+          ...(selectedUser && {
+            userId: selectedUser.idUser,
+          }),
+        },
+      );
 
       setErrorMessage(
         apiError?.message ??
@@ -413,6 +442,7 @@ export default function UserForm({
             onChange={handleFormChange}
             error={Boolean(requiredFieldsIncomplete.password)}
             helperText={requiredFieldsIncomplete.password}
+            disabled={loading}
             fullWidth
           />
         )}
@@ -423,7 +453,7 @@ export default function UserForm({
               name="enabled"
               checked={formData.enabled}
               onChange={handleFormChange}
-              disabled={formMode === FORM_MODES.VIEW}
+              disabled={formMode === FORM_MODES.VIEW || loading}
             />
           }
           label="Enabled"
