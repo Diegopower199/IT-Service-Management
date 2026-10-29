@@ -1,19 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Frontend environment variables
 
-## Getting Started
+Before starting the Next.js frontend, configure the required environment variables.
 
-First, run the development server:
+### Required variables
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| Variable                        | Description                          |
+| ------------------------------- | ------------------------------------ |
+| `NEXT_PUBLIC_WEB_SERVER`        | Hostname of the Spring Boot backend  |
+| `NEXT_PUBLIC_WEB_PORT_BACK_END` | Port used by the Spring Boot backend |
+
+### Local configuration
+
+Create a `.env` file inside the frontend directory using `.env.sample` as a template:
+
+```env
+NEXT_PUBLIC_WEB_SERVER=localhost
+NEXT_PUBLIC_WEB_PORT_BACK_END=8080
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The frontend uses these variables to build the backend API URL:
 
+```text
+http://localhost:8080/api/v1
+```
 
+The `.env` file is ignored by Git and should not be committed.
+
+The `.env.sample` file is included in the repository as a configuration template.
+
+Do not store passwords, tokens, API keys, or other secrets in `NEXT_PUBLIC_*` variables, because these values are exposed to the browser.
