@@ -1,6 +1,5 @@
 import api from "@/config/axios";
-import { PageResponse } from "@/types/pageTypes";
-import { PaginationParams } from "@/types/paginationTypes";
+import { PageResponse, PaginationParams } from "@/types/paginationTypes";
 import {
   AssignTicketRequest,
   ChangePriorityRequest,

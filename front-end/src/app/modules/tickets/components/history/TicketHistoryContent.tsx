@@ -46,12 +46,11 @@ export default function TicketHistoryContent({
         setLoading(true);
         setErrorMessage("");
 
-        const response = await getAllTicketHistoryById(
-          ticketId,
-          paginationModel.page,
-          paginationModel.pageSize,
-          DEFAULT_TICKET_HISTORY_SORT,
-        );
+        const response = await getAllTicketHistoryById(ticketId, {
+          page: paginationModel.page,
+          size: paginationModel.pageSize,
+          sort: DEFAULT_TICKET_HISTORY_SORT,
+        });
 
         setTicketHistory(response.content);
         setTotalElements(response.totalElements);

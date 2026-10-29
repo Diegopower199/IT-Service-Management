@@ -80,12 +80,11 @@ export default function TicketCommentsContent({
         setLoading(true);
         setLoadErrorMessage("");
 
-        const response = await getAllTicketsCommentsById(
-          ticketId,
-          paginationModel.page,
-          paginationModel.pageSize,
-          DEFAULT_TICKET_COMMENTS_SORT,
-        );
+        const response = await getAllTicketsCommentsById(ticketId, {
+          page: paginationModel.page,
+          size: paginationModel.pageSize,
+          sort: DEFAULT_TICKET_COMMENTS_SORT,
+        });
 
         setTicketComments(response.content);
         setTotalElements(response.totalElements);
@@ -194,12 +193,11 @@ export default function TicketCommentsContent({
          * Therefore, reload the current page manually.
          */
         try {
-          const response = await getAllTicketsCommentsById(
-            ticketId,
-            lastPage,
-            paginationModel.pageSize,
-            DEFAULT_TICKET_COMMENTS_SORT,
-          );
+          const response = await getAllTicketsCommentsById(ticketId, {
+            page: lastPage,
+            size: paginationModel.pageSize,
+            sort: DEFAULT_TICKET_COMMENTS_SORT,
+          });
 
           setTicketComments(response.content);
           setTotalElements(response.totalElements);
