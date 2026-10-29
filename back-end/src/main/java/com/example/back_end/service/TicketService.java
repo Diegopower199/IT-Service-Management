@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ import com.example.back_end.repository.PriorityRepository;
 import com.example.back_end.repository.StatusRepository;
 import com.example.back_end.repository.TicketRepository;
 import com.example.back_end.repository.UserRepository;
+import com.example.back_end.specification.TicketSpecification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -89,13 +91,18 @@ public class TicketService {
         return convertToResponse(ticket);
     }
 
-    public Page<TicketResponse> getMyTickets(Pageable pageable) {
+    public Page<TicketResponse> getMyTickets(String title, String status, String priority, String category,
+            Pageable pageable) {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        Page<TicketModel> tickets = ticketRepository.findByCreatedByOrRequestedFor(
-                currentUser,
-                currentUser, pageable);
+        Specification<TicketModel> specification = TicketSpecification.createdByOrRequestedFor(currentUser)
+                .and(TicketSpecification.titleContains(title))
+                .and(TicketSpecification.statusIs(status))
+                .and(TicketSpecification.priorityIs(priority))
+                .and(TicketSpecification.categoryIs(category));
+
+        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
 
         return tickets.map(this::convertToResponse);
     }

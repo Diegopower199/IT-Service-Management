@@ -6,10 +6,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 import com.example.back_end.model.TicketModel;
 import com.example.back_end.model.UserModel;
 
-public interface TicketRepository extends JpaRepository<TicketModel, Long> {
+public interface TicketRepository extends JpaRepository<TicketModel, Long>, JpaSpecificationExecutor<TicketModel> {
+
+    /**
+     * @deprecated Replaced by ticket Specifications to support dynamic filtering.
+     */
+    @Deprecated
     Page<TicketModel> findByCreatedByOrRequestedFor(
             UserModel createdBy,
             UserModel requestedFor,

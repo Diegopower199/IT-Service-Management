@@ -19,7 +19,12 @@ import dayjs from "dayjs";
 
 import { useAuth } from "@/hooks/useAuth";
 
-import type { TicketResponse } from "@/types/ticketTypes";
+import type { TicketFilters, TicketResponse } from "@/types/ticketTypes";
+
+import type { StatusResponse } from "@/types/statusTypes";
+import type { PriorityResponse } from "@/types/priorityTypes";
+import type { CategoryResponse } from "@/types/categoryTypes";
+
 import { USER_ROLES } from "@/types/roleTypes";
 
 import {
@@ -48,9 +53,13 @@ import { getApiError } from "@/utils/apiErrorUtils";
 
 import TicketForm from "../form/TicketForm";
 import TicketDetails from "../details/TicketDetails";
+import TicketFiltersBar from "./TicketFiltersBar";
 
 import Button from "@/components/ui/Button";
 import PageLoading from "@/components/ui/PageLoading";
+import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
+import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
+import { getAllActiveCategories } from "@/app/modules/categories/services/categoryService";
 
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();
@@ -58,12 +67,25 @@ export default function TicketsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const titleFilter = searchParams.get("title");
   const statusFilter = searchParams.get("status");
   const priorityFilter = searchParams.get("priority");
+  const categoryFilter = searchParams.get("category");
+
+  const filters: TicketFilters = {
+    title: titleFilter,
+    status: statusFilter,
+    priority: priorityFilter,
+    category: categoryFilter,
+  };
 
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [statuses, setStatuses] = useState<StatusResponse[]>([]);
+  const [priorities, setPriorities] = useState<PriorityResponse[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -83,6 +105,77 @@ export default function TicketsContent() {
     pageSize: DEFAULT_PAGE_SIZE,
   });
 
+  /**
+   * Loads the active filter options used by the ticket filters.
+   */
+  useEffect(() => {
+    if (!isAuthReady || !user) {
+      return;
+    }
+
+    if (user.role !== USER_ROLES.USER) {
+      return;
+    }
+
+    /**
+     * Loads the active ticket statuses from the backend.
+     */
+    const loadStatuses = async () => {
+      try {
+        const response = await getAllActiveStatuses();
+
+        setStatuses(response);
+      } catch (error) {
+        console.error("Error loading statuses:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading statuses.");
+      }
+    };
+
+    /**
+     * Loads the active ticket priorities from the backend.
+     */
+    const loadPriorities = async () => {
+      try {
+        const response = await getAllActivePriorities();
+
+        setPriorities(response);
+      } catch (error) {
+        console.error("Error loading priorities:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading priorities.");
+      }
+    };
+
+    /**
+     * Loads the active ticket categories from the backend.
+     */
+    const loadCategories = async () => {
+      try {
+        const response = await getAllActiveCategories();
+
+        setCategories(response);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+
+        const apiError = getApiError(error);
+
+        setErrorMessage(apiError?.message ?? "Error loading categories.");
+      }
+    };
+
+    loadStatuses();
+    loadPriorities();
+    loadCategories();
+  }, [isAuthReady, user]);
+
+  /**
+   * Loads the tickets available to the authenticated user.
+   */
   useEffect(() => {
     if (!isAuthReady) {
       return;
@@ -117,13 +210,15 @@ export default function TicketsContent() {
             priorityFilter,
           );
         } else {
-          response = await getOwnTickets(
-            paginationModel.page,
-            paginationModel.pageSize,
-            DEFAULT_TICKET_SORT,
-            statusFilter,
-            priorityFilter,
-          );
+          response = await getOwnTickets({
+            page: paginationModel.page,
+            size: paginationModel.pageSize,
+            sort: DEFAULT_TICKET_SORT,
+            title: titleFilter,
+            status: statusFilter,
+            priority: priorityFilter,
+            category: categoryFilter,
+          });
         }
 
         setTickets(response.content);
@@ -146,9 +241,54 @@ export default function TicketsContent() {
     router,
     paginationModel,
     ticketsUpdated,
+    titleFilter,
     statusFilter,
     priorityFilter,
+    categoryFilter,
   ]);
+
+  /**
+   * Applies the selected ticket filters through the URL query parameters.
+   */
+  const handleApplyFilters = (nextFilters: TicketFilters) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    const updateParam = (key: keyof TicketFilters, value?: string | null) => {
+      const normalizedValue = value?.trim();
+
+      if (normalizedValue) {
+        params.set(key, normalizedValue);
+      } else {
+        params.delete(key);
+      }
+    };
+
+    updateParam("title", nextFilters.title);
+    updateParam("status", nextFilters.status);
+    updateParam("priority", nextFilters.priority);
+    updateParam("category", nextFilters.category);
+
+    setPaginationModel((previous) => ({
+      ...previous,
+      page: 0,
+    }));
+
+    const query = params.toString();
+
+    router.replace(query ? `/tickets?${query}` : "/tickets");
+  };
+
+  /**
+   * Removes every ticket filter and returns the table to the first page.
+   */
+  const handleClearFilters = () => {
+    setPaginationModel((previous) => ({
+      ...previous,
+      page: 0,
+    }));
+
+    router.replace("/tickets");
+  };
 
   const handleCreateTicket = () => {
     setSelectedTicket(null);
@@ -228,6 +368,13 @@ export default function TicketsContent() {
       headerName: "Title",
       flex: 1,
       minWidth: 200,
+    },
+    {
+      field: "category",
+      headerName: "Category",
+      flex: 1,
+      minWidth: 200,
+      valueGetter: (_, row) => row.category.name,
     },
     {
       field: "status",
@@ -339,6 +486,17 @@ export default function TicketsContent() {
       <Button onClick={handleCreateTicket}>
         Create Ticket <AddIcon />
       </Button>
+
+      {user.role === USER_ROLES.USER && (
+        <TicketFiltersBar
+          filters={filters}
+          statusOptions={statuses.map((status) => status.name)}
+          priorityOptions={priorities.map((priority) => priority.name)}
+          categoryOptions={categories.map((category) => category.name)}
+          onApply={handleApplyFilters}
+          onClear={handleClearFilters}
+        />
+      )}
 
       {errorMessage && (
         <Alert severity="error" sx={{ my: 2 }}>

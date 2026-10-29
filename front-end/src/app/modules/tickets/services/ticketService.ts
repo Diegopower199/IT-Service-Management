@@ -1,14 +1,18 @@
 import api from "@/config/axios";
 import { PageResponse } from "@/types/pageTypes";
-import { ChangePriorityRequest } from "@/types/priorityTypes";
+import { PaginationParams } from "@/types/paginationTypes";
 import {
   AssignTicketRequest,
+  ChangePriorityRequest,
   ChangeStatusRequest,
   CreateTicketRequest,
+  TicketFilters,
   TicketResponse,
   TicketStatisticsResponse,
   UpdateTicketRequest,
 } from "@/types/ticketTypes";
+
+export interface TicketQueryParams extends PaginationParams, TicketFilters {}
 
 export const getAllTickets = async (
   page: number,
@@ -31,20 +35,10 @@ export const getAllTickets = async (
 };
 
 export const getOwnTickets = async (
-  page: number,
-  size: number,
-  sort: string,
-  status?: string | null,
-  priority?: string | null,
+  params: TicketQueryParams,
 ): Promise<PageResponse<TicketResponse>> => {
   const response = await api.get<PageResponse<TicketResponse>>("/tickets/my", {
-    params: {
-      page,
-      size,
-      sort,
-      status,
-      priority,
-    },
+    params,
   });
 
   return response.data;

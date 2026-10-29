@@ -298,6 +298,10 @@ class TicketControllerTest {
         Page<TicketResponse> page = new PageImpl<>(List.of(ticket));
 
         when(ticketService.getMyTickets(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
                 any(Pageable.class)))
                 .thenReturn(page);
 
@@ -318,7 +322,12 @@ class TicketControllerTest {
                                 .value(1));
 
         verify(ticketService)
-                .getMyTickets(any(Pageable.class));
+                .getMyTickets(
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        any(Pageable.class));
     }
 
     @Test
@@ -327,6 +336,10 @@ class TicketControllerTest {
             throws Exception {
 
         when(ticketService.getMyTickets(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
                 any(Pageable.class)))
                 .thenReturn(Page.empty());
 
@@ -347,7 +360,12 @@ class TicketControllerTest {
                                 .value(0));
 
         verify(ticketService)
-                .getMyTickets(any(Pageable.class));
+                .getMyTickets(
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        any(Pageable.class));
     }
 
     // =========================================================

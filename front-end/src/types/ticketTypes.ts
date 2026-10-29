@@ -51,6 +51,17 @@ export interface ChangeStatusRequest {
   statusId: number;
 }
 
+export interface ChangePriorityRequest {
+  priorityId: number;
+}
+
 export interface AssignTicketRequest {
   assignedToId: number;
+}
+
+export interface TicketFilters {
+  title?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  category?: string | null;
 }

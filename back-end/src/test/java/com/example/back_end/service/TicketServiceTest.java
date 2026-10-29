@@ -18,6 +18,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -554,13 +556,17 @@ class TicketServiceTest {
                 pageable,
                 1);
 
-        when(ticketRepository.findByCreatedByOrRequestedFor(
-                currentUser,
-                currentUser,
-                pageable))
+        when(ticketRepository.findAll(
+                ArgumentMatchers.<Specification<TicketModel>>any(),
+                eq(pageable)))
                 .thenReturn(ticketPage);
 
-        Page<TicketResponse> response = ticketService.getMyTickets(pageable);
+        Page<TicketResponse> response = ticketService.getMyTickets(
+                null,
+                null,
+                null,
+                null,
+                pageable);
 
         assertEquals(
                 1,
@@ -577,10 +583,9 @@ class TicketServiceTest {
                         .getTitle());
 
         verify(ticketRepository)
-                .findByCreatedByOrRequestedFor(
-                        currentUser,
-                        currentUser,
-                        pageable);
+                .findAll(
+                        ArgumentMatchers.<Specification<TicketModel>>any(),
+                        eq(pageable));
     }
 
     @Test
@@ -618,13 +623,17 @@ class TicketServiceTest {
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        when(ticketRepository.findByCreatedByOrRequestedFor(
-                currentUser,
-                currentUser,
-                pageable))
+        when(ticketRepository.findAll(
+                ArgumentMatchers.<Specification<TicketModel>>any(),
+                eq(pageable)))
                 .thenReturn(Page.empty(pageable));
 
-        Page<TicketResponse> response = ticketService.getMyTickets(pageable);
+        Page<TicketResponse> response = ticketService.getMyTickets(
+                null,
+                null,
+                null,
+                null,
+                pageable);
 
         assertTrue(response.isEmpty());
 
@@ -633,10 +642,9 @@ class TicketServiceTest {
                 response.getTotalElements());
 
         verify(ticketRepository)
-                .findByCreatedByOrRequestedFor(
-                        currentUser,
-                        currentUser,
-                        pageable);
+                .findAll(
+                        ArgumentMatchers.<Specification<TicketModel>>any(),
+                        eq(pageable));
     }
 
     // =========================================================

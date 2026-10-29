@@ -59,8 +59,19 @@ public class TicketController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<Page<TicketResponse>> getMyTickets(Pageable pageable) {
-        Page<TicketResponse> tickets = ticketService.getMyTickets(pageable);
+    public ResponseEntity<Page<TicketResponse>> getMyTickets(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            Pageable pageable) {
+
+        Page<TicketResponse> tickets = ticketService.getMyTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
 
         return ResponseEntity.ok(tickets);
     }
