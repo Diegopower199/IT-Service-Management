@@ -55,7 +55,11 @@ export default function DashboardContent() {
       try {
         setTicketsErrorMessage("");
 
-        const response = await getOwnTickets(0, 20, "lastUpdated,desc");
+        const response = await getOwnTickets({
+          page: 0,
+          size: 20,
+          sort: "lastUpdated,desc",
+        });
 
         setTickets(response.content);
       } catch (error) {

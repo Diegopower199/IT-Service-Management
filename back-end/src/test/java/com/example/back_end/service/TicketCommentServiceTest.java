@@ -23,12 +23,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.example.back_end.dtos.ticketComment.TicketCommentRequest;
 import com.example.back_end.dtos.ticketComment.TicketCommentResponse;
-import com.example.back_end.exception.AccessDeniedException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.RoleModel;

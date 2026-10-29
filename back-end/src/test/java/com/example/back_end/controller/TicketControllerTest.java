@@ -107,6 +107,8 @@ class TicketControllerTest {
         when(ticketService.getAllTickets(
                 isNull(),
                 isNull(),
+                isNull(),
+                isNull(),
                 any(Pageable.class)))
                 .thenReturn(page);
 
@@ -148,40 +150,29 @@ class TicketControllerTest {
                 .getAllTickets(
                         isNull(),
                         isNull(),
+                        isNull(),
+                        isNull(),
                         any(Pageable.class));
     }
 
     @Test
     @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToGetAllTickets()
+    void shouldForbidTechnicianFromGettingAllTickets()
             throws Exception {
-
-        when(ticketService.getAllTickets(
-                isNull(),
-                isNull(),
-                any(Pageable.class)))
-                .thenReturn(Page.empty());
 
         mockMvc.perform(
                 get("/tickets")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.content.length()")
-                                .value(0))
-                .andExpect(
-                        jsonPath("$.empty")
-                                .value(true))
-                .andExpect(
-                        jsonPath("$.totalElements")
-                                .value(0));
+                        status().isForbidden());
 
-        verify(ticketService)
+        verify(ticketService, never())
                 .getAllTickets(
-                        isNull(),
-                        isNull(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
                         any(Pageable.class));
     }
 
@@ -197,6 +188,8 @@ class TicketControllerTest {
 
         verify(ticketService, never())
                 .getAllTickets(
+                        any(),
+                        any(),
                         any(),
                         any(),
                         any(Pageable.class));
@@ -298,6 +291,10 @@ class TicketControllerTest {
         Page<TicketResponse> page = new PageImpl<>(List.of(ticket));
 
         when(ticketService.getMyTickets(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
                 any(Pageable.class)))
                 .thenReturn(page);
 
@@ -318,7 +315,12 @@ class TicketControllerTest {
                                 .value(1));
 
         verify(ticketService)
-                .getMyTickets(any(Pageable.class));
+                .getMyTickets(
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        any(Pageable.class));
     }
 
     @Test
@@ -327,6 +329,10 @@ class TicketControllerTest {
             throws Exception {
 
         when(ticketService.getMyTickets(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
                 any(Pageable.class)))
                 .thenReturn(Page.empty());
 
@@ -347,7 +353,12 @@ class TicketControllerTest {
                                 .value(0));
 
         verify(ticketService)
-                .getMyTickets(any(Pageable.class));
+                .getMyTickets(
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        any(Pageable.class));
     }
 
     // =========================================================

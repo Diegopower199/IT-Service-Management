@@ -40,11 +40,20 @@ public class TicketController {
     private final TicketService ticketService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
-    public ResponseEntity<Page<TicketResponse>> getAllTickets(@RequestParam(required = false) String status,
-            @RequestParam(required = false) String priority, Pageable pageable) {
-        Page<TicketResponse> tickets = ticketService.getAllTickets(status,
-                priority, pageable);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<TicketResponse>> getAllTickets(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            Pageable pageable) {
+
+        Page<TicketResponse> tickets = ticketService.getAllTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
 
         return ResponseEntity.ok(tickets);
     }
@@ -59,8 +68,38 @@ public class TicketController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<Page<TicketResponse>> getMyTickets(Pageable pageable) {
-        Page<TicketResponse> tickets = ticketService.getMyTickets(pageable);
+    public ResponseEntity<Page<TicketResponse>> getMyTickets(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            Pageable pageable) {
+
+        Page<TicketResponse> tickets = ticketService.getMyTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
+
+        return ResponseEntity.ok(tickets);
+    }
+
+    @GetMapping("/assigned")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    public ResponseEntity<Page<TicketResponse>> getAssignedTickets(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            Pageable pageable) {
+
+        Page<TicketResponse> tickets = ticketService.getAssignedTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
 
         return ResponseEntity.ok(tickets);
     }
@@ -124,15 +163,5 @@ public class TicketController {
         TicketStatisticsResponse statistics = ticketService.getTicketStatistics();
 
         return ResponseEntity.ok(statistics);
-    }
-
-    @GetMapping("/assigned")
-    @PreAuthorize("hasRole('TECHNICIAN')")
-    public ResponseEntity<Page<TicketResponse>> getAssignedTickets(
-            Pageable pageable) {
-
-        Page<TicketResponse> tickets = ticketService.getAssignedTickets(pageable);
-
-        return ResponseEntity.ok(tickets);
     }
 }

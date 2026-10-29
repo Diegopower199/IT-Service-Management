@@ -23,11 +23,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
 import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
-import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;

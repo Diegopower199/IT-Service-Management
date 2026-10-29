@@ -1,34 +1,15 @@
 package com.example.back_end.repository;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 import com.example.back_end.model.TicketModel;
 import com.example.back_end.model.UserModel;
 
-public interface TicketRepository extends JpaRepository<TicketModel, Long> {
-    Page<TicketModel> findByCreatedByOrRequestedFor(
-            UserModel createdBy,
-            UserModel requestedFor,
-            Pageable pageable);
-
-    Page<TicketModel> findByAssignedTo(
-            UserModel assignedTo,
-            Pageable pageable);
-
-    @Query("""
-            SELECT t
-            FROM TicketModel t
-            WHERE (:status IS NULL OR t.status.name = :status)
-              AND (:priority IS NULL OR t.priority.name = :priority)
-            """)
-    Page<TicketModel> findAllWithFilters(
-            @Param("status") String status,
-            @Param("priority") String priority,
-            Pageable pageable);
+public interface TicketRepository extends JpaRepository<TicketModel, Long>, JpaSpecificationExecutor<TicketModel> {
 
     // =========================================================
     // USER STATISTICS

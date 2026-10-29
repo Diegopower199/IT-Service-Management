@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,6 @@ import com.example.back_end.enums.PriorityName;
 import com.example.back_end.enums.RoleName;
 import com.example.back_end.enums.StatusName;
 import com.example.back_end.enums.TicketHistoryAction;
-import com.example.back_end.exception.AccessDeniedException;
 import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.InvalidRoleException;
 import com.example.back_end.exception.ResourceNotFoundException;
@@ -38,6 +39,7 @@ import com.example.back_end.repository.PriorityRepository;
 import com.example.back_end.repository.StatusRepository;
 import com.example.back_end.repository.TicketRepository;
 import com.example.back_end.repository.UserRepository;
+import com.example.back_end.specification.TicketSpecification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,13 +55,19 @@ public class TicketService {
 
     private final TicketHistoryService ticketHistoryService;
 
-    public Page<TicketResponse> getAllTickets(String status,
-            String priority, Pageable pageable) {
+    public Page<TicketResponse> getAllTickets(
+            String title,
+            String status,
+            String priority,
+            String category,
+            Pageable pageable) {
 
-        Page<TicketModel> tickets = ticketRepository.findAllWithFilters(
-                status,
-                priority,
-                pageable);
+        Specification<TicketModel> specification = TicketSpecification.titleContains(title)
+                .and(TicketSpecification.statusIs(status))
+                .and(TicketSpecification.priorityIs(priority))
+                .and(TicketSpecification.categoryIs(category));
+
+        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
 
         return tickets.map(this::convertToResponse);
     }
@@ -89,13 +97,38 @@ public class TicketService {
         return convertToResponse(ticket);
     }
 
-    public Page<TicketResponse> getMyTickets(Pageable pageable) {
+    public Page<TicketResponse> getMyTickets(String title, String status, String priority, String category,
+            Pageable pageable) {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        Page<TicketModel> tickets = ticketRepository.findByCreatedByOrRequestedFor(
-                currentUser,
-                currentUser, pageable);
+        Specification<TicketModel> specification = TicketSpecification.createdByOrRequestedFor(currentUser)
+                .and(TicketSpecification.titleContains(title))
+                .and(TicketSpecification.statusIs(status))
+                .and(TicketSpecification.priorityIs(priority))
+                .and(TicketSpecification.categoryIs(category));
+
+        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
+
+        return tickets.map(this::convertToResponse);
+    }
+
+    public Page<TicketResponse> getAssignedTickets(
+            String title,
+            String status,
+            String priority,
+            String category,
+            Pageable pageable) {
+
+        UserModel currentUser = getAuthenticatedUser();
+
+        Specification<TicketModel> specification = TicketSpecification.assignedTo(currentUser)
+                .and(TicketSpecification.titleContains(title))
+                .and(TicketSpecification.statusIs(status))
+                .and(TicketSpecification.priorityIs(priority))
+                .and(TicketSpecification.categoryIs(category));
+
+        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
 
         return tickets.map(this::convertToResponse);
     }
@@ -473,18 +506,6 @@ public class TicketService {
                 openTickets,
                 inProgressTickets,
                 criticalTickets);
-    }
-
-    public Page<TicketResponse> getAssignedTickets(
-            Pageable pageable) {
-
-        UserModel currentUser = getAuthenticatedUser();
-
-        Page<TicketModel> tickets = ticketRepository.findByAssignedTo(
-                currentUser,
-                pageable);
-
-        return tickets.map(this::convertToResponse);
     }
 
     private UserModel getAuthenticatedUser() {
