@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Alert, Box, Paper, Stack, TextField, Typography } from "@mui/material";
+
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import Label from "@/components/ui/Label";
 
 import { useAuth } from "@/hooks/useAuth";
+
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import { login } from "../services/authService";
+
 import type { LoginRequest } from "../../../../types/authTypes";
 
 interface RequiredFieldsErrors {
@@ -21,6 +23,7 @@ interface RequiredFieldsErrors {
 
 export default function LoginForm() {
   const router = useRouter();
+
   const { setAuthentication } = useAuth();
 
   const [formData, setFormData] = useState<LoginRequest>({
@@ -37,10 +40,17 @@ export default function LoginForm() {
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
-    setFormData((prevData) => ({
-      ...prevData,
+    setFormData((previousData) => ({
+      ...previousData,
       [name]: value,
     }));
+
+    setRequiredFieldsIncomplete((previousErrors) => ({
+      ...previousErrors,
+      [name]: undefined,
+    }));
+
+    setError("");
   };
 
   const validateRequiredFields = () => {
@@ -100,77 +110,81 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <Label htmlFor="username">Username</Label>
-
-        <Input
-          id="username"
-          name="username"
-          type="text"
-          value={formData.username}
-          onChange={handleFormChange}
-        />
-
-        {requiredFieldsIncomplete.username && (
-          <p>{requiredFieldsIncomplete.username}</p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="password">Password</Label>
-
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleFormChange}
-        />
-
-        {requiredFieldsIncomplete.password && (
-          <p>{requiredFieldsIncomplete.password}</p>
-        )}
-      </div>
-
-      {error && <p>{error}</p>}
-
-      <Button type="submit" variant="login" disabled={isLoading}>
-        {isLoading ? "Logging in..." : "Login"}
-      </Button>
-
-      <Button
-        onClick={() =>
-          setFormData({
-            username: "admin",
-            password: "123456",
-          })
-        }
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#f5f7fb",
+        px: 2,
+      }}
+    >
+      <Paper
+        component="form"
+        onSubmit={handleSubmit}
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxWidth: 420,
+          p: 4,
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.06)",
+        }}
       >
-        ADMIN
-      </Button>
+        <Stack spacing={3}>
+          <Box>
+            <Typography
+              variant="h5"
+              component="h1"
+              sx={{
+                fontWeight: 700,
+                mb: 0.5,
+              }}
+            >
+              Sign in
+            </Typography>
 
-      <Button
-        onClick={() =>
-          setFormData({
-            username: "technician",
-            password: "123456",
-          })
-        }
-      >
-        TECHNICIAN
-      </Button>
+            <Typography variant="body2" color="text.secondary">
+              Access your IT Service Management workspace
+            </Typography>
+          </Box>
 
-      <Button
-        onClick={() =>
-          setFormData({
-            username: "user",
-            password: "123456",
-          })
-        }
-      >
-        USER
-      </Button>
-    </form>
+          <TextField
+            label="Username"
+            name="username"
+            type="text"
+            value={formData.username}
+            onChange={handleFormChange}
+            error={Boolean(requiredFieldsIncomplete.username)}
+            helperText={requiredFieldsIncomplete.username}
+            disabled={isLoading}
+            fullWidth
+            autoComplete="username"
+          />
+
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleFormChange}
+            error={Boolean(requiredFieldsIncomplete.password)}
+            helperText={requiredFieldsIncomplete.password}
+            disabled={isLoading}
+            fullWidth
+            autoComplete="current-password"
+          />
+
+          {error && <Alert severity="error">{error}</Alert>}
+
+          <Button type="submit" variant="primary" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
+        </Stack>
+      </Paper>
+    </Box>
   );
 }

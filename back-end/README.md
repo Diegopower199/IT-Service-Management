@@ -1,54 +1,51 @@
-## Environment Variables
+## Backend environment variables
 
-The backend uses environment variables to store sensitive configuration values. Secrets must not be hardcoded in the source code or committed to the repository.
+Before starting the Spring Boot backend, configure the required environment variables.
 
-### JWT Secret
+### Required variables
 
-The JWT signing key is configured in `application.properties` as follows:
+| Variable       | Description                                               |
+| -------------- | --------------------------------------------------------- |
+| `DB_URL`       | MySQL connection URL                                      |
+| `DB_USERNAME`  | MySQL username                                            |
+| `DB_PASSWORD`  | MySQL password                                            |
+| `JWT_SECRET`   | Secret used to sign JWT access tokens                     |
+| `FRONTEND_URL` | Frontend origin allowed by the backend CORS configuration |
 
-```properties
-jwt.secret=${JWT_SECRET}
-```
+### Optional variables
 
-Before starting the backend, the `JWT_SECRET` environment variable must be defined.
+| Variable                              | Default value | Description                                          |
+| ------------------------------------- | ------------- | ---------------------------------------------------- |
+| `SERVER_PORT`                         | `8080`        | Spring Boot server port                              |
+| `JWT_ACCESS_TOKEN_EXPIRATION_MINUTES` | `15`          | Access token expiration time                         |
+| `JWT_REFRESH_TOKEN_EXPIRATION_DAYS`   | `7`           | Refresh token expiration time                        |
+| `COOKIE_SECURE`                       | `false`       | Set to true when running the application over HTTPS. |
 
-#### Generate a JWT secret on Windows PowerShell
-
-```powershell
-$bytes = New-Object byte[] 32
-$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-$rng.GetBytes($bytes)
-[Convert]::ToBase64String($bytes)
-```
-
-The last command generates a random Base64-encoded 256-bit key suitable for HS256.
-
-Do not share or commit the generated key.
-
-#### Set the environment variable
-
-In the same PowerShell terminal that will be used to start the backend:
+### Windows PowerShell
 
 ```powershell
-$env:JWT_SECRET="YOUR_GENERATED_SECRET"
+setx DB_URL "jdbc:mysql://127.0.0.1:3306/helpdesk"
+setx DB_USERNAME "root"
+setx DB_PASSWORD "your_database_password"
+setx JWT_SECRET "your_jwt_secret"
+setx FRONTEND_URL "http://localhost:3000"
 ```
 
-You can verify that the variable exists with:
+After setting the variables, restart the terminal or IDE before starting the backend.
+
+Do not commit real passwords, JWT secrets, API keys, or other credentials to the repository.
+
+## Run the backend
+
+1. Configure the required environment variables.
+2. Make sure MySQL is running and the configured database exists.
+3. Start the Spring Boot application:
 
 ```powershell
-$env:JWT_SECRET
-```
+.\mvnw clean spring-boot:run
 
-Then start the application:
+If you experience build issues, you can manually remove the generated `target` directory before restarting the backend:
 
 ```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-> **Note:** `$env:JWT_SECRET` configured this way exists only for the current PowerShell session. If the terminal is closed, the variable must be configured again before starting the backend.
-
-### Security
-
-Never commit real secrets, passwords, JWT signing keys, database credentials, or production configuration values to Git.
-
-For production environments, sensitive values should be provided through environment variables or an appropriate secrets management system.
+Remove-Item -Recurse -Force .\target
+.\mvnw clean spring-boot:run

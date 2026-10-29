@@ -8,11 +8,9 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.back_end.dtos.auth.AuthLoginResponse;
@@ -21,7 +19,6 @@ import com.example.back_end.dtos.auth.LoginRequest;
 import com.example.back_end.dtos.auth.RefreshTokenResponse;
 import com.example.back_end.dtos.auth.RefreshTokenResult;
 import com.example.back_end.service.AuthService;
-import com.example.back_end.utils.GlobalConstants;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +31,6 @@ import lombok.RequiredArgsConstructor;
  * configured in {@code SecurityConfig}.
  * </p>
  */
-@CrossOrigin(origins = GlobalConstants.FRONTEND_URL, methods = { RequestMethod.POST })
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
