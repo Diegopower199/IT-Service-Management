@@ -15,20 +15,10 @@ import {
 export interface TicketQueryParams extends PaginationParams, TicketFilters {}
 
 export const getAllTickets = async (
-  page: number,
-  size: number,
-  sort: string,
-  status?: string | null,
-  priority?: string | null,
+  params: TicketQueryParams,
 ): Promise<PageResponse<TicketResponse>> => {
   const response = await api.get<PageResponse<TicketResponse>>("/tickets", {
-    params: {
-      page,
-      size,
-      sort,
-      status,
-      priority,
-    },
+    params,
   });
 
   return response.data;
@@ -44,33 +34,23 @@ export const getOwnTickets = async (
   return response.data;
 };
 
-export const getTicketById = async (
-  ticketId: number,
-): Promise<TicketResponse> => {
-  const response = await api.get<TicketResponse>(`/tickets/${ticketId}`);
-
-  return response.data;
-};
-
 export const getAssignedTickets = async (
-  page: number,
-  size: number,
-  sort: string,
-  status?: string | null,
-  priority?: string | null,
+  params: TicketQueryParams,
 ): Promise<PageResponse<TicketResponse>> => {
   const response = await api.get<PageResponse<TicketResponse>>(
     "/tickets/assigned",
     {
-      params: {
-        page,
-        size,
-        sort,
-        status,
-        priority,
-      },
+      params,
     },
   );
+
+  return response.data;
+};
+
+export const getTicketById = async (
+  ticketId: number,
+): Promise<TicketResponse> => {
+  const response = await api.get<TicketResponse>(`/tickets/${ticketId}`);
 
   return response.data;
 };

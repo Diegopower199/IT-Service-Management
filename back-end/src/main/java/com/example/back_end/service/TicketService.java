@@ -55,13 +55,19 @@ public class TicketService {
 
     private final TicketHistoryService ticketHistoryService;
 
-    public Page<TicketResponse> getAllTickets(String status,
-            String priority, Pageable pageable) {
+    public Page<TicketResponse> getAllTickets(
+            String title,
+            String status,
+            String priority,
+            String category,
+            Pageable pageable) {
 
-        Page<TicketModel> tickets = ticketRepository.findAllWithFilters(
-                status,
-                priority,
-                pageable);
+        Specification<TicketModel> specification = TicketSpecification.titleContains(title)
+                .and(TicketSpecification.statusIs(status))
+                .and(TicketSpecification.priorityIs(priority))
+                .and(TicketSpecification.categoryIs(category));
+
+        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
 
         return tickets.map(this::convertToResponse);
     }
@@ -97,6 +103,26 @@ public class TicketService {
         UserModel currentUser = getAuthenticatedUser();
 
         Specification<TicketModel> specification = TicketSpecification.createdByOrRequestedFor(currentUser)
+                .and(TicketSpecification.titleContains(title))
+                .and(TicketSpecification.statusIs(status))
+                .and(TicketSpecification.priorityIs(priority))
+                .and(TicketSpecification.categoryIs(category));
+
+        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
+
+        return tickets.map(this::convertToResponse);
+    }
+
+    public Page<TicketResponse> getAssignedTickets(
+            String title,
+            String status,
+            String priority,
+            String category,
+            Pageable pageable) {
+
+        UserModel currentUser = getAuthenticatedUser();
+
+        Specification<TicketModel> specification = TicketSpecification.assignedTo(currentUser)
                 .and(TicketSpecification.titleContains(title))
                 .and(TicketSpecification.statusIs(status))
                 .and(TicketSpecification.priorityIs(priority))
@@ -480,18 +506,6 @@ public class TicketService {
                 openTickets,
                 inProgressTickets,
                 criticalTickets);
-    }
-
-    public Page<TicketResponse> getAssignedTickets(
-            Pageable pageable) {
-
-        UserModel currentUser = getAuthenticatedUser();
-
-        Page<TicketModel> tickets = ticketRepository.findByAssignedTo(
-                currentUser,
-                pageable);
-
-        return tickets.map(this::convertToResponse);
     }
 
     private UserModel getAuthenticatedUser() {

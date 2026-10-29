@@ -42,6 +42,18 @@ public final class TicketSpecification {
     }
 
     /**
+     * Creates a specification that filters tickets assigned to the provided user.
+     *
+     * @param user user assigned to the ticket
+     * @return specification used to filter tickets by assigned user
+     */
+    public static Specification<TicketModel> assignedTo(UserModel user) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(
+                root.get("assignedTo"),
+                user);
+    }
+
+    /**
      * Creates a specification that filters tickets whose title contains the
      * provided text.
      *

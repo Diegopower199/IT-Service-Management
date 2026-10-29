@@ -86,9 +86,6 @@ class TicketServiceTest {
     // =========================================================
     // GET ALL TICKETS
     // =========================================================
-    // =========================================================
-    // GET ALL TICKETS
-    // =========================================================
     @Test
     void shouldReturnAllTickets() {
 
@@ -161,13 +158,14 @@ class TicketServiceTest {
                 pageable,
                 2);
 
-        when(ticketRepository.findAllWithFilters(
-                null,
-                null,
-                pageable))
+        when(ticketRepository.findAll(
+                ArgumentMatchers.<Specification<TicketModel>>any(),
+                eq(pageable)))
                 .thenReturn(ticketPage);
 
         Page<TicketResponse> response = ticketService.getAllTickets(
+                null,
+                null,
                 null,
                 null,
                 pageable);
@@ -221,10 +219,10 @@ class TicketServiceTest {
                         .getName());
 
         verify(ticketRepository)
-                .findAllWithFilters(
-                        null,
-                        null,
-                        pageable);
+                .findAll(
+                        ArgumentMatchers
+                                .<Specification<TicketModel>>any(),
+                        eq(pageable));
     }
 
     @Test
@@ -232,13 +230,14 @@ class TicketServiceTest {
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        when(ticketRepository.findAllWithFilters(
-                null,
-                null,
-                pageable))
+        when(ticketRepository.findAll(
+                ArgumentMatchers.<Specification<TicketModel>>any(),
+                eq(pageable)))
                 .thenReturn(Page.empty(pageable));
 
         Page<TicketResponse> response = ticketService.getAllTickets(
+                null,
+                null,
                 null,
                 null,
                 pageable);
@@ -250,10 +249,10 @@ class TicketServiceTest {
                 response.getTotalElements());
 
         verify(ticketRepository)
-                .findAllWithFilters(
-                        null,
-                        null,
-                        pageable);
+                .findAll(
+                        ArgumentMatchers
+                                .<Specification<TicketModel>>any(),
+                        eq(pageable));
     }
 
     // =========================================================

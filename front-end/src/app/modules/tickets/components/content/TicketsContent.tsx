@@ -105,21 +105,11 @@ export default function TicketsContent() {
     pageSize: DEFAULT_PAGE_SIZE,
   });
 
-  /**
-   * Loads the active filter options used by the ticket filters.
-   */
   useEffect(() => {
     if (!isAuthReady || !user) {
       return;
     }
 
-    if (user.role !== USER_ROLES.USER) {
-      return;
-    }
-
-    /**
-     * Loads the active ticket statuses from the backend.
-     */
     const loadStatuses = async () => {
       try {
         const response = await getAllActiveStatuses();
@@ -134,9 +124,6 @@ export default function TicketsContent() {
       }
     };
 
-    /**
-     * Loads the active ticket priorities from the backend.
-     */
     const loadPriorities = async () => {
       try {
         const response = await getAllActivePriorities();
@@ -151,9 +138,6 @@ export default function TicketsContent() {
       }
     };
 
-    /**
-     * Loads the active ticket categories from the backend.
-     */
     const loadCategories = async () => {
       try {
         const response = await getAllActiveCategories();
@@ -173,9 +157,6 @@ export default function TicketsContent() {
     loadCategories();
   }, [isAuthReady, user]);
 
-  /**
-   * Loads the tickets available to the authenticated user.
-   */
   useEffect(() => {
     if (!isAuthReady) {
       return;
@@ -194,21 +175,25 @@ export default function TicketsContent() {
         let response;
 
         if (user.role === USER_ROLES.ADMIN) {
-          response = await getAllTickets(
-            paginationModel.page,
-            paginationModel.pageSize,
-            DEFAULT_TICKET_SORT,
-            statusFilter,
-            priorityFilter,
-          );
+          response = await getAllTickets({
+            page: paginationModel.page,
+            size: paginationModel.pageSize,
+            sort: DEFAULT_TICKET_SORT,
+            title: titleFilter,
+            status: statusFilter,
+            priority: priorityFilter,
+            category: categoryFilter,
+          });
         } else if (user.role === USER_ROLES.TECHNICIAN) {
-          response = await getAssignedTickets(
-            paginationModel.page,
-            paginationModel.pageSize,
-            DEFAULT_TICKET_SORT,
-            statusFilter,
-            priorityFilter,
-          );
+          response = await getAssignedTickets({
+            page: paginationModel.page,
+            size: paginationModel.pageSize,
+            sort: DEFAULT_TICKET_SORT,
+            title: titleFilter,
+            status: statusFilter,
+            priority: priorityFilter,
+            category: categoryFilter,
+          });
         } else {
           response = await getOwnTickets({
             page: paginationModel.page,
@@ -247,9 +232,6 @@ export default function TicketsContent() {
     categoryFilter,
   ]);
 
-  /**
-   * Applies the selected ticket filters through the URL query parameters.
-   */
   const handleApplyFilters = (nextFilters: TicketFilters) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -278,9 +260,6 @@ export default function TicketsContent() {
     router.replace(query ? `/tickets?${query}` : "/tickets");
   };
 
-  /**
-   * Removes every ticket filter and returns the table to the first page.
-   */
   const handleClearFilters = () => {
     setPaginationModel((previous) => ({
       ...previous,
@@ -487,16 +466,14 @@ export default function TicketsContent() {
         Create Ticket <AddIcon />
       </Button>
 
-      {user.role === USER_ROLES.USER && (
-        <TicketFiltersBar
-          filters={filters}
-          statusOptions={statuses.map((status) => status.name)}
-          priorityOptions={priorities.map((priority) => priority.name)}
-          categoryOptions={categories.map((category) => category.name)}
-          onApply={handleApplyFilters}
-          onClear={handleClearFilters}
-        />
-      )}
+      <TicketFiltersBar
+        filters={filters}
+        statusOptions={statuses.map((status) => status.name)}
+        priorityOptions={priorities.map((priority) => priority.name)}
+        categoryOptions={categories.map((category) => category.name)}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+      />
 
       {errorMessage && (
         <Alert severity="error" sx={{ my: 2 }}>
