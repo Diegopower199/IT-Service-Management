@@ -91,9 +91,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (jwtService.isTokenValid(token, userDetails)) {
 
-                    // Represents an already authenticated principal.
-                    // The credentials are set to null because the password must not be
-                    // stored in the SecurityContext.
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -103,14 +100,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetailsSource()
                                     .buildDetails(request));
 
-                    // From this point on, Spring Security considers the user authenticated
-                    // for the remainder of the current request.
                     SecurityContextHolder.getContext()
                             .setAuthentication(authToken);
                 }
             }
-
-            filterChain.doFilter(request, response);
 
         } catch (JwtException
                 | IllegalArgumentException
@@ -124,7 +117,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new BadCredentialsException(
                             "Invalid or expired JWT",
                             ex));
+
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 
     /**

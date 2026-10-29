@@ -19,6 +19,8 @@ import com.example.back_end.security.JwtAuthenticationEntryPoint;
 import com.example.back_end.security.JwtAuthenticationFilter;
 import com.example.back_end.utils.GlobalConstants;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults;
 
 import lombok.RequiredArgsConstructor;
@@ -88,7 +90,13 @@ public class SecurityConfig {
 
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(
-                                jwtAuthenticationEntryPoint))
+                                jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(
+                                (request, response, accessDeniedException) -> {
+                                    response.sendError(
+                                            HttpServletResponse.SC_FORBIDDEN,
+                                            "Forbidden");
+                                }))
 
                 .sessionManagement(sessionManager -> sessionManager
                         .sessionCreationPolicy(

@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -37,7 +38,6 @@ import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
 import com.example.back_end.enums.TicketHistoryAction;
-import com.example.back_end.exception.AccessDeniedException;
 import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.InvalidRoleException;
 import com.example.back_end.exception.ResourceNotFoundException;

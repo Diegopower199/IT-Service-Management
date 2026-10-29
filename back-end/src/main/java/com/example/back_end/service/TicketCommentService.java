@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,6 @@ import com.example.back_end.dtos.ticketComment.TicketCommentRequest;
 import com.example.back_end.dtos.ticketComment.TicketCommentResponse;
 import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.enums.RoleName;
-import com.example.back_end.exception.AccessDeniedException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.TicketCommentModel;
 import com.example.back_end.model.TicketModel;
