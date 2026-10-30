@@ -22,9 +22,9 @@ import com.example.back_end.dtos.ticket.TicketResponse;
 import com.example.back_end.dtos.ticket.TicketStatisticsResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
 import com.example.back_end.dtos.user.UserSummaryResponse;
-import com.example.back_end.enums.PriorityName;
+import com.example.back_end.enums.ProtectedPriority;
 import com.example.back_end.enums.RoleName;
-import com.example.back_end.enums.SystemStatus;
+import com.example.back_end.enums.ProtectedStatus;
 import com.example.back_end.enums.TicketHistoryAction;
 import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.InvalidRoleException;
@@ -153,7 +153,7 @@ public class TicketService {
                         "Active priority with id " + request.getPriorityId() + " not found"));
 
         StatusModel status = statusRepository
-                .findByNameAndActiveTrue(SystemStatus.OPEN.name())
+                .findByNameAndActiveTrue(ProtectedStatus.OPEN.name())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Active OPEN status not found"));
 
@@ -459,15 +459,15 @@ public class TicketService {
 
             openTickets = ticketRepository.countRelatedToUserByStatus(
                     currentUser,
-                    SystemStatus.OPEN.name());
+                    ProtectedStatus.OPEN.name());
 
             inProgressTickets = ticketRepository.countRelatedToUserByStatus(
                     currentUser,
-                    SystemStatus.IN_PROGRESS.name());
+                    ProtectedStatus.IN_PROGRESS.name());
 
             criticalTickets = ticketRepository.countRelatedToUserByPriority(
                     currentUser,
-                    PriorityName.CRITICAL.name());
+                    ProtectedPriority.CRITICAL.name());
 
         } else if (role.equalsIgnoreCase(
                 RoleName.TECHNICIAN.name())) {
@@ -477,28 +477,28 @@ public class TicketService {
 
             openTickets = ticketRepository.countByAssignedToAndStatus_Name(
                     currentUser,
-                    SystemStatus.OPEN.name());
+                    ProtectedStatus.OPEN.name());
 
             inProgressTickets = ticketRepository.countByAssignedToAndStatus_Name(
                     currentUser,
-                    SystemStatus.IN_PROGRESS.name());
+                    ProtectedStatus.IN_PROGRESS.name());
 
             criticalTickets = ticketRepository.countByAssignedToAndPriority_Name(
                     currentUser,
-                    PriorityName.CRITICAL.name());
+                    ProtectedPriority.CRITICAL.name());
 
         } else {
 
             totalTickets = ticketRepository.count();
 
             openTickets = ticketRepository.countByStatus_Name(
-                    SystemStatus.OPEN.name());
+                    ProtectedStatus.OPEN.name());
 
             inProgressTickets = ticketRepository.countByStatus_Name(
-                    SystemStatus.IN_PROGRESS.name());
+                    ProtectedStatus.IN_PROGRESS.name());
 
             criticalTickets = ticketRepository.countByPriority_Name(
-                    PriorityName.CRITICAL.name());
+                    ProtectedPriority.CRITICAL.name());
         }
 
         return new TicketStatisticsResponse(

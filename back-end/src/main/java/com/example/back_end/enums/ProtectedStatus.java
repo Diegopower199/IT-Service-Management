@@ -1,6 +1,6 @@
 package com.example.back_end.enums;
 
-public enum SystemStatus {
+public enum ProtectedStatus {
 
     OPEN,
     IN_PROGRESS,
@@ -8,8 +8,8 @@ public enum SystemStatus {
     RESOLVED,
     CLOSED;
 
-    public static boolean isSystemStatus(String statusName) {
-        for (SystemStatus status : values()) {
+    public static boolean isProtectedStatus(String statusName) {
+        for (ProtectedStatus status : values()) {
             if (status.name().equalsIgnoreCase(statusName)) {
                 return true;
             }

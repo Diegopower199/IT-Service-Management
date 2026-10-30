@@ -1,4 +1,4 @@
-export const SYSTEM_STATUSES = {
+export const PROTECTED_STATUSES = {
   OPEN: "OPEN",
   IN_PROGRESS: "IN_PROGRESS",
   WAITING: "WAITING",
@@ -6,12 +6,12 @@ export const SYSTEM_STATUSES = {
   CLOSED: "CLOSED",
 } as const;
 
-export type SystemStatus =
-  (typeof SYSTEM_STATUSES)[keyof typeof SYSTEM_STATUSES];
+export type ProtectedStatus =
+  (typeof PROTECTED_STATUSES)[keyof typeof PROTECTED_STATUSES];
 
-export const isSystemStatus = (statusName: string): boolean => {
-  return Object.values(SYSTEM_STATUSES).includes(
-    statusName.toUpperCase() as SystemStatus,
+export const isProtectedStatus = (statusName: string): boolean => {
+  return Object.values(PROTECTED_STATUSES).includes(
+    statusName.toUpperCase() as ProtectedStatus,
   );
 };
 

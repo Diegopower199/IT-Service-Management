@@ -27,7 +27,7 @@ import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 
 import { useAuth } from "@/hooks/useAuth";
 
-import { isSystemStatus, type StatusResponse } from "@/types/statusTypes";
+import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
 
 import { USER_ROLES } from "@/types/roleTypes";
 
@@ -131,7 +131,7 @@ export default function StatusesContent() {
   };
 
   const handleEditStatus = (status: StatusResponse) => {
-    if (isSystemStatus(status.name)) {
+    if (isProtectedStatus(status.name)) {
       return;
     }
 
@@ -141,7 +141,7 @@ export default function StatusesContent() {
   };
 
   const handleOpenStatusDialog = (status: StatusResponse) => {
-    if (status.active && isSystemStatus(status.name)) {
+    if (status.active && isProtectedStatus(status.name)) {
       return;
     }
 
@@ -163,7 +163,7 @@ export default function StatusesContent() {
       return;
     }
 
-    if (statusToChange.active && isSystemStatus(statusToChange.name)) {
+    if (statusToChange.active && isProtectedStatus(statusToChange.name)) {
       return;
     }
 
@@ -238,7 +238,7 @@ export default function StatusesContent() {
       headerName: "Actions",
       width: 170,
       getActions: ({ row }) => {
-        const protectedStatus = isSystemStatus(row.name);
+        const protectedStatus = isProtectedStatus(row.name);
 
         return [
           <GridActionsCellItem
