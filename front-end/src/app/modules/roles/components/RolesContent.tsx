@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Alert, Chip } from "@mui/material";
+import { Alert } from "@mui/material";
 
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
@@ -77,7 +77,7 @@ export default function RolesContent() {
 
   const columns: GridColDef<RoleResponse>[] = [
     {
-      field: "idRol",
+      field: "idRole",
       headerName: "ID",
       width: 100,
     },
@@ -86,22 +86,6 @@ export default function RolesContent() {
       headerName: "Name",
       flex: 1,
       minWidth: 200,
-    },
-    {
-      field: "active",
-      headerName: "Status",
-      width: 150,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.active ? "Active" : "Inactive"}
-          color={params.row.active ? "success" : "default"}
-          size="small"
-          variant="outlined"
-          sx={{
-            fontWeight: 600,
-          }}
-        />
-      ),
     },
   ];
 

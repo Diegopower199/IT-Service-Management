@@ -24,8 +24,8 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import { createUser, updateUser } from "../../services/userService";
-import { getAllActiveRoles } from "@/app/modules/roles/services/rolesService";
 import { getAllActiveDepartments } from "@/app/modules/departments/services/departmentService";
+import { getAllRoles } from "@/app/modules/roles/services/rolesService";
 
 interface UserFormProps {
   formMode: FormMode;
@@ -40,7 +40,7 @@ interface UserFormData {
   firstName: string;
   lastName: string;
   password: string;
-  rolId: number;
+  roleId: number;
   departmentId: number;
   enabled: boolean;
 }
@@ -51,7 +51,7 @@ const INITIAL_FORM_DATA: UserFormData = {
   firstName: "",
   lastName: "",
   password: "",
-  rolId: 0,
+  roleId: 0,
   departmentId: 0,
   enabled: true,
 };
@@ -70,7 +70,7 @@ const getInitialFormData = (
       firstName: selectedUser.firstName,
       lastName: selectedUser.lastName,
       password: "",
-      rolId: selectedUser.role.idRole,
+      roleId: selectedUser.role.idRole,
       departmentId: selectedUser.department?.idDepartment ?? 0,
       enabled: selectedUser.enabled,
     };
@@ -105,7 +105,7 @@ export default function UserForm({
 
   const fetchRolesOptions = async (): Promise<boolean> => {
     try {
-      const rolesResponse = await getAllActiveRoles();
+      const rolesResponse = await getAllRoles();
 
       setRolesOptions(rolesResponse);
 
@@ -175,7 +175,7 @@ export default function UserForm({
       [name]:
         type === "checkbox"
           ? (event.target as HTMLInputElement).checked
-          : name === "rolId" || name === "departmentId"
+          : name === "roleId" || name === "departmentId"
             ? Number(value)
             : value,
     }));
@@ -207,8 +207,8 @@ export default function UserForm({
       errorMissingFields.lastName = "Please enter a last name.";
     }
 
-    if (!formData.rolId) {
-      errorMissingFields.rolId = "Please select a role.";
+    if (!formData.roleId) {
+      errorMissingFields.roleId = "Please select a role.";
     }
 
     if (!formData.departmentId) {
@@ -249,7 +249,7 @@ export default function UserForm({
           firstName: formData.firstName,
           lastName: formData.lastName,
           password: formData.password,
-          roleId: formData.rolId,
+          roleId: formData.roleId,
           departmentId: formData.departmentId,
           enabled: formData.enabled,
         });
@@ -261,7 +261,7 @@ export default function UserForm({
           email: formData.email,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          roleId: formData.rolId,
+          roleId: formData.roleId,
           departmentId: formData.departmentId,
           enabled: formData.enabled,
         });
@@ -371,15 +371,15 @@ export default function UserForm({
         <TextField
           select
           label="Role"
-          name="rolId"
+          name="roleId"
           value={
-            rolesOptions.some((role) => role.idRole === formData.rolId)
-              ? formData.rolId
+            rolesOptions.some((role) => role.idRole === formData.roleId)
+              ? formData.roleId
               : 0
           }
           onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.rolId)}
-          helperText={requiredFieldsIncomplete.rolId}
+          error={Boolean(requiredFieldsIncomplete.roleId)}
+          helperText={requiredFieldsIncomplete.roleId}
           disabled={formMode === FORM_MODES.VIEW}
           fullWidth
         >

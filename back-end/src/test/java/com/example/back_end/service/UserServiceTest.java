@@ -59,7 +59,7 @@ public class UserServiceTest {
     @Test
     void shouldReturnAllUsers() {
 
-        RoleModel adminRol = new RoleModel(1L, "ADMIN", true);
+        RoleModel adminRol = new RoleModel(1L, "ADMIN");
 
         DepartmentModel itDepartment = new DepartmentModel(1L, "IT", true);
 
@@ -74,7 +74,7 @@ public class UserServiceTest {
                 adminRol,
                 itDepartment);
 
-        RoleModel technicianRol = new RoleModel(2L, "TECHNICIAN", true);
+        RoleModel technicianRol = new RoleModel(2L, "TECHNICIAN");
 
         DepartmentModel supportDepartment = new DepartmentModel(2L, "Support", true);
 
@@ -203,7 +203,7 @@ public class UserServiceTest {
     @Test
     void shouldReturnUserById() {
 
-        RoleModel role = new RoleModel(1L, "ADMIN", true);
+        RoleModel role = new RoleModel(1L, "ADMIN");
 
         DepartmentModel department = new DepartmentModel(1L, "IT", true);
 
@@ -261,7 +261,7 @@ public class UserServiceTest {
         when(request.getRoleId()).thenReturn(3L);
         when(request.getDepartmentId()).thenReturn(2L);
 
-        RoleModel role = new RoleModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER");
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -407,7 +407,7 @@ public class UserServiceTest {
         when(request.getDepartmentId())
                 .thenReturn(99L);
 
-        RoleModel role = new RoleModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER");
 
         when(userRepository.existsByUsername("ana"))
                 .thenReturn(false);
@@ -445,7 +445,7 @@ public class UserServiceTest {
         when(request.getRoleId()).thenReturn(3L);
         when(request.getDepartmentId()).thenReturn(2L);
 
-        RoleModel oldRol = new RoleModel(1L, "ADMIN", true);
+        RoleModel oldRol = new RoleModel(1L, "ADMIN");
 
         DepartmentModel oldDepartment = new DepartmentModel(1L, "IT", true);
 
@@ -460,7 +460,7 @@ public class UserServiceTest {
                 oldRol,
                 oldDepartment);
 
-        RoleModel newRol = new RoleModel(3L, "USER", true);
+        RoleModel newRol = new RoleModel(3L, "USER");
 
         DepartmentModel newDepartment = new DepartmentModel(2L, "Finance", true);
 
@@ -519,7 +519,7 @@ public class UserServiceTest {
         when(request.getUsername())
                 .thenReturn("ana");
 
-        RoleModel role = new RoleModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER");
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -559,7 +559,7 @@ public class UserServiceTest {
         when(request.getEmail())
                 .thenReturn("ana@example.com");
 
-        RoleModel role = new RoleModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER");
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -602,7 +602,7 @@ public class UserServiceTest {
         when(request.getRoleId())
                 .thenReturn(99L);
 
-        RoleModel role = new RoleModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER");
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -648,7 +648,7 @@ public class UserServiceTest {
         when(request.getDepartmentId())
                 .thenReturn(99L);
 
-        RoleModel role = new RoleModel(3L, "USER", true);
+        RoleModel role = new RoleModel(3L, "USER");
 
         DepartmentModel department = new DepartmentModel(2L, "Finance", true);
 
@@ -680,5 +680,4 @@ public class UserServiceTest {
                 .save(any(UserModel.class));
     }
 
-   
 }
