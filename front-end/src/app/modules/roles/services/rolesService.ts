@@ -8,14 +8,8 @@ export const getAllRoles = async (): Promise<RoleResponse[]> => {
   return response.data;
 };
 
-export const getRolById = async (idRol: number): Promise<RoleResponse> => {
-  const response = await api.get<RoleResponse>(`/roles/${idRol}`);
-
-  return response.data;
-};
-
-export const getAllActiveRoles = async (): Promise<RoleResponse[]> => {
-  const response = await api.get<RoleResponse[]>("/roles/active");
+export const getRoleById = async (idRole: number): Promise<RoleResponse> => {
+  const response = await api.get<RoleResponse>(`/roles/${idRole}`);
 
   return response.data;
 };

@@ -62,8 +62,7 @@ class AuthServiceTest {
 
         RoleModel role = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,

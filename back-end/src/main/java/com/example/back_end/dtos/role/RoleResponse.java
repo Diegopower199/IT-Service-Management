@@ -11,5 +11,4 @@ public class RoleResponse {
 
     private Long idRole;
     private String name;
-    private boolean active;
 }

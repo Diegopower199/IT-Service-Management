@@ -51,8 +51,7 @@ class TicketHistoryServiceTest {
 
         RoleModel adminRole = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -203,8 +202,7 @@ class TicketHistoryServiceTest {
 
         RoleModel adminRole = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -278,8 +276,7 @@ class TicketHistoryServiceTest {
 
         RoleModel userRole = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,

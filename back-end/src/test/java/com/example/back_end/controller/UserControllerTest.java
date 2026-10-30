@@ -313,8 +313,7 @@ class UserControllerTest {
 
         RoleResponse role = new RoleResponse(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         DepartmentResponse department = new DepartmentResponse(
                 1L,

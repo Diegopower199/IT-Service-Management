@@ -205,8 +205,7 @@ public class UserService {
         if (user.getRole() != null) {
             rolResponse = new RoleResponse(
                     user.getRole().getIdRole(),
-                    user.getRole().getName(),
-                    user.getRole().isActive());
+                    user.getRole().getName());
         }
 
         if (user.getDepartment() != null) {

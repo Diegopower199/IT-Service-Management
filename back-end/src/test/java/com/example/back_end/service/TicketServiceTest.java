@@ -91,8 +91,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -263,8 +262,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -353,8 +351,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -410,13 +407,11 @@ class TicketServiceTest {
 
         RoleModel adminRol = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -496,8 +491,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -592,8 +586,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -672,8 +665,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -813,8 +805,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -875,8 +866,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -955,8 +945,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1044,8 +1033,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1145,8 +1133,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1272,8 +1259,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1355,13 +1341,11 @@ class TicketServiceTest {
 
         RoleModel technicianRol = new RoleModel(
                 2L,
-                "TECHNICIAN",
-                true);
+                "TECHNICIAN");
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1496,8 +1480,7 @@ class TicketServiceTest {
 
         RoleModel technicianRol = new RoleModel(
                 2L,
-                "TECHNICIAN",
-                true);
+                "TECHNICIAN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1564,13 +1547,11 @@ class TicketServiceTest {
 
         RoleModel adminRol = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         RoleModel technicianRol = new RoleModel(
                 2L,
-                "TECHNICIAN",
-                true);
+                "TECHNICIAN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1672,13 +1653,11 @@ class TicketServiceTest {
 
         RoleModel adminRol = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         RoleModel technicianRol = new RoleModel(
                 2L,
-                "TECHNICIAN",
-                true);
+                "TECHNICIAN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1826,8 +1805,7 @@ class TicketServiceTest {
 
         RoleModel userRol = new RoleModel(
                 3L,
-                "USER",
-                true);
+                "USER");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -1887,8 +1865,7 @@ class TicketServiceTest {
 
         RoleModel adminRol = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -2010,8 +1987,7 @@ class TicketServiceTest {
 
         RoleModel adminRol = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -2087,8 +2063,7 @@ class TicketServiceTest {
 
         RoleModel adminRol = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
@@ -2210,8 +2185,7 @@ class TicketServiceTest {
 
         RoleModel adminRol = new RoleModel(
                 1L,
-                "ADMIN",
-                true);
+                "ADMIN");
 
         DepartmentModel department = new DepartmentModel(
                 1L,
