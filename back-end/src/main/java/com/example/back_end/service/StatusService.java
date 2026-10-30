@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.back_end.dtos.status.StatusRequest;
 import com.example.back_end.dtos.status.StatusResponse;
+import com.example.back_end.enums.SystemStatus;
+import com.example.back_end.exception.ProtectedResourceException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.StatusModel;
@@ -79,6 +81,13 @@ public class StatusService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Status with id " + statusId + " not found"));
 
+        if (SystemStatus.isSystemStatus(existingStatus.getName())) {
+            throw new ProtectedResourceException(
+                    "System status '"
+                            + existingStatus.getName()
+                            + "' cannot be modified");
+        }
+
         if (!existingStatus.getName().equalsIgnoreCase(request.getName())
                 && statusRepository.existsByName(request.getName())) {
 
@@ -98,6 +107,13 @@ public class StatusService {
         StatusModel status = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Status with id " + id + " not found"));
+
+        if (SystemStatus.isSystemStatus(status.getName())) {
+            throw new ProtectedResourceException(
+                    "System status '"
+                            + status.getName()
+                            + "' cannot be deactivated");
+        }
 
         status.setActive(false);
 
