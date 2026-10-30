@@ -1,4 +1,9 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import type { TicketResponse } from "@/types/ticketTypes";
+
 import styles from "../styles/dashboard.module.css";
 
 interface DashboardRecentTicketsProps {
@@ -8,19 +13,24 @@ interface DashboardRecentTicketsProps {
 export default function DashboardRecentTickets({
   tickets,
 }: DashboardRecentTicketsProps) {
+  const t = useTranslations("Dashboard.RecentTickets");
+
+  const tStatuses = useTranslations("Common.Statuses");
+  const tPriorities = useTranslations("Common.Priorities");
+
   return (
     <section className={styles.recentTickets}>
-      <h2 className={styles.sectionTitle}>Recent Tickets</h2>
+      <h2 className={styles.sectionTitle}>{t("title")}</h2>
 
       <table className={styles.ticketTable}>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Assigned</th>
-            <th>Updated</th>
+            <th>{t("id")}</th>
+            <th>{t("ticketTitle")}</th>
+            <th>{t("status")}</th>
+            <th>{t("priority")}</th>
+            <th>{t("assigned")}</th>
+            <th>{t("updated")}</th>
           </tr>
         </thead>
 
@@ -28,10 +38,15 @@ export default function DashboardRecentTickets({
           {tickets.map((ticket) => (
             <tr key={ticket.idTicket}>
               <td className={styles.ticketId}>#{ticket.idTicket}</td>
+
               <td>{ticket.title}</td>
-              <td>{ticket.status.name}</td>
-              <td>{ticket.priority.name}</td>
+
+              <td>{tStatuses(ticket.status.name)}</td>
+
+              <td>{tPriorities(ticket.priority.name)}</td>
+
               <td>{ticket.assignedTo?.username ?? "-"}</td>
+
               <td>{ticket.lastUpdated}</td>
             </tr>
           ))}

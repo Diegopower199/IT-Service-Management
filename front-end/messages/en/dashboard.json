@@ -1,0 +1,34 @@
+{
+    "Header": {
+        "welcome": "Welcome, {username}",
+        "adminDescription": "System overview and help desk activity.",
+        "technicianDescription": "Overview of your assigned tickets and current workload.",
+        "userDescription": "Overview of your help desk activity.",
+        "defaultDescription": "Help desk overview."
+    },
+    "Content": {
+        "ticketsLoadError": "Error loading tickets.",
+        "statisticsLoadError": "Error loading statistics."
+    },
+    "QuickActions": {
+        "title": "Quick Actions",
+        "assignToMe": "Assign Ticket to Me",
+        "viewUnassigned": "View Unassigned Tickets",
+        "assign": "Assign Ticket",
+        "reassign": "Reassign Ticket"
+    },
+    "RecentTickets": {
+        "title": "Recent Tickets",
+        "id": "ID",
+        "ticketTitle": "Title",
+        "status": "Status",
+        "priority": "Priority",
+        "assigned": "Assigned",
+        "updated": "Updated"
+    },
+    "Statistics": {
+        "myTickets": "My Tickets",
+        "assignedTickets": "Assigned Tickets",
+        "totalTickets": "Total Tickets"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "Statuses": {
+        "OPEN": "Abierto",
+        "IN_PROGRESS": "En progreso",
+        "WAITING": "En espera",
+        "RESOLVED": "Resuelto",
+        "CLOSED": "Cerrado"
+    },
+    "Priorities": {
+        "LOW": "Baja",
+        "MEDIUM": "Media",
+        "HIGH": "Alta",
+        "CRITICAL": "Crítico"
+    }
+}
