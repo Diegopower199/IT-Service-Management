@@ -27,7 +27,11 @@ import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 
 import { useAuth } from "@/hooks/useAuth";
 
-import type { PriorityResponse } from "@/types/priorityTypes";
+import {
+  isProtectedPriority,
+  type PriorityResponse,
+} from "@/types/priorityTypes";
+
 import { USER_ROLES } from "@/types/roleTypes";
 
 import {
@@ -128,12 +132,20 @@ export default function PrioritiesContent() {
   };
 
   const handleEditPriority = (priority: PriorityResponse) => {
+    if (isProtectedPriority(priority.name)) {
+      return;
+    }
+
     setSelectedPriority(priority);
     setFormMode(FORM_MODES.EDIT);
     setShowForm(true);
   };
 
   const handleOpenStatusDialog = (priority: PriorityResponse) => {
+    if (priority.active && isProtectedPriority(priority.name)) {
+      return;
+    }
+
     setStatusErrorMessage("");
     setPriorityStatusToChange(priority);
   };
@@ -149,6 +161,13 @@ export default function PrioritiesContent() {
 
   const handleChangePriorityStatus = async () => {
     if (!priorityStatusToChange) {
+      return;
+    }
+
+    if (
+      priorityStatusToChange.active &&
+      isProtectedPriority(priorityStatusToChange.name)
+    ) {
       return;
     }
 
@@ -224,28 +243,34 @@ export default function PrioritiesContent() {
       type: "actions",
       headerName: "Actions",
       width: 170,
-      getActions: ({ row }) => [
-        <GridActionsCellItem
-          key="view"
-          icon={<VisibilityIcon />}
-          label="View"
-          onClick={() => handleViewPriority(row)}
-        />,
+      getActions: ({ row }) => {
+        const protectedPriority = isProtectedPriority(row.name);
 
-        <GridActionsCellItem
-          key="edit"
-          icon={<EditIcon />}
-          label="Edit"
-          onClick={() => handleEditPriority(row)}
-        />,
+        return [
+          <GridActionsCellItem
+            key="view"
+            icon={<VisibilityIcon />}
+            label="View"
+            onClick={() => handleViewPriority(row)}
+          />,
 
-        <GridActionsCellItem
-          key="status"
-          icon={<ChangeCircleIcon />}
-          label={row.active ? "Deactivate" : "Activate"}
-          onClick={() => handleOpenStatusDialog(row)}
-        />,
-      ],
+          <GridActionsCellItem
+            key="edit"
+            icon={<EditIcon />}
+            label="Edit"
+            disabled={protectedPriority}
+            onClick={() => handleEditPriority(row)}
+          />,
+
+          <GridActionsCellItem
+            key="status"
+            icon={<ChangeCircleIcon />}
+            label={row.active ? "Deactivate" : "Activate"}
+            disabled={protectedPriority && row.active}
+            onClick={() => handleOpenStatusDialog(row)}
+          />,
+        ];
+      },
     },
   ];
 

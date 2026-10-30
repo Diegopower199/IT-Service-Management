@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.back_end.dtos.status.StatusRequest;
 import com.example.back_end.dtos.status.StatusResponse;
-import com.example.back_end.enums.SystemStatus;
+import com.example.back_end.enums.ProtectedStatus;
 import com.example.back_end.exception.ProtectedResourceException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
@@ -81,7 +81,7 @@ public class StatusService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Status with id " + statusId + " not found"));
 
-        if (SystemStatus.isSystemStatus(existingStatus.getName())) {
+        if (ProtectedStatus.isProtectedStatus(existingStatus.getName())) {
             throw new ProtectedResourceException(
                     "System status '"
                             + existingStatus.getName()
@@ -108,7 +108,7 @@ public class StatusService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Status with id " + id + " not found"));
 
-        if (SystemStatus.isSystemStatus(status.getName())) {
+        if (ProtectedStatus.isProtectedStatus(status.getName())) {
             throw new ProtectedResourceException(
                     "System status '"
                             + status.getName()

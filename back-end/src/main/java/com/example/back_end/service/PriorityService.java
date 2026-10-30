@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.back_end.dtos.priority.PriorityRequest;
 import com.example.back_end.dtos.priority.PriorityResponse;
+import com.example.back_end.enums.ProtectedPriority;
+import com.example.back_end.exception.ProtectedResourceException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.PriorityModel;
@@ -78,11 +80,18 @@ public class PriorityService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Priority with id " + priorityId + " not found"));
 
-        if (!existingPriority.getName().equals(request.getName())
+        if (!existingPriority.getName().equalsIgnoreCase(request.getName())
                 && priorityRepository.existsByName(request.getName())) {
 
             throw new ResourceAlreadyExistsException(
                     "Priority '" + request.getName() + "' already exists");
+        }
+
+        if (ProtectedPriority.isProtectedPriority(existingPriority.getName())) {
+            throw new ProtectedResourceException(
+                    "Priority '"
+                            + existingPriority.getName()
+                            + "' cannot be modified");
         }
 
         existingPriority.setName(request.getName());
@@ -97,6 +106,13 @@ public class PriorityService {
         PriorityModel priority = priorityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Priority with id " + id + " not found"));
+
+        if (ProtectedPriority.isProtectedPriority(priority.getName())) {
+            throw new ProtectedResourceException(
+                    "Priority '"
+                            + priority.getName()
+                            + "' cannot be deactivated");
+        }
 
         priority.setActive(false);
 
