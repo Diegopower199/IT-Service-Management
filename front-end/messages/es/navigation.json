@@ -1,0 +1,21 @@
+{
+    "Header": {
+        "logout": "Cerrar sesión",
+        "roles": {
+            "ADMIN": "Administrador",
+            "TECHNICIAN": "Técnico",
+            "USER": "Usuario"
+        }
+    },
+    "Sidebar": {
+        "dashboard": "Panel principal",
+        "tickets": "Tickets",
+        "users": "Usuarios",
+        "departments": "Departamentos",
+        "categories": "Categorías",
+        "priorities": "Prioridades",
+        "statuses": "Estados",
+        "roles": "Roles",
+        "profile": "Perfil"
+    }
+}

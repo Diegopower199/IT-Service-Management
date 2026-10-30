@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useTranslations } from "next-intl";
+
 import { Alert, Box, Paper, Stack, TextField, Typography } from "@mui/material";
 
 import Button from "@/components/ui/Button";
+import LanguageSelector from "@/components/ui/LanguageSelector";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -23,6 +26,8 @@ interface RequiredFieldsErrors {
 
 export default function LoginForm() {
   const router = useRouter();
+
+  const t = useTranslations("Auth.Login");
 
   const { setAuthentication } = useAuth();
 
@@ -57,11 +62,11 @@ export default function LoginForm() {
     const errorMissingFields: RequiredFieldsErrors = {};
 
     if (!formData.username.trim()) {
-      errorMissingFields.username = "Please enter a username";
+      errorMissingFields.username = t("usernameRequired");
     }
 
     if (!formData.password.trim()) {
-      errorMissingFields.password = "Please enter a password";
+      errorMissingFields.password = t("passwordRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -94,7 +99,7 @@ export default function LoginForm() {
       const apiError = getApiError(error);
 
       if (apiError?.status === 403) {
-        setError("Invalid username or password");
+        setError(t("invalidCredentials"));
         return;
       }
 
@@ -103,7 +108,7 @@ export default function LoginForm() {
         action: "handleSubmit",
       });
 
-      setError(apiError?.message ?? "Unable to connect to the server");
+      setError(apiError?.message ?? t("serverError"));
     } finally {
       setIsLoading(false);
     }
@@ -118,8 +123,19 @@ export default function LoginForm() {
         justifyContent: "center",
         backgroundColor: "#f5f7fb",
         px: 2,
+        position: "relative",
       }}
     >
+      <Box
+        sx={{
+          position: "absolute",
+          top: 24,
+          right: 24,
+        }}
+      >
+        <LanguageSelector />
+      </Box>
+
       <Paper
         component="form"
         onSubmit={handleSubmit}
@@ -144,16 +160,16 @@ export default function LoginForm() {
                 mb: 0.5,
               }}
             >
-              Sign in
+              {t("title")}
             </Typography>
 
             <Typography variant="body2" color="text.secondary">
-              Access your IT Service Management workspace
+              {t("subtitle")}
             </Typography>
           </Box>
 
           <TextField
-            label="Username"
+            label={t("username")}
             name="username"
             type="text"
             value={formData.username}
@@ -166,7 +182,7 @@ export default function LoginForm() {
           />
 
           <TextField
-            label="Password"
+            label={t("password")}
             name="password"
             type="password"
             value={formData.password}
@@ -181,7 +197,7 @@ export default function LoginForm() {
           {error && <Alert severity="error">{error}</Alert>}
 
           <Button type="submit" variant="primary" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
+            {isLoading ? t("loggingIn") : t("login")}
           </Button>
         </Stack>
       </Paper>
