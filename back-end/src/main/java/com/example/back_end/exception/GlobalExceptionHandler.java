@@ -137,6 +137,22 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    @ExceptionHandler(ProtectedResourceException.class)
+    public ResponseEntity<ErrorResponse> handleProtectedResource(
+            ProtectedResourceException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "PROTECTED_RESOURCE",
+                ex.getMessage(),
+                null,
+                LocalDateTime.now());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+    }
+
     // =========================================================
     // VALIDATION
     // =========================================================

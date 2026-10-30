@@ -24,7 +24,7 @@ import com.example.back_end.dtos.ticket.UpdateTicketRequest;
 import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.enums.PriorityName;
 import com.example.back_end.enums.RoleName;
-import com.example.back_end.enums.StatusName;
+import com.example.back_end.enums.SystemStatus;
 import com.example.back_end.enums.TicketHistoryAction;
 import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.InvalidRoleException;
@@ -153,7 +153,7 @@ public class TicketService {
                         "Active priority with id " + request.getPriorityId() + " not found"));
 
         StatusModel status = statusRepository
-                .findByNameAndActiveTrue(StatusName.OPEN.name())
+                .findByNameAndActiveTrue(SystemStatus.OPEN.name())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Active OPEN status not found"));
 
@@ -459,11 +459,11 @@ public class TicketService {
 
             openTickets = ticketRepository.countRelatedToUserByStatus(
                     currentUser,
-                    StatusName.OPEN.name());
+                    SystemStatus.OPEN.name());
 
             inProgressTickets = ticketRepository.countRelatedToUserByStatus(
                     currentUser,
-                    StatusName.IN_PROGRESS.name());
+                    SystemStatus.IN_PROGRESS.name());
 
             criticalTickets = ticketRepository.countRelatedToUserByPriority(
                     currentUser,
@@ -477,11 +477,11 @@ public class TicketService {
 
             openTickets = ticketRepository.countByAssignedToAndStatus_Name(
                     currentUser,
-                    StatusName.OPEN.name());
+                    SystemStatus.OPEN.name());
 
             inProgressTickets = ticketRepository.countByAssignedToAndStatus_Name(
                     currentUser,
-                    StatusName.IN_PROGRESS.name());
+                    SystemStatus.IN_PROGRESS.name());
 
             criticalTickets = ticketRepository.countByAssignedToAndPriority_Name(
                     currentUser,
@@ -492,10 +492,10 @@ public class TicketService {
             totalTickets = ticketRepository.count();
 
             openTickets = ticketRepository.countByStatus_Name(
-                    StatusName.OPEN.name());
+                    SystemStatus.OPEN.name());
 
             inProgressTickets = ticketRepository.countByStatus_Name(
-                    StatusName.IN_PROGRESS.name());
+                    SystemStatus.IN_PROGRESS.name());
 
             criticalTickets = ticketRepository.countByPriority_Name(
                     PriorityName.CRITICAL.name());

@@ -27,7 +27,8 @@ import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 
 import { useAuth } from "@/hooks/useAuth";
 
-import type { StatusResponse } from "@/types/statusTypes";
+import { isSystemStatus, type StatusResponse } from "@/types/statusTypes";
+
 import { USER_ROLES } from "@/types/roleTypes";
 
 import {
@@ -130,12 +131,20 @@ export default function StatusesContent() {
   };
 
   const handleEditStatus = (status: StatusResponse) => {
+    if (isSystemStatus(status.name)) {
+      return;
+    }
+
     setSelectedStatus(status);
     setFormMode(FORM_MODES.EDIT);
     setShowForm(true);
   };
 
   const handleOpenStatusDialog = (status: StatusResponse) => {
+    if (status.active && isSystemStatus(status.name)) {
+      return;
+    }
+
     setStatusErrorMessage("");
     setStatusToChange(status);
   };
@@ -151,6 +160,10 @@ export default function StatusesContent() {
 
   const handleChangeStatus = async () => {
     if (!statusToChange) {
+      return;
+    }
+
+    if (statusToChange.active && isSystemStatus(statusToChange.name)) {
       return;
     }
 
@@ -224,28 +237,34 @@ export default function StatusesContent() {
       type: "actions",
       headerName: "Actions",
       width: 170,
-      getActions: ({ row }) => [
-        <GridActionsCellItem
-          key="view"
-          icon={<VisibilityIcon />}
-          label="View"
-          onClick={() => handleViewStatus(row)}
-        />,
+      getActions: ({ row }) => {
+        const protectedStatus = isSystemStatus(row.name);
 
-        <GridActionsCellItem
-          key="edit"
-          icon={<EditIcon />}
-          label="Edit"
-          onClick={() => handleEditStatus(row)}
-        />,
+        return [
+          <GridActionsCellItem
+            key="view"
+            icon={<VisibilityIcon />}
+            label="View"
+            onClick={() => handleViewStatus(row)}
+          />,
 
-        <GridActionsCellItem
-          key="status"
-          icon={<ChangeCircleIcon />}
-          label={row.active ? "Deactivate" : "Activate"}
-          onClick={() => handleOpenStatusDialog(row)}
-        />,
-      ],
+          <GridActionsCellItem
+            key="edit"
+            icon={<EditIcon />}
+            label="Edit"
+            disabled={protectedStatus}
+            onClick={() => handleEditStatus(row)}
+          />,
+
+          <GridActionsCellItem
+            key="status"
+            icon={<ChangeCircleIcon />}
+            label={row.active ? "Deactivate" : "Activate"}
+            disabled={protectedStatus && row.active}
+            onClick={() => handleOpenStatusDialog(row)}
+          />,
+        ];
+      },
     },
   ];
 
