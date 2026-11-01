@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -57,6 +58,8 @@ export default function CategoryForm({
   onClose,
   onSubmitSuccess,
 }: CategoryFormProps) {
+  const t = useTranslations("Categories.Form");
+
   const [formData, setFormData] = useState<CategoryFormData>(
     getInitialFormData(formMode, selectedCategory),
   );
@@ -94,7 +97,7 @@ export default function CategoryForm({
       {};
 
     if (!formData.name.trim()) {
-      errorMissingFields.name = "Please enter a category name.";
+      errorMissingFields.name = t("nameRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -163,8 +166,8 @@ export default function CategoryForm({
       setErrorMessage(
         apiError?.message ??
           (formMode === FORM_MODES.CREATE
-            ? "Error creating category."
-            : "Error updating category."),
+            ? t("createError")
+            : t("updateError")),
       );
     } finally {
       setLoading(false);
@@ -173,14 +176,14 @@ export default function CategoryForm({
 
   const getTitle = () => {
     if (formMode === FORM_MODES.CREATE) {
-      return "Create Category";
+      return t("createTitle");
     }
 
     if (formMode === FORM_MODES.VIEW) {
-      return "Category Details";
+      return t("viewTitle");
     }
 
-    return "Edit Category";
+    return t("editTitle");
   };
 
   return (
@@ -191,7 +194,7 @@ export default function CategoryForm({
 
       <Stack spacing={3}>
         <TextField
-          label="Name"
+          label={t("name")}
           name="name"
           value={formData.name}
           onChange={handleFormChange}
@@ -203,8 +206,8 @@ export default function CategoryForm({
 
         {selectedCategory && formMode === FORM_MODES.VIEW && (
           <TextField
-            label="Status"
-            value={selectedCategory.active ? "Active" : "Inactive"}
+            label={t("status")}
+            value={selectedCategory.active ? t("active") : t("inactive")}
             disabled
             fullWidth
           />
@@ -219,16 +222,16 @@ export default function CategoryForm({
             onClick={onClose}
             disabled={loading}
           >
-            {isViewMode ? "Back" : "Cancel"}
+            {isViewMode ? t("back") : t("cancel")}
           </Button>
 
           {!isViewMode && (
             <Button type="submit" variant="contained" disabled={loading}>
               {loading
-                ? "Saving..."
+                ? t("saving")
                 : formMode === FORM_MODES.CREATE
-                  ? "Create Category"
-                  : "Save Changes"}
+                  ? t("createCategory")
+                  : t("saveChanges")}
             </Button>
           )}
         </Stack>

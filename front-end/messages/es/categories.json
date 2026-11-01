@@ -1,0 +1,41 @@
+{
+    "Content": {
+        "title": "Categorías",
+        "createCategory": "Crear categoría",
+        "loadError": "Error al cargar las categorías.",
+        "id": "ID",
+        "name": "Nombre",
+        "status": "Estado",
+        "actions": "Acciones",
+        "active": "Activa",
+        "inactive": "Inactiva",
+        "view": "Ver",
+        "edit": "Editar",
+        "activate": "Activar",
+        "deactivate": "Desactivar",
+        "activateTitle": "Activar categoría",
+        "deactivateTitle": "Desactivar categoría",
+        "activateConfirmation": "¿Seguro que quieres activar la categoría {name}?",
+        "deactivateConfirmation": "¿Seguro que quieres desactivar la categoría {name}?",
+        "statusChangeError": "Error al cambiar el estado de la categoría.",
+        "cancel": "Cancelar",
+        "saving": "Guardando..."
+    },
+    "Form": {
+        "createTitle": "Crear categoría",
+        "viewTitle": "Detalles de la categoría",
+        "editTitle": "Editar categoría",
+        "name": "Nombre",
+        "status": "Estado",
+        "active": "Activa",
+        "inactive": "Inactiva",
+        "nameRequired": "Introduce un nombre para la categoría.",
+        "createError": "Error al crear la categoría.",
+        "updateError": "Error al actualizar la categoría.",
+        "back": "Volver",
+        "cancel": "Cancelar",
+        "saving": "Guardando...",
+        "createCategory": "Crear categoría",
+        "saveChanges": "Guardar cambios"
+    }
+}

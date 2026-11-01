@@ -1,0 +1,41 @@
+{
+    "Content": {
+        "title": "Categories",
+        "createCategory": "Create Category",
+        "loadError": "Error loading categories.",
+        "id": "ID",
+        "name": "Name",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "view": "View",
+        "edit": "Edit",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "activateTitle": "Activate Category",
+        "deactivateTitle": "Deactivate Category",
+        "activateConfirmation": "Are you sure you want to activate category {name}?",
+        "deactivateConfirmation": "Are you sure you want to deactivate category {name}?",
+        "statusChangeError": "Error changing category status.",
+        "cancel": "Cancel",
+        "saving": "Saving..."
+    },
+    "Form": {
+        "createTitle": "Create Category",
+        "viewTitle": "Category Details",
+        "editTitle": "Edit Category",
+        "name": "Name",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "nameRequired": "Please enter a category name.",
+        "createError": "Error creating category.",
+        "updateError": "Error updating category.",
+        "back": "Back",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "createCategory": "Create Category",
+        "saveChanges": "Save Changes"
+    }
+}

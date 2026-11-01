@@ -5,6 +5,7 @@ import CommonEn from "./en/common.json";
 import ProfileEn from "./en/profile.json";
 import UsersEn from "./en/users.json";
 import DepartmentsEn from "./en/departments.json";
+import CategoriesEn from "./en/categories.json";
 
 import AuthEs from "./es/auth.json";
 import NavigationEs from "./es/navigation.json";
@@ -13,6 +14,7 @@ import CommonEs from "./es/common.json";
 import ProfileEs from "./es/profile.json";
 import UsersEs from "./es/users.json";
 import DepartmentsEs from "./es/departments.json";
+import CategoriesEs from "./es/categories.json";
 
 export const messages = {
   en: {
@@ -23,6 +25,7 @@ export const messages = {
     Profile: ProfileEn,
     Users: UsersEn,
     Departments: DepartmentsEn,
+    Categories: CategoriesEn,
   },
   es: {
     Auth: AuthEs,
@@ -32,5 +35,6 @@ export const messages = {
     Profile: ProfileEs,
     Users: UsersEs,
     Departments: DepartmentsEs,
+    Categories: CategoriesEs,
   },
 };
