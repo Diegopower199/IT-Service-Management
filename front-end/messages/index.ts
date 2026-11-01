@@ -8,6 +8,7 @@ import DepartmentsEn from "./en/departments.json";
 import CategoriesEn from "./en/categories.json";
 import PrioritiesEn from "./en/priorities.json";
 import StatusesEn from "./en/statuses.json";
+import RolesEn from "./en/roles.json";
 
 import AuthEs from "./es/auth.json";
 import NavigationEs from "./es/navigation.json";
@@ -19,6 +20,7 @@ import DepartmentsEs from "./es/departments.json";
 import CategoriesEs from "./es/categories.json";
 import PrioritiesEs from "./es/priorities.json";
 import StatusesEs from "./es/statuses.json";
+import RolesEs from "./es/roles.json";
 
 export const messages = {
   en: {
@@ -32,6 +34,7 @@ export const messages = {
     Categories: CategoriesEn,
     Priorities: PrioritiesEn,
     Statuses: StatusesEn,
+    Roles: RolesEn,
   },
   es: {
     Auth: AuthEs,
@@ -44,5 +47,6 @@ export const messages = {
     Categories: CategoriesEs,
     Priorities: PrioritiesEs,
     Statuses: StatusesEs,
+    Roles: RolesEs,
   },
 };
