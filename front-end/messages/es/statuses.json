@@ -1,0 +1,41 @@
+{
+    "Content": {
+        "title": "Estados",
+        "createStatus": "Crear estado",
+        "loadError": "Error al cargar los estados.",
+        "id": "ID",
+        "name": "Nombre",
+        "status": "Estado",
+        "actions": "Acciones",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "view": "Ver",
+        "edit": "Editar",
+        "activate": "Activar",
+        "deactivate": "Desactivar",
+        "activateTitle": "Activar estado",
+        "deactivateTitle": "Desactivar estado",
+        "activateConfirmation": "¿Seguro que quieres activar el estado {name}?",
+        "deactivateConfirmation": "¿Seguro que quieres desactivar el estado {name}?",
+        "statusChangeError": "Error al cambiar el estado.",
+        "cancel": "Cancelar",
+        "saving": "Guardando..."
+    },
+    "Form": {
+        "createTitle": "Crear estado",
+        "viewTitle": "Detalles del estado",
+        "editTitle": "Editar estado",
+        "name": "Nombre",
+        "status": "Estado",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "nameRequired": "Introduce un nombre para el estado.",
+        "createError": "Error al crear el estado.",
+        "updateError": "Error al actualizar el estado.",
+        "back": "Volver",
+        "cancel": "Cancelar",
+        "saving": "Guardando...",
+        "createStatus": "Crear estado",
+        "saveChanges": "Guardar cambios"
+    }
+}

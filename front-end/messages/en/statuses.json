@@ -1,0 +1,41 @@
+{
+    "Content": {
+        "title": "Statuses",
+        "createStatus": "Create Status",
+        "loadError": "Error loading statuses.",
+        "id": "ID",
+        "name": "Name",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "view": "View",
+        "edit": "Edit",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "activateTitle": "Activate Status",
+        "deactivateTitle": "Deactivate Status",
+        "activateConfirmation": "Are you sure you want to activate status {name}?",
+        "deactivateConfirmation": "Are you sure you want to deactivate status {name}?",
+        "statusChangeError": "Error changing status.",
+        "cancel": "Cancel",
+        "saving": "Saving..."
+    },
+    "Form": {
+        "createTitle": "Create Status",
+        "viewTitle": "Status Details",
+        "editTitle": "Edit Status",
+        "name": "Name",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "nameRequired": "Please enter a status name.",
+        "createError": "Error creating status.",
+        "updateError": "Error updating status.",
+        "back": "Back",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "createStatus": "Create Status",
+        "saveChanges": "Save Changes"
+    }
+}
