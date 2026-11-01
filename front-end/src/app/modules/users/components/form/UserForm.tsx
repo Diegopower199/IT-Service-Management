@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -107,7 +107,7 @@ export default function UserForm({
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchRolesOptions = async (): Promise<boolean> => {
+  const fetchRolesOptions = useCallback(async (): Promise<boolean> => {
     try {
       const rolesResponse = await getAllRoles();
 
@@ -126,9 +126,9 @@ export default function UserForm({
 
       return false;
     }
-  };
+  }, [t]);
 
-  const fetchDepartmentsOptions = async (): Promise<boolean> => {
+  const fetchDepartmentsOptions = useCallback(async (): Promise<boolean> => {
     try {
       const departmentsResponse = await getAllActiveDepartments();
 
@@ -147,7 +147,7 @@ export default function UserForm({
 
       return false;
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     const fetchFormOptions = async () => {
@@ -167,7 +167,7 @@ export default function UserForm({
     };
 
     fetchFormOptions();
-  }, []);
+  }, [fetchRolesOptions, fetchDepartmentsOptions]);
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
