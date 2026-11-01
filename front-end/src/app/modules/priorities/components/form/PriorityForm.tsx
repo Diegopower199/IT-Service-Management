@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -11,7 +12,10 @@ import {
   Typography,
 } from "@mui/material";
 
-import type { PriorityResponse } from "@/types/priorityTypes";
+import {
+  isProtectedPriority,
+  type PriorityResponse,
+} from "@/types/priorityTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
@@ -56,6 +60,9 @@ export default function PriorityForm({
   onClose,
   onSubmitSuccess,
 }: PriorityFormProps) {
+  const t = useTranslations("Priorities.Form");
+  const tPriorities = useTranslations("Common.Priorities");
+
   const [formData, setFormData] = useState<PriorityFormData>(
     getInitialFormData(formMode, selectedPriority),
   );
@@ -69,6 +76,14 @@ export default function PriorityForm({
   const [errorMessage, setErrorMessage] = useState("");
 
   const isViewMode = formMode === FORM_MODES.VIEW;
+
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (isProtectedPriority(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -93,7 +108,7 @@ export default function PriorityForm({
       {};
 
     if (!formData.name.trim()) {
-      errorMissingFields.name = "Please enter a priority name.";
+      errorMissingFields.name = t("nameRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -162,8 +177,8 @@ export default function PriorityForm({
       setErrorMessage(
         apiError?.message ??
           (formMode === FORM_MODES.CREATE
-            ? "Error creating priority."
-            : "Error updating priority."),
+            ? t("createError")
+            : t("updateError")),
       );
     } finally {
       setLoading(false);
@@ -172,14 +187,14 @@ export default function PriorityForm({
 
   const getTitle = () => {
     if (formMode === FORM_MODES.CREATE) {
-      return "Create Priority";
+      return t("createTitle");
     }
 
     if (formMode === FORM_MODES.VIEW) {
-      return "Priority Details";
+      return t("viewTitle");
     }
 
-    return "Edit Priority";
+    return t("editTitle");
   };
 
   return (
@@ -190,9 +205,11 @@ export default function PriorityForm({
 
       <Stack spacing={3}>
         <TextField
-          label="Name"
+          label={t("name")}
           name="name"
-          value={formData.name}
+          value={
+            isViewMode ? getPriorityDisplayName(formData.name) : formData.name
+          }
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.name)}
           helperText={requiredFieldsIncomplete.name}
@@ -202,8 +219,8 @@ export default function PriorityForm({
 
         {selectedPriority && formMode === FORM_MODES.VIEW && (
           <TextField
-            label="Status"
-            value={selectedPriority.active ? "Active" : "Inactive"}
+            label={t("status")}
+            value={selectedPriority.active ? t("active") : t("inactive")}
             disabled
             fullWidth
           />
@@ -218,16 +235,16 @@ export default function PriorityForm({
             onClick={onClose}
             disabled={loading}
           >
-            {isViewMode ? "Back" : "Cancel"}
+            {isViewMode ? t("back") : t("cancel")}
           </Button>
 
           {!isViewMode && (
             <Button type="submit" variant="contained" disabled={loading}>
               {loading
-                ? "Saving..."
+                ? t("saving")
                 : formMode === FORM_MODES.CREATE
-                  ? "Create Priority"
-                  : "Save Changes"}
+                  ? t("createPriority")
+                  : t("saveChanges")}
             </Button>
           )}
         </Stack>
