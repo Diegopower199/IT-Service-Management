@@ -1,11 +1,6 @@
 {
     "Header": {
-        "logout": "Cerrar sesión",
-        "roles": {
-            "ADMIN": "Administrador",
-            "TECHNICIAN": "Técnico",
-            "USER": "Usuario"
-        }
+        "logout": "Cerrar sesión"
     },
     "Sidebar": {
         "dashboard": "Panel principal",

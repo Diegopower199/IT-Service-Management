@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -29,6 +30,8 @@ const INITIAL_FORM_DATA: ChangePasswordFormData = {
 };
 
 export default function ChangePasswordForm() {
+  const t = useTranslations("Profile.ChangePassword");
+
   const [formData, setFormData] =
     useState<ChangePasswordFormData>(INITIAL_FORM_DATA);
 
@@ -62,15 +65,15 @@ export default function ChangePasswordForm() {
     const errors: Partial<Record<keyof ChangePasswordFormData, string>> = {};
 
     if (!formData.currentPassword) {
-      errors.currentPassword = "Please enter your current password.";
+      errors.currentPassword = t("currentPasswordRequired");
     }
 
     if (!formData.newPassword) {
-      errors.newPassword = "Please enter a new password.";
+      errors.newPassword = t("newPasswordRequired");
     }
 
     if (!formData.confirmPassword) {
-      errors.confirmPassword = "Please confirm your new password.";
+      errors.confirmPassword = t("confirmPasswordRequired");
     }
 
     if (
@@ -78,7 +81,7 @@ export default function ChangePasswordForm() {
       formData.confirmPassword &&
       formData.newPassword !== formData.confirmPassword
     ) {
-      errors.confirmPassword = "Passwords do not match.";
+      errors.confirmPassword = t("passwordsDoNotMatch");
     }
 
     setRequiredFieldsIncomplete(errors);
@@ -108,7 +111,7 @@ export default function ChangePasswordForm() {
 
       setFormData(INITIAL_FORM_DATA);
 
-      setSuccessMessage("Password changed successfully.");
+      setSuccessMessage(t("success"));
     } catch (error) {
       logger.error("Failed to change password", error, {
         component: "ChangePasswordForm",
@@ -117,7 +120,7 @@ export default function ChangePasswordForm() {
 
       const apiError = getApiError(error);
 
-      setErrorMessage(apiError?.message ?? "Error changing password.");
+      setErrorMessage(apiError?.message ?? t("error"));
     } finally {
       setLoading(false);
     }
@@ -126,12 +129,12 @@ export default function ChangePasswordForm() {
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Typography variant="h6" gutterBottom>
-        Change Password
+        {t("title")}
       </Typography>
 
       <Stack spacing={3}>
         <TextField
-          label="Current Password"
+          label={t("currentPassword")}
           name="currentPassword"
           type="password"
           value={formData.currentPassword}
@@ -143,7 +146,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
-          label="New Password"
+          label={t("newPassword")}
           name="newPassword"
           type="password"
           value={formData.newPassword}
@@ -155,7 +158,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
-          label="Confirm New Password"
+          label={t("confirmPassword")}
           name="confirmPassword"
           type="password"
           value={formData.confirmPassword}
@@ -171,7 +174,7 @@ export default function ChangePasswordForm() {
         {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
         <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? "Saving..." : "Change Password"}
+          {loading ? t("saving") : t("submit")}
         </Button>
       </Stack>
     </Box>

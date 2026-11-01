@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -35,6 +36,8 @@ export default function ProfileForm({
   onClose,
   onSubmitSuccess,
 }: ProfileFormProps) {
+  const t = useTranslations("Profile.Form");
+
   const [formData, setFormData] = useState<ProfileFormData>({
     firstName: profile.firstName,
     lastName: profile.lastName,
@@ -69,15 +72,15 @@ export default function ProfileForm({
     const errors: Partial<Record<keyof ProfileFormData, string>> = {};
 
     if (!formData.firstName.trim()) {
-      errors.firstName = "Please enter a first name.";
+      errors.firstName = t("firstNameRequired");
     }
 
     if (!formData.lastName.trim()) {
-      errors.lastName = "Please enter a last name.";
+      errors.lastName = t("lastNameRequired");
     }
 
     if (!formData.email.trim()) {
-      errors.email = "Please enter an email.";
+      errors.email = t("emailRequired");
     }
 
     setRequiredFieldsIncomplete(errors);
@@ -126,7 +129,7 @@ export default function ProfileForm({
         action: "handleSubmit",
       });
 
-      setErrorMessage(apiError?.message ?? "Error updating profile.");
+      setErrorMessage(apiError?.message ?? t("updateError"));
     } finally {
       setLoading(false);
     }
@@ -143,12 +146,12 @@ export default function ProfileForm({
       }}
     >
       <Typography variant="h6" gutterBottom>
-        Edit Profile
+        {t("title")}
       </Typography>
 
       <Stack spacing={3} sx={{ mt: 3 }}>
         <TextField
-          label="First name"
+          label={t("firstName")}
           name="firstName"
           value={formData.firstName}
           onChange={handleFormChange}
@@ -159,7 +162,7 @@ export default function ProfileForm({
         />
 
         <TextField
-          label="Last name"
+          label={t("lastName")}
           name="lastName"
           value={formData.lastName}
           onChange={handleFormChange}
@@ -170,7 +173,7 @@ export default function ProfileForm({
         />
 
         <TextField
-          label="Email"
+          label={t("email")}
           name="email"
           type="email"
           value={formData.email}
@@ -190,11 +193,11 @@ export default function ProfileForm({
             onClick={onClose}
             disabled={loading}
           >
-            Cancel
+            {t("cancel")}
           </Button>
 
           <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? t("saving") : t("saveChanges")}
           </Button>
         </Stack>
       </Stack>

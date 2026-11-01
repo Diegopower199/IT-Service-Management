@@ -11,5 +11,10 @@
         "MEDIUM": "Medium",
         "HIGH": "High",
         "CRITICAL": "Critical"
+    },
+    "Roles": {
+        "ADMIN": "Administrator",
+        "TECHNICIAN": "Technician",
+        "USER": "User"
     }
 }
