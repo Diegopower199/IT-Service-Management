@@ -10,7 +10,7 @@
         "LOW": "Baja",
         "MEDIUM": "Media",
         "HIGH": "Alta",
-        "CRITICAL": "Crítica"
+        "CRITICAL": "Crítico"
     },
     "Roles": {
         "ADMIN": "Administrador",
