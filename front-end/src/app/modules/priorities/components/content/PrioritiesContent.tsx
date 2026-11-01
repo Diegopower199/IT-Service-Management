@@ -124,7 +124,7 @@ export default function PrioritiesContent() {
   }, [isAuthReady, user, router, prioritiesUpdated, t]);
 
   const getPriorityDisplayName = (priorityName: string) => {
-    if (isProtectedPriority(priorityName)) {
+    if (isProtectedPriority(priorityName) && tPriorities.has(priorityName)) {
       return tPriorities(priorityName);
     }
 

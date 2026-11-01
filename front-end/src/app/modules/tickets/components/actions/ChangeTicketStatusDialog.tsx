@@ -85,7 +85,7 @@ export default function ChangeTicketStatusDialog({
   }, [ticketId, t]);
 
   const getStatusDisplayName = (statusName: string) => {
-    if (isProtectedStatus(statusName)) {
+    if (isProtectedStatus(statusName) && tStatuses.has(statusName)) {
       return tStatuses(statusName);
     }
 

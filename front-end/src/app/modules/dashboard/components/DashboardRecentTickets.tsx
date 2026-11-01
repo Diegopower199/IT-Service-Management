@@ -18,6 +18,22 @@ export default function DashboardRecentTickets({
   const tStatuses = useTranslations("Common.Statuses");
   const tPriorities = useTranslations("Common.Priorities");
 
+  const getStatusDisplayName = (statusName: string) => {
+    if (tStatuses.has(statusName)) {
+      return tStatuses(statusName);
+    }
+
+    return statusName;
+  };
+
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (tPriorities.has(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
+
   return (
     <section className={styles.recentTickets}>
       <h2 className={styles.sectionTitle}>{t("title")}</h2>
@@ -41,9 +57,9 @@ export default function DashboardRecentTickets({
 
               <td>{ticket.title}</td>
 
-              <td>{tStatuses(ticket.status.name)}</td>
+              <td>{getStatusDisplayName(ticket.status.name)}</td>
 
-              <td>{tPriorities(ticket.priority.name)}</td>
+              <td>{getPriorityDisplayName(ticket.priority.name)}</td>
 
               <td>{ticket.assignedTo?.username ?? "-"}</td>
 

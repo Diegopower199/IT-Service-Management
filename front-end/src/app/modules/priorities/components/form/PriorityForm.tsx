@@ -78,7 +78,7 @@ export default function PriorityForm({
   const isViewMode = formMode === FORM_MODES.VIEW;
 
   const getPriorityDisplayName = (priorityName: string) => {
-    if (isProtectedPriority(priorityName)) {
+    if (isProtectedPriority(priorityName) && tPriorities.has(priorityName)) {
       return tPriorities(priorityName);
     }
 

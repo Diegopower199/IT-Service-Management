@@ -123,7 +123,7 @@ export default function StatusesContent() {
   }, [isAuthReady, user, router, statusesUpdated, t]);
 
   const getStatusDisplayName = (statusName: string) => {
-    if (isProtectedStatus(statusName)) {
+    if (isProtectedStatus(statusName) && tStatuses.has(statusName)) {
       return tStatuses(statusName);
     }
 
