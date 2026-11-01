@@ -1,0 +1,41 @@
+{
+    "Content": {
+        "title": "Departamentos",
+        "createDepartment": "Crear departamento",
+        "loadError": "Error al cargar los departamentos.",
+        "id": "ID",
+        "name": "Nombre",
+        "status": "Estado",
+        "actions": "Acciones",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "view": "Ver",
+        "edit": "Editar",
+        "activate": "Activar",
+        "deactivate": "Desactivar",
+        "activateTitle": "Activar departamento",
+        "deactivateTitle": "Desactivar departamento",
+        "activateConfirmation": "¿Seguro que quieres activar el departamento {name}?",
+        "deactivateConfirmation": "¿Seguro que quieres desactivar el departamento {name}?",
+        "statusChangeError": "Error al cambiar el estado del departamento.",
+        "cancel": "Cancelar",
+        "saving": "Guardando..."
+    },
+    "Form": {
+        "createTitle": "Crear departamento",
+        "viewTitle": "Detalles del departamento",
+        "editTitle": "Editar departamento",
+        "name": "Nombre",
+        "status": "Estado",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "nameRequired": "Introduce un nombre para el departamento.",
+        "createError": "Error al crear el departamento.",
+        "updateError": "Error al actualizar el departamento.",
+        "back": "Volver",
+        "cancel": "Cancelar",
+        "saving": "Guardando...",
+        "createDepartment": "Crear departamento",
+        "saveChanges": "Guardar cambios"
+    }
+}

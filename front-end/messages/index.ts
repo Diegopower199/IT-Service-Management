@@ -4,6 +4,7 @@ import DashboardEn from "./en/dashboard.json";
 import CommonEn from "./en/common.json";
 import ProfileEn from "./en/profile.json";
 import UsersEn from "./en/users.json";
+import DepartmentsEn from "./en/departments.json";
 
 import AuthEs from "./es/auth.json";
 import NavigationEs from "./es/navigation.json";
@@ -11,6 +12,7 @@ import DashboardEs from "./es/dashboard.json";
 import CommonEs from "./es/common.json";
 import ProfileEs from "./es/profile.json";
 import UsersEs from "./es/users.json";
+import DepartmentsEs from "./es/departments.json";
 
 export const messages = {
   en: {
@@ -20,6 +22,7 @@ export const messages = {
     Common: CommonEn,
     Profile: ProfileEn,
     Users: UsersEn,
+    Departments: DepartmentsEn,
   },
   es: {
     Auth: AuthEs,
@@ -28,5 +31,6 @@ export const messages = {
     Common: CommonEs,
     Profile: ProfileEs,
     Users: UsersEs,
+    Departments: DepartmentsEs,
   },
 };

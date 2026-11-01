@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -59,6 +60,8 @@ export default function DepartmentForm({
   onClose,
   onSubmitSuccess,
 }: DepartmentFormProps) {
+  const t = useTranslations("Departments.Form");
+
   const [formData, setFormData] = useState<DepartmentFormData>(
     getInitialFormData(formMode, selectedDepartment),
   );
@@ -97,7 +100,7 @@ export default function DepartmentForm({
     > = {};
 
     if (!formData.name.trim()) {
-      errorMissingFields.name = "Please enter a department name.";
+      errorMissingFields.name = t("nameRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -166,8 +169,8 @@ export default function DepartmentForm({
       setErrorMessage(
         apiError?.message ??
           (formMode === FORM_MODES.CREATE
-            ? "Error creating department."
-            : "Error updating department."),
+            ? t("createError")
+            : t("updateError")),
       );
     } finally {
       setLoading(false);
@@ -176,14 +179,14 @@ export default function DepartmentForm({
 
   const getTitle = () => {
     if (formMode === FORM_MODES.CREATE) {
-      return "Create Department";
+      return t("createTitle");
     }
 
     if (formMode === FORM_MODES.VIEW) {
-      return "Department Details";
+      return t("viewTitle");
     }
 
-    return "Edit Department";
+    return t("editTitle");
   };
 
   return (
@@ -194,7 +197,7 @@ export default function DepartmentForm({
 
       <Stack spacing={3}>
         <TextField
-          label="Name"
+          label={t("name")}
           name="name"
           value={formData.name}
           onChange={handleFormChange}
@@ -206,8 +209,8 @@ export default function DepartmentForm({
 
         {selectedDepartment && formMode === FORM_MODES.VIEW && (
           <TextField
-            label="Status"
-            value={selectedDepartment.active ? "Active" : "Inactive"}
+            label={t("status")}
+            value={selectedDepartment.active ? t("active") : t("inactive")}
             disabled
             fullWidth
           />
@@ -222,16 +225,16 @@ export default function DepartmentForm({
             onClick={onClose}
             disabled={loading}
           >
-            {isViewMode ? "Back" : "Cancel"}
+            {isViewMode ? t("back") : t("cancel")}
           </Button>
 
           {!isViewMode && (
             <Button type="submit" variant="contained" disabled={loading}>
               {loading
-                ? "Saving..."
+                ? t("saving")
                 : formMode === FORM_MODES.CREATE
-                  ? "Create Department"
-                  : "Save Changes"}
+                  ? t("createDepartment")
+                  : t("saveChanges")}
             </Button>
           )}
         </Stack>

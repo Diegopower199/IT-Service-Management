@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -55,6 +56,8 @@ export default function DepartmentsContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
 
+  const t = useTranslations("Departments.Content");
+
   const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -106,14 +109,14 @@ export default function DepartmentsContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading departments.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadDepartments();
-  }, [isAuthReady, user, router, departmentsUpdated]);
+  }, [isAuthReady, user, router, departmentsUpdated, t]);
 
   const handleCreateDepartment = () => {
     setSelectedDepartment(null);
@@ -174,9 +177,7 @@ export default function DepartmentsContent() {
 
       const apiError = getApiError(error);
 
-      setStatusErrorMessage(
-        apiError?.message ?? "Error changing department status.",
-      );
+      setStatusErrorMessage(apiError?.message ?? t("statusChangeError"));
     } finally {
       setChangingStatus(false);
     }
@@ -194,22 +195,22 @@ export default function DepartmentsContent() {
   const columns: GridColDef<DepartmentResponse>[] = [
     {
       field: "idDepartment",
-      headerName: "ID",
+      headerName: t("id"),
       width: 100,
     },
     {
       field: "name",
-      headerName: "Name",
+      headerName: t("name"),
       flex: 1,
       minWidth: 200,
     },
     {
       field: "active",
-      headerName: "Status",
+      headerName: t("status"),
       width: 150,
       renderCell: (params) => (
         <Chip
-          label={params.row.active ? "Active" : "Inactive"}
+          label={params.row.active ? t("active") : t("inactive")}
           color={params.row.active ? "success" : "default"}
           size="small"
           variant="outlined"
@@ -222,27 +223,27 @@ export default function DepartmentsContent() {
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("actions"),
       width: 170,
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="view"
           icon={<VisibilityIcon />}
-          label="View"
+          label={t("view")}
           onClick={() => handleViewDepartment(row)}
         />,
 
         <GridActionsCellItem
           key="edit"
           icon={<EditIcon />}
-          label="Edit"
+          label={t("edit")}
           onClick={() => handleEditDepartment(row)}
         />,
 
         <GridActionsCellItem
           key="status"
           icon={<ChangeCircleIcon />}
-          label={row.active ? "Deactivate" : "Activate"}
+          label={row.active ? t("deactivate") : t("activate")}
           onClick={() => handleOpenStatusDialog(row)}
         />,
       ],
@@ -270,10 +271,10 @@ export default function DepartmentsContent() {
 
   return (
     <main>
-      <h1>Departments</h1>
+      <h1>{t("title")}</h1>
 
       <Button variant="contained" onClick={handleCreateDepartment}>
-        Create Department <AddIcon />
+        {t("createDepartment")} <AddIcon />
       </Button>
 
       {errorMessage && (
@@ -312,16 +313,22 @@ export default function DepartmentsContent() {
       >
         <DialogTitle>
           {departmentStatusToChange?.active
-            ? "Deactivate Department"
-            : "Activate Department"}
+            ? t("deactivateTitle")
+            : t("activateTitle")}
         </DialogTitle>
 
         <DialogContent>
-          <Typography>
-            Are you sure you want to{" "}
-            {departmentStatusToChange?.active ? "deactivate" : "activate"}{" "}
-            department <strong>{departmentStatusToChange?.name}</strong>?
-          </Typography>
+          {departmentStatusToChange && (
+            <Typography>
+              {departmentStatusToChange.active
+                ? t("deactivateConfirmation", {
+                    name: departmentStatusToChange.name,
+                  })
+                : t("activateConfirmation", {
+                    name: departmentStatusToChange.name,
+                  })}
+            </Typography>
+          )}
 
           {statusErrorMessage && (
             <Alert
@@ -342,7 +349,7 @@ export default function DepartmentsContent() {
             onClick={handleCloseStatusDialog}
             disabled={changingStatus}
           >
-            Cancel
+            {t("cancel")}
           </Button>
 
           <Button
@@ -352,10 +359,10 @@ export default function DepartmentsContent() {
             disabled={changingStatus}
           >
             {changingStatus
-              ? "Saving..."
+              ? t("saving")
               : departmentStatusToChange?.active
-                ? "Deactivate"
-                : "Activate"}
+                ? t("deactivate")
+                : t("activate")}
           </Button>
         </DialogActions>
       </Dialog>

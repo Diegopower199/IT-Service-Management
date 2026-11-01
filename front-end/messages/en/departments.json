@@ -1,0 +1,41 @@
+{
+    "Content": {
+        "title": "Departments",
+        "createDepartment": "Create Department",
+        "loadError": "Error loading departments.",
+        "id": "ID",
+        "name": "Name",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "view": "View",
+        "edit": "Edit",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "activateTitle": "Activate Department",
+        "deactivateTitle": "Deactivate Department",
+        "activateConfirmation": "Are you sure you want to activate department {name}?",
+        "deactivateConfirmation": "Are you sure you want to deactivate department {name}?",
+        "statusChangeError": "Error changing department status.",
+        "cancel": "Cancel",
+        "saving": "Saving..."
+    },
+    "Form": {
+        "createTitle": "Create Department",
+        "viewTitle": "Department Details",
+        "editTitle": "Edit Department",
+        "name": "Name",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "nameRequired": "Please enter a department name.",
+        "createError": "Error creating department.",
+        "updateError": "Error updating department.",
+        "back": "Back",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "createDepartment": "Create Department",
+        "saveChanges": "Save Changes"
+    }
+}
