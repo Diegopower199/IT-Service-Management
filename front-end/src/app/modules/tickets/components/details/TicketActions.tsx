@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
 
@@ -29,6 +30,8 @@ export default function TicketActions({
   onCommentsUpdated,
   onHistoryUpdated,
 }: TicketActionsProps) {
+  const t = useTranslations("Tickets.Actions");
+
   const [openChangeStatus, setOpenChangeStatus] = useState(false);
   const [openChangePriority, setOpenChangePriority] = useState(false);
   const [openAddComment, setOpenAddComment] = useState(false);
@@ -37,8 +40,6 @@ export default function TicketActions({
   const isTechnician = userRole === USER_ROLES.TECHNICIAN;
 
   const isAdmin = userRole === USER_ROLES.ADMIN;
-
-  const isUser = userRole === USER_ROLES.USER;
 
   const handleOpenChangeStatus = (
     event: React.MouseEvent<HTMLButtonElement>,
@@ -95,7 +96,7 @@ export default function TicketActions({
           p: 3,
         }}
       >
-        <Typography variant="h6">Actions</Typography>
+        <Typography variant="h6">{t("title")}</Typography>
 
         <Divider sx={{ my: 2 }} />
 
@@ -103,25 +104,25 @@ export default function TicketActions({
           {(isTechnician || isAdmin) && (
             <>
               <Button variant="contained" onClick={handleOpenAssignTechnician}>
-                Assign Technician
+                {t("assignTechnician")}
               </Button>
 
               <Button variant="outlined" onClick={handleOpenChangeStatus}>
-                Change Status
+                {t("changeStatus")}
               </Button>
 
               <Button variant="outlined" onClick={handleOpenChangePriority}>
-                Change Priority
+                {t("changePriority")}
               </Button>
             </>
           )}
 
           <Button variant="outlined" onClick={onEdit}>
-            Edit Ticket
+            {t("editTicket")}
           </Button>
 
           <Button variant="outlined" onClick={handleOpenAddComment}>
-            Add Comment
+            {t("addComment")}
           </Button>
         </Stack>
       </Paper>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Alert, Chip } from "@mui/material";
 
@@ -21,8 +22,13 @@ import { useAuth } from "@/hooks/useAuth";
 
 import type { TicketFilters, TicketResponse } from "@/types/ticketTypes";
 
-import type { StatusResponse } from "@/types/statusTypes";
-import type { PriorityResponse } from "@/types/priorityTypes";
+import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
+
+import {
+  isProtectedPriority,
+  type PriorityResponse,
+} from "@/types/priorityTypes";
+
 import type { CategoryResponse } from "@/types/categoryTypes";
 
 import { USER_ROLES } from "@/types/roleTypes";
@@ -43,11 +49,7 @@ import {
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
 
-import {
-  formatEnumName,
-  getPriorityColor,
-  getStatusColor,
-} from "@/utils/ticketUiUtils";
+import { getPriorityColor, getStatusColor } from "@/utils/ticketUiUtils";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
@@ -68,6 +70,10 @@ export default function TicketsContent() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const t = useTranslations("Tickets.Content");
+  const tStatuses = useTranslations("Common.Statuses");
+  const tPriorities = useTranslations("Common.Priorities");
 
   const titleFilter = searchParams.get("title");
   const statusFilter = searchParams.get("status");
@@ -125,7 +131,7 @@ export default function TicketsContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading statuses.");
+        setErrorMessage(apiError?.message ?? t("statusesLoadError"));
       }
     };
 
@@ -142,7 +148,7 @@ export default function TicketsContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading priorities.");
+        setErrorMessage(apiError?.message ?? t("prioritiesLoadError"));
       }
     };
 
@@ -159,14 +165,14 @@ export default function TicketsContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading categories.");
+        setErrorMessage(apiError?.message ?? t("categoriesLoadError"));
       }
     };
 
     loadStatuses();
     loadPriorities();
     loadCategories();
-  }, [isAuthReady, user]);
+  }, [isAuthReady, user, t]);
 
   useEffect(() => {
     if (!isAuthReady) {
@@ -227,7 +233,7 @@ export default function TicketsContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading tickets.");
+        setErrorMessage(apiError?.message ?? t("ticketsLoadError"));
       } finally {
         setLoading(false);
       }
@@ -244,7 +250,24 @@ export default function TicketsContent() {
     statusFilter,
     priorityFilter,
     categoryFilter,
+    t,
   ]);
+
+  const getStatusDisplayName = (statusName: string) => {
+    if (isProtectedStatus(statusName)) {
+      return tStatuses(statusName);
+    }
+
+    return statusName;
+  };
+
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (isProtectedPriority(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
 
   const handleApplyFilters = (nextFilters: TicketFilters) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -350,37 +373,37 @@ export default function TicketsContent() {
 
       const apiError = getApiError(error);
 
-      setErrorMessage(apiError?.message ?? "Error updating ticket details.");
+      setErrorMessage(apiError?.message ?? t("detailsUpdateError"));
     }
   };
 
   const columns: GridColDef<TicketResponse>[] = [
     {
       field: "idTicket",
-      headerName: "ID",
+      headerName: t("id"),
       width: 90,
     },
     {
       field: "title",
-      headerName: "Title",
+      headerName: t("title"),
       flex: 1,
       minWidth: 200,
     },
     {
       field: "category",
-      headerName: "Category",
+      headerName: t("category"),
       flex: 1,
       minWidth: 200,
       valueGetter: (_, row) => row.category.name,
     },
     {
       field: "status",
-      headerName: "Status",
+      headerName: t("status"),
       width: 160,
       valueGetter: (_, row) => row.status.name,
       renderCell: (params) => (
         <Chip
-          label={formatEnumName(params.row.status.name)}
+          label={getStatusDisplayName(params.row.status.name)}
           color={getStatusColor(params.row.status.name)}
           size="small"
           variant="outlined"
@@ -392,12 +415,12 @@ export default function TicketsContent() {
     },
     {
       field: "priority",
-      headerName: "Priority",
+      headerName: t("priority"),
       width: 150,
       valueGetter: (_, row) => row.priority.name,
       renderCell: (params) => (
         <Chip
-          label={formatEnumName(params.row.priority.name)}
+          label={getPriorityDisplayName(params.row.priority.name)}
           color={getPriorityColor(params.row.priority.name)}
           size="small"
           sx={{
@@ -408,7 +431,7 @@ export default function TicketsContent() {
     },
     {
       field: "lastUpdated",
-      headerName: "Last Updated",
+      headerName: t("lastUpdated"),
       width: 190,
       valueFormatter: (value) =>
         value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "",
@@ -416,19 +439,19 @@ export default function TicketsContent() {
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("actions"),
       width: 120,
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="view"
           icon={<VisibilityIcon />}
-          label="View"
+          label={t("view")}
           onClick={() => handleViewTicket(row)}
         />,
         <GridActionsCellItem
           key="edit"
           icon={<EditIcon />}
-          label="Edit"
+          label={t("edit")}
           onClick={() => handleEditTicket(row)}
         />,
       ],
@@ -474,14 +497,14 @@ export default function TicketsContent() {
     <main>
       <h1>
         {user.role === USER_ROLES.ADMIN
-          ? "All Tickets"
+          ? t("allTickets")
           : user.role === USER_ROLES.TECHNICIAN
-            ? "Assigned Tickets"
-            : "My Tickets"}
+            ? t("assignedTickets")
+            : t("myTickets")}
       </h1>
 
       <Button onClick={handleCreateTicket}>
-        Create Ticket <AddIcon />
+        {t("createTicket")} <AddIcon />
       </Button>
 
       <TicketFiltersBar

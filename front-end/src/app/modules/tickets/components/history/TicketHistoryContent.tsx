@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+
 import dayjs from "dayjs";
 
 import { Alert, Typography } from "@mui/material";
@@ -26,6 +28,8 @@ interface TicketHistoryContentProps {
 export default function TicketHistoryContent({
   ticketId,
 }: TicketHistoryContentProps) {
+  const t = useTranslations("Tickets.HistoryContent");
+
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
     [],
   );
@@ -64,49 +68,49 @@ export default function TicketHistoryContent({
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading ticket history.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadTicketHistory();
-  }, [ticketId, paginationModel]);
+  }, [ticketId, paginationModel, t]);
 
   const columns: GridColDef<TicketHistoryResponse>[] = [
     {
       field: "action",
-      headerName: "Action",
+      headerName: t("action"),
       flex: 1,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "fieldName",
-      headerName: "Field",
+      headerName: t("field"),
       flex: 1,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "oldValue",
-      headerName: "Old Value",
+      headerName: t("oldValue"),
       flex: 1,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "newValue",
-      headerName: "New Value",
+      headerName: t("newValue"),
       flex: 1,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "user",
-      headerName: "User",
+      headerName: t("user"),
       flex: 1,
       valueGetter: (_, row) => row.user.username,
     },
     {
       field: "createdAt",
-      headerName: "Date",
+      headerName: t("date"),
       flex: 1,
       valueFormatter: (value) =>
         value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "",
@@ -116,11 +120,11 @@ export default function TicketHistoryContent({
   return (
     <>
       <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
-        Ticket History
+        {t("title")}
       </Typography>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Ticket #{ticketId}
+        {t("ticket", { ticketId })}
       </Typography>
 
       {errorMessage && (

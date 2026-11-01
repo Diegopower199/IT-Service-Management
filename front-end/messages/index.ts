@@ -9,6 +9,7 @@ import CategoriesEn from "./en/categories.json";
 import PrioritiesEn from "./en/priorities.json";
 import StatusesEn from "./en/statuses.json";
 import RolesEn from "./en/roles.json";
+import TicketsEn from "./en/tickets.json";
 
 import AuthEs from "./es/auth.json";
 import NavigationEs from "./es/navigation.json";
@@ -21,6 +22,7 @@ import CategoriesEs from "./es/categories.json";
 import PrioritiesEs from "./es/priorities.json";
 import StatusesEs from "./es/statuses.json";
 import RolesEs from "./es/roles.json";
+import TicketsEs from "./es/tickets.json";
 
 export const messages = {
   en: {
@@ -35,6 +37,7 @@ export const messages = {
     Priorities: PrioritiesEn,
     Statuses: StatusesEn,
     Roles: RolesEn,
+    Tickets: TicketsEn,
   },
   es: {
     Auth: AuthEs,
@@ -48,5 +51,6 @@ export const messages = {
     Priorities: PrioritiesEs,
     Statuses: StatusesEs,
     Roles: RolesEs,
+    Tickets: TicketsEs,
   },
 };
