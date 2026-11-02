@@ -13,6 +13,7 @@ import {
 } from "react";
 
 interface AuthUser {
+  userId: number;
   username: string;
   role: UserRole;
 }
@@ -22,7 +23,12 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isAuthReady: boolean;
-  setAuthentication: (token: string, username: string, role: UserRole) => void;
+  setAuthentication: (
+    token: string,
+    userId: number,
+    username: string,
+    role: UserRole,
+  ) => void;
   signOut: () => Promise<void>;
 }
 
@@ -67,13 +73,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
+    const storedUserId = localStorage.getItem("userId");
     const storedUsername = localStorage.getItem("username");
     const storedRole = localStorage.getItem("role") as UserRole | null;
 
-    if (storedToken && storedUsername && storedRole) {
+    if (storedToken && storedUserId && storedUsername && storedRole) {
       setToken(storedToken);
 
       setUser({
+        userId: Number(storedUserId),
         username: storedUsername,
         role: storedRole,
       });
@@ -95,6 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   const clearAuthentication = useCallback(() => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userId");
     localStorage.removeItem("username");
     localStorage.removeItem("role");
 
@@ -129,21 +138,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Stores authentication information after a successful login.
    *
    * @param newToken access token returned by the authentication API
+   * @param userId authenticated user's ID
    * @param username authenticated username
    * @param role authenticated user's role
    */
   const setAuthentication = (
     newToken: string,
+    userId: number,
     username: string,
     role: UserRole,
   ) => {
     localStorage.setItem("token", newToken);
+    localStorage.setItem("userId", userId.toString());
     localStorage.setItem("username", username);
     localStorage.setItem("role", role);
 
     setToken(newToken);
 
     setUser({
+      userId,
       username,
       role,
     });

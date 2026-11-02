@@ -92,7 +92,7 @@ export default function LoginForm() {
     try {
       const response = await login(formData);
 
-      setAuthentication(response.token, response.username, response.role);
+      setAuthentication(response.token, response.userId, response.username, response.role);
 
       router.replace("/dashboard");
     } catch (error) {

@@ -8,9 +8,6 @@ import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { UserRole } from "@/types/roleTypes";
 
-import { isProtectedStatus } from "@/types/statusTypes";
-import { isProtectedPriority } from "@/types/priorityTypes";
-
 import { getPriorityColor, getStatusColor } from "@/utils/ticketUiUtils";
 
 import TicketOverview from "./TicketOverview";
