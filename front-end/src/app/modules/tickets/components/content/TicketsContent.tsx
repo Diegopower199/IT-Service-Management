@@ -22,13 +22,6 @@ import { useAuth } from "@/hooks/useAuth";
 
 import type { TicketFilters, TicketResponse } from "@/types/ticketTypes";
 
-import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
-
-import {
-  isProtectedPriority,
-  type PriorityResponse,
-} from "@/types/priorityTypes";
-
 import type { CategoryResponse } from "@/types/categoryTypes";
 
 import { USER_ROLES } from "@/types/roleTypes";
@@ -64,6 +57,8 @@ import PageLoading from "@/components/ui/PageLoading";
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 import { getAllActiveCategories } from "@/app/modules/categories/services/categoryService";
+import { StatusResponse } from "@/types/statusTypes";
+import { PriorityResponse } from "@/types/priorityTypes";
 
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();
@@ -86,6 +81,10 @@ export default function TicketsContent() {
     priority: priorityFilter,
     category: categoryFilter,
   };
+
+  const isTechnician = user?.role === USER_ROLES.TECHNICIAN;
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isUser = user?.role === USER_ROLES.USER;
 
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -191,7 +190,7 @@ export default function TicketsContent() {
 
         let response;
 
-        if (user.role === USER_ROLES.ADMIN) {
+        if (isAdmin) {
           response = await getAllTickets({
             page: paginationModel.page,
             size: paginationModel.pageSize,
@@ -201,7 +200,7 @@ export default function TicketsContent() {
             priority: priorityFilter,
             category: categoryFilter,
           });
-        } else if (user.role === USER_ROLES.TECHNICIAN) {
+        } else if (isTechnician) {
           response = await getAssignedTickets({
             page: paginationModel.page,
             size: paginationModel.pageSize,
@@ -250,6 +249,9 @@ export default function TicketsContent() {
     statusFilter,
     priorityFilter,
     categoryFilter,
+    isAdmin,
+    isTechnician,
+    isUser,
     t,
   ]);
 
@@ -496,7 +498,7 @@ export default function TicketsContent() {
   return (
     <main>
       <h1>
-        {user.role === USER_ROLES.ADMIN
+        {isAdmin
           ? t("allTickets")
           : user.role === USER_ROLES.TECHNICIAN
             ? t("assignedTickets")

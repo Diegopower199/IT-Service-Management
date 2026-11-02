@@ -38,7 +38,6 @@ export default function TicketActions({
   const [openAssignTechnician, setOpenAssignTechnician] = useState(false);
 
   const isTechnician = userRole === USER_ROLES.TECHNICIAN;
-
   const isAdmin = userRole === USER_ROLES.ADMIN;
 
   const handleOpenChangeStatus = (

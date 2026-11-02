@@ -7,6 +7,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
+  userId: number;
   username: string;
   role: UserRole;
 }

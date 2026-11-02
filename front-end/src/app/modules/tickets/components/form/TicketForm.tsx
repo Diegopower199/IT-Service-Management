@@ -15,18 +15,17 @@ import {
 
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { CategoryResponse } from "@/types/categoryTypes";
-
-import {
-  isProtectedPriority,
-  type PriorityResponse,
-} from "@/types/priorityTypes";
-
+import type { PriorityResponse } from "@/types/priorityTypes";
 import type { UserSummaryResponse } from "@/types/userTypes";
+
+import { USER_ROLES } from "@/types/roleTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+
+import { useAuth } from "@/hooks/useAuth";
 
 import { getAllPriorities } from "../../../priorities/services/priorityService";
 import { getAllCategories } from "../../../categories/services/categoryService";
@@ -81,6 +80,10 @@ export default function TicketForm({
 }: TicketFormProps) {
   const t = useTranslations("Tickets.Form");
   const tPriorities = useTranslations("Common.Priorities");
+
+  const { user } = useAuth();
+
+  const isUser = user?.role === USER_ROLES.USER;
 
   const [formData, setFormData] = useState<TicketFormData>(
     getInitialFormData(formMode, selectedTicket),
@@ -169,6 +172,10 @@ export default function TicketForm({
 
   useEffect(() => {
     const fetchFormOptions = async () => {
+      if (!user) {
+        return;
+      }
+
       setErrorMessage("");
 
       const categoriesLoaded = await fetchCategoriesOptions();
@@ -184,10 +191,12 @@ export default function TicketForm({
           return;
         }
 
-        const usersLoaded = await fetchUsersOptions();
+        if (!isUser) {
+          const usersLoaded = await fetchUsersOptions();
 
-        if (!usersLoaded) {
-          return;
+          if (!usersLoaded) {
+            return;
+          }
         }
       }
     };
@@ -195,6 +204,8 @@ export default function TicketForm({
     fetchFormOptions();
   }, [
     formMode,
+    user,
+    isUser,
     fetchCategoriesOptions,
     fetchPrioritiesOptions,
     fetchUsersOptions,
@@ -248,7 +259,7 @@ export default function TicketForm({
     }
 
     if (formMode === FORM_MODES.CREATE) {
-      if (!formData.requestedForId) {
+      if (!isUser && !formData.requestedForId) {
         errorMissingFields.requestedForId = t("requestedForRequired");
       }
 
@@ -265,6 +276,10 @@ export default function TicketForm({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (!user) {
+      return;
+    }
+
     const requiredFieldsError = validateRequiredFields();
 
     if (requiredFieldsError) {
@@ -277,10 +292,12 @@ export default function TicketForm({
       setRequiredFieldsIncomplete({});
 
       if (formMode === FORM_MODES.CREATE) {
+        const requestedForId = isUser ? user.userId : formData.requestedForId;
+
         await createTicket({
           title: formData.title,
           description: formData.description,
-          requestedForId: formData.requestedForId,
+          requestedForId,
           categoryId: formData.categoryId,
           priorityId: formData.priorityId,
         });
@@ -376,14 +393,14 @@ export default function TicketForm({
           fullWidth
         />
 
-        {formMode === FORM_MODES.CREATE && (
+        {user && formMode === FORM_MODES.CREATE && !isUser && (
           <TextField
             select
             label={t("requestedFor")}
             name="requestedForId"
             value={
               usersOptions.some(
-                (user) => user.idUser === formData.requestedForId,
+                (userOption) => userOption.idUser === formData.requestedForId,
               )
                 ? formData.requestedForId
                 : 0
@@ -401,9 +418,9 @@ export default function TicketForm({
             {usersOptions.length === 0 ? (
               <MenuItem disabled>{t("noUsersAvailable")}</MenuItem>
             ) : (
-              usersOptions.map((user) => (
-                <MenuItem key={user.idUser} value={user.idUser}>
-                  {user.username}
+              usersOptions.map((userOption) => (
+                <MenuItem key={userOption.idUser} value={userOption.idUser}>
+                  {userOption.username}
                 </MenuItem>
               ))
             )}

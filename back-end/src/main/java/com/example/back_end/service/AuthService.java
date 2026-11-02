@@ -63,6 +63,7 @@ public class AuthService {
 
         AuthLoginResponse authLoginResponse = new AuthLoginResponse(
                 accessToken,
+                user.getIdUser(),
                 user.getUsername(),
                 user.getRole().getName());
 

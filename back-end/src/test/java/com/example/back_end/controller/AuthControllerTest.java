@@ -71,6 +71,7 @@ class AuthControllerTest {
         AuthLoginResponse response =
                 new AuthLoginResponse(
                         "jwt-token",
+                        1L,
                         "ana",
                         "USER");
 
