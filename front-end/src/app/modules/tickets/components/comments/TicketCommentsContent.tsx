@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import dayjs from "dayjs";
 
 import {
@@ -45,6 +46,8 @@ export default function TicketCommentsContent({
   ticketId,
 }: TicketCommentsContentProps) {
   const { user } = useAuth();
+
+  const t = useTranslations("Tickets.Comments");
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
     [],
@@ -98,16 +101,14 @@ export default function TicketCommentsContent({
 
         const apiError = getApiError(error);
 
-        setLoadErrorMessage(
-          apiError?.message ?? "Error loading ticket comments.",
-        );
+        setLoadErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadTicketComments();
-  }, [ticketId, paginationModel]);
+  }, [ticketId, paginationModel, t]);
 
   const handlePageChange = (newPage: number) => {
     setPaginationModel({
@@ -139,7 +140,7 @@ export default function TicketCommentsContent({
     const errorMissingFields: Partial<Record<keyof CommentForm, string>> = {};
 
     if (!formData.comment.trim()) {
-      errorMissingFields.comment = "Please enter a comment.";
+      errorMissingFields.comment = t("commentRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -173,13 +174,6 @@ export default function TicketCommentsContent({
 
       setRequiredFieldsIncomplete({});
 
-      /*
-       * Comments are sorted by createdAt ASC:
-       * oldest comments first and newest comments last.
-       *
-       * Therefore, after creating a new comment,
-       * we calculate the last page so the new comment is visible.
-       */
       const newTotalElements = totalElements + 1;
 
       const lastPage =
@@ -191,12 +185,6 @@ export default function TicketCommentsContent({
           pageSize: paginationModel.pageSize,
         });
       } else {
-        /*
-         * If we are already on the last page,
-         * paginationModel does not change.
-         *
-         * Therefore, reload the current page manually.
-         */
         try {
           const response = await getAllTicketsCommentsById(ticketId, {
             page: lastPage,
@@ -215,9 +203,7 @@ export default function TicketCommentsContent({
 
           const apiError = getApiError(error);
 
-          setLoadErrorMessage(
-            apiError?.message ?? "Error reloading ticket comments.",
-          );
+          setLoadErrorMessage(apiError?.message ?? t("reloadError"));
         }
       }
     } catch (error) {
@@ -237,7 +223,7 @@ export default function TicketCommentsContent({
         ticketId,
       });
 
-      setErrorMessage(apiError?.message ?? "Error creating comment.");
+      setErrorMessage(apiError?.message ?? t("createError"));
     } finally {
       setSavingComment(false);
     }
@@ -246,11 +232,11 @@ export default function TicketCommentsContent({
   return (
     <Box>
       <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
-        Ticket Comments
+        {t("title")}
       </Typography>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Ticket #{ticketId}
+        {t("ticket", { ticketId })}
       </Typography>
 
       {loadErrorMessage && (
@@ -265,11 +251,9 @@ export default function TicketCommentsContent({
       )}
 
       {loading ? (
-        <Typography color="text.secondary">Loading comments...</Typography>
+        <Typography color="text.secondary">{t("loading")}</Typography>
       ) : ticketComments.length === 0 ? (
-        <Typography color="text.secondary">
-          No comments have been added yet.
-        </Typography>
+        <Typography color="text.secondary">{t("empty")}</Typography>
       ) : (
         <Stack spacing={2}>
           {ticketComments.map((ticketComment) => (
@@ -299,7 +283,7 @@ export default function TicketCommentsContent({
                 </Box>
 
                 {ticketComment.internal && (
-                  <Chip label="INTERNAL" size="small" variant="outlined" />
+                  <Chip label={t("internal")} size="small" variant="outlined" />
                 )}
               </Stack>
 
@@ -320,7 +304,7 @@ export default function TicketCommentsContent({
         <Stack spacing={2}>
           <TextField
             name="comment"
-            label="Add comment"
+            label={t("addComment")}
             multiline
             minRows={3}
             fullWidth
@@ -341,14 +325,14 @@ export default function TicketCommentsContent({
                   disabled={savingComment}
                 />
               }
-              label="Internal comment"
+              label={t("internalComment")}
             />
           )}
 
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
           <Button type="submit" variant="primary" disabled={savingComment}>
-            {savingComment ? "Adding..." : "Add Comment"}
+            {savingComment ? t("adding") : t("submit")}
           </Button>
         </Stack>
       </Box>

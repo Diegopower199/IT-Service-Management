@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -59,6 +60,9 @@ export default function PrioritiesContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
 
+  const t = useTranslations("Priorities.Content");
+  const tPriorities = useTranslations("Common.Priorities");
+
   const [priorities, setPriorities] = useState<PriorityResponse[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -110,14 +114,22 @@ export default function PrioritiesContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading priorities.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadPriorities();
-  }, [isAuthReady, user, router, prioritiesUpdated]);
+  }, [isAuthReady, user, router, prioritiesUpdated, t]);
+
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (tPriorities.has(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
 
   const handleCreatePriority = () => {
     setSelectedPriority(null);
@@ -193,9 +205,7 @@ export default function PrioritiesContent() {
 
       const apiError = getApiError(error);
 
-      setStatusErrorMessage(
-        apiError?.message ?? "Error changing priority status.",
-      );
+      setStatusErrorMessage(apiError?.message ?? t("statusChangeError"));
     } finally {
       setChangingStatus(false);
     }
@@ -213,22 +223,23 @@ export default function PrioritiesContent() {
   const columns: GridColDef<PriorityResponse>[] = [
     {
       field: "idPriority",
-      headerName: "ID",
+      headerName: t("id"),
       width: 100,
     },
     {
       field: "name",
-      headerName: "Name",
+      headerName: t("name"),
       flex: 1,
       minWidth: 200,
+      renderCell: (params) => getPriorityDisplayName(params.row.name),
     },
     {
       field: "active",
-      headerName: "Status",
+      headerName: t("status"),
       width: 150,
       renderCell: (params) => (
         <Chip
-          label={params.row.active ? "Active" : "Inactive"}
+          label={params.row.active ? t("active") : t("inactive")}
           color={params.row.active ? "success" : "default"}
           size="small"
           variant="outlined"
@@ -241,7 +252,7 @@ export default function PrioritiesContent() {
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("actions"),
       width: 170,
       getActions: ({ row }) => {
         const protectedPriority = isProtectedPriority(row.name);
@@ -250,14 +261,14 @@ export default function PrioritiesContent() {
           <GridActionsCellItem
             key="view"
             icon={<VisibilityIcon />}
-            label="View"
+            label={t("view")}
             onClick={() => handleViewPriority(row)}
           />,
 
           <GridActionsCellItem
             key="edit"
             icon={<EditIcon />}
-            label="Edit"
+            label={t("edit")}
             disabled={protectedPriority}
             onClick={() => handleEditPriority(row)}
           />,
@@ -265,7 +276,7 @@ export default function PrioritiesContent() {
           <GridActionsCellItem
             key="status"
             icon={<ChangeCircleIcon />}
-            label={row.active ? "Deactivate" : "Activate"}
+            label={row.active ? t("deactivate") : t("activate")}
             disabled={protectedPriority && row.active}
             onClick={() => handleOpenStatusDialog(row)}
           />,
@@ -295,10 +306,10 @@ export default function PrioritiesContent() {
 
   return (
     <main>
-      <h1>Priorities</h1>
+      <h1>{t("title")}</h1>
 
       <Button variant="contained" onClick={handleCreatePriority}>
-        Create Priority <AddIcon />
+        {t("createPriority")} <AddIcon />
       </Button>
 
       {errorMessage && (
@@ -337,16 +348,22 @@ export default function PrioritiesContent() {
       >
         <DialogTitle>
           {priorityStatusToChange?.active
-            ? "Deactivate Priority"
-            : "Activate Priority"}
+            ? t("deactivateTitle")
+            : t("activateTitle")}
         </DialogTitle>
 
         <DialogContent>
-          <Typography>
-            Are you sure you want to{" "}
-            {priorityStatusToChange?.active ? "deactivate" : "activate"}{" "}
-            priority <strong>{priorityStatusToChange?.name}</strong>?
-          </Typography>
+          {priorityStatusToChange && (
+            <Typography>
+              {priorityStatusToChange.active
+                ? t("deactivateConfirmation", {
+                    name: getPriorityDisplayName(priorityStatusToChange.name),
+                  })
+                : t("activateConfirmation", {
+                    name: getPriorityDisplayName(priorityStatusToChange.name),
+                  })}
+            </Typography>
+          )}
 
           {statusErrorMessage && (
             <Alert
@@ -367,7 +384,7 @@ export default function PrioritiesContent() {
             onClick={handleCloseStatusDialog}
             disabled={changingStatus}
           >
-            Cancel
+            {t("cancel")}
           </Button>
 
           <Button
@@ -377,10 +394,10 @@ export default function PrioritiesContent() {
             disabled={changingStatus}
           >
             {changingStatus
-              ? "Saving..."
+              ? t("saving")
               : priorityStatusToChange?.active
-                ? "Deactivate"
-                : "Activate"}
+                ? t("deactivate")
+                : t("activate")}
           </Button>
         </DialogActions>
       </Dialog>

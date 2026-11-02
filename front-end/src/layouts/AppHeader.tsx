@@ -1,12 +1,19 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useAuth } from "@/hooks/useAuth";
 
 import styles from "./appHeader.module.css";
+
 import Button from "@/components/ui/Button";
+import LanguageSelector from "@/components/ui/LanguageSelector";
 
 export default function AppHeader() {
   const { user, signOut } = useAuth();
+
+  const t = useTranslations("Navigation.Header");
+  const tRoles = useTranslations("Common.Roles");
 
   return (
     <header className={styles.header}>
@@ -16,7 +23,9 @@ export default function AppHeader() {
         <div className={styles.userSection}>
           <span>{user.username}</span>
 
-          <span className={styles.role}>{user.role}</span>
+          <span className={styles.role}>{tRoles(user.role)}</span>
+
+          <LanguageSelector />
 
           <Button
             type="button"
@@ -24,7 +33,7 @@ export default function AppHeader() {
             onClick={signOut}
             className={styles.logout}
           >
-            Logout
+            {t("logout")}
           </Button>
         </div>
       )}

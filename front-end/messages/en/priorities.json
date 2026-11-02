@@ -1,0 +1,41 @@
+{
+    "Content": {
+        "title": "Priorities",
+        "createPriority": "Create Priority",
+        "loadError": "Error loading priorities.",
+        "id": "ID",
+        "name": "Name",
+        "status": "Status",
+        "actions": "Actions",
+        "active": "Active",
+        "inactive": "Inactive",
+        "view": "View",
+        "edit": "Edit",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "activateTitle": "Activate Priority",
+        "deactivateTitle": "Deactivate Priority",
+        "activateConfirmation": "Are you sure you want to activate priority {name}?",
+        "deactivateConfirmation": "Are you sure you want to deactivate priority {name}?",
+        "statusChangeError": "Error changing priority status.",
+        "cancel": "Cancel",
+        "saving": "Saving..."
+    },
+    "Form": {
+        "createTitle": "Create Priority",
+        "viewTitle": "Priority Details",
+        "editTitle": "Edit Priority",
+        "name": "Name",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "nameRequired": "Please enter a priority name.",
+        "createError": "Error creating priority.",
+        "updateError": "Error updating priority.",
+        "back": "Back",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "createPriority": "Create Priority",
+        "saveChanges": "Save Changes"
+    }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -22,13 +23,13 @@ import {
   Typography,
 } from "@mui/material";
 
-import type { StatusResponse } from "@/types/statusTypes";
+import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
 
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
-import { formatEnumName, getStatusColor } from "@/utils/ticketUiUtils";
+import { getStatusColor } from "@/utils/ticketUiUtils";
 
 import { changeTicketStatus } from "../../services/ticketService";
 
@@ -47,6 +48,9 @@ export default function ChangeTicketStatusDialog({
   onClose,
   onTicketUpdated,
 }: ChangeTicketStatusDialogProps) {
+  const t = useTranslations("Tickets.ChangeStatusDialog");
+  const tStatuses = useTranslations("Common.Statuses");
+
   const [statuses, setStatuses] = useState<StatusResponse[]>([]);
 
   const [selectedStatusId, setSelectedStatusId] = useState("");
@@ -73,12 +77,20 @@ export default function ChangeTicketStatusDialog({
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading statuses.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       }
     };
 
     loadStatuses();
-  }, []);
+  }, [ticketId, t]);
+
+  const getStatusDisplayName = (statusName: string) => {
+    if (tStatuses.has(statusName)) {
+      return tStatuses(statusName);
+    }
+
+    return statusName;
+  };
 
   const handleStatusChange = (event: SelectChangeEvent) => {
     setSelectedStatusId(event.target.value);
@@ -133,7 +145,7 @@ export default function ChangeTicketStatusDialog({
         statusId: Number(selectedStatusId),
       });
 
-      setErrorMessage(apiError?.message ?? "Error changing ticket status.");
+      setErrorMessage(apiError?.message ?? t("updateError"));
     } finally {
       setSaving(false);
     }
@@ -168,7 +180,7 @@ export default function ChangeTicketStatusDialog({
             fontWeight: 600,
           }}
         >
-          Change Ticket Status
+          {t("title")}
         </Typography>
 
         <Typography
@@ -180,7 +192,7 @@ export default function ChangeTicketStatusDialog({
             mb: 0,
           }}
         >
-          Update the workflow status for ticket #{ticketId}.
+          {t("subtitle", { ticketId })}
         </Typography>
       </DialogTitle>
 
@@ -205,11 +217,11 @@ export default function ChangeTicketStatusDialog({
                 letterSpacing: 0.5,
               }}
             >
-              Current status
+              {t("currentStatus")}
             </Typography>
 
             <Chip
-              label={formatEnumName(currentStatus.name)}
+              label={getStatusDisplayName(currentStatus.name)}
               color={getStatusColor(currentStatus.name)}
               sx={{
                 fontWeight: 600,
@@ -225,15 +237,15 @@ export default function ChangeTicketStatusDialog({
                 mb: 1,
               }}
             >
-              Select new status
+              {t("selectNewStatus")}
             </Typography>
 
             <FormControl fullWidth error={Boolean(statusError)}>
-              <InputLabel>Status</InputLabel>
+              <InputLabel>{t("status")}</InputLabel>
 
               <Select
                 value={selectedStatusId || String(currentStatus.idStatus)}
-                label="Status"
+                label={t("status")}
                 onChange={handleStatusChange}
                 disabled={saving}
                 sx={{
@@ -262,7 +274,7 @@ export default function ChangeTicketStatusDialog({
                       />
 
                       <Typography variant="body2">
-                        {formatEnumName(status.name)}
+                        {getStatusDisplayName(status.name)}
                       </Typography>
                     </Stack>
                   </MenuItem>
@@ -287,7 +299,7 @@ export default function ChangeTicketStatusDialog({
         }}
       >
         <Button onClick={handleClose} disabled={saving} color="inherit">
-          Cancel
+          {t("cancel")}
         </Button>
 
         <Button
@@ -303,7 +315,7 @@ export default function ChangeTicketStatusDialog({
             borderRadius: 2,
           }}
         >
-          {saving ? "Updating..." : "Update Status"}
+          {saving ? t("updating") : t("updateStatus")}
         </Button>
       </DialogActions>
     </Dialog>

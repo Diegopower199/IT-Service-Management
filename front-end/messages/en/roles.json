@@ -1,0 +1,8 @@
+{
+    "Content": {
+        "title": "Roles",
+        "loadError": "Error loading roles.",
+        "id": "ID",
+        "name": "Name"
+    }
+}

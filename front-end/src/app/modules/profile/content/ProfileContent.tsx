@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Alert, Box, Typography } from "@mui/material";
 
@@ -22,6 +23,8 @@ import ProfileInformation from "../information/ProfileInformation";
 export default function ProfileContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
+
+  const t = useTranslations("Profile.Content");
 
   const [profile, setProfile] = useState<UserResponse | null>(null);
 
@@ -57,14 +60,14 @@ export default function ProfileContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading profile.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadProfile();
-  }, [isAuthReady, user, router, profileUpdated]);
+  }, [isAuthReady, user, router, profileUpdated, t]);
 
   const handleProfileUpdated = () => {
     setProfileUpdated((previous) => !previous);
@@ -81,7 +84,7 @@ export default function ProfileContent() {
   return (
     <main>
       <Typography variant="h4" component="h1" gutterBottom>
-        My Profile
+        {t("title")}
       </Typography>
 
       {errorMessage && (

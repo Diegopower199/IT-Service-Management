@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -85,6 +86,9 @@ export default function UserForm({
   onClose,
   onSubmitSuccess,
 }: UserFormProps) {
+  const t = useTranslations("Users.Form");
+  const tRoles = useTranslations("Common.Roles");
+
   const [formData, setFormData] = useState<UserFormData>(
     getInitialFormData(formMode, selectedUser),
   );
@@ -103,7 +107,7 @@ export default function UserForm({
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchRolesOptions = async (): Promise<boolean> => {
+  const fetchRolesOptions = useCallback(async (): Promise<boolean> => {
     try {
       const rolesResponse = await getAllRoles();
 
@@ -118,13 +122,13 @@ export default function UserForm({
 
       const apiError = getApiError(error);
 
-      setErrorMessage(apiError?.message ?? "Error loading roles.");
+      setErrorMessage(apiError?.message ?? t("rolesLoadError"));
 
       return false;
     }
-  };
+  }, [t]);
 
-  const fetchDepartmentsOptions = async (): Promise<boolean> => {
+  const fetchDepartmentsOptions = useCallback(async (): Promise<boolean> => {
     try {
       const departmentsResponse = await getAllActiveDepartments();
 
@@ -139,11 +143,11 @@ export default function UserForm({
 
       const apiError = getApiError(error);
 
-      setErrorMessage(apiError?.message ?? "Error loading departments.");
+      setErrorMessage(apiError?.message ?? t("departmentsLoadError"));
 
       return false;
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     const fetchFormOptions = async () => {
@@ -163,7 +167,7 @@ export default function UserForm({
     };
 
     fetchFormOptions();
-  }, []);
+  }, [fetchRolesOptions, fetchDepartmentsOptions]);
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -192,31 +196,31 @@ export default function UserForm({
     const errorMissingFields: Partial<Record<keyof UserFormData, string>> = {};
 
     if (!formData.username.trim()) {
-      errorMissingFields.username = "Please enter a username.";
+      errorMissingFields.username = t("usernameRequired");
     }
 
     if (!formData.email.trim()) {
-      errorMissingFields.email = "Please enter an email.";
+      errorMissingFields.email = t("emailRequired");
     }
 
     if (!formData.firstName.trim()) {
-      errorMissingFields.firstName = "Please enter a first name.";
+      errorMissingFields.firstName = t("firstNameRequired");
     }
 
     if (!formData.lastName.trim()) {
-      errorMissingFields.lastName = "Please enter a last name.";
+      errorMissingFields.lastName = t("lastNameRequired");
     }
 
     if (!formData.roleId) {
-      errorMissingFields.roleId = "Please select a role.";
+      errorMissingFields.roleId = t("roleRequired");
     }
 
     if (!formData.departmentId) {
-      errorMissingFields.departmentId = "Please select a department.";
+      errorMissingFields.departmentId = t("departmentRequired");
     }
 
     if (formMode === FORM_MODES.CREATE && !formData.password.trim()) {
-      errorMissingFields.password = "Please enter a password.";
+      errorMissingFields.password = t("passwordRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -296,8 +300,8 @@ export default function UserForm({
       setErrorMessage(
         apiError?.message ??
           (formMode === FORM_MODES.CREATE
-            ? "Error creating user."
-            : "Error updating user."),
+            ? t("createError")
+            : t("updateError")),
       );
     } finally {
       setLoading(false);
@@ -306,14 +310,14 @@ export default function UserForm({
 
   const getTitle = () => {
     if (formMode === FORM_MODES.CREATE) {
-      return "Create User";
+      return t("createTitle");
     }
 
     if (formMode === FORM_MODES.VIEW) {
-      return "User Details";
+      return t("viewTitle");
     }
 
-    return "Edit User";
+    return t("editTitle");
   };
 
   return (
@@ -324,7 +328,7 @@ export default function UserForm({
 
       <Stack spacing={3}>
         <TextField
-          label="Username"
+          label={t("username")}
           name="username"
           value={formData.username}
           onChange={handleFormChange}
@@ -335,7 +339,7 @@ export default function UserForm({
         />
 
         <TextField
-          label="Email"
+          label={t("email")}
           name="email"
           type="email"
           value={formData.email}
@@ -347,7 +351,7 @@ export default function UserForm({
         />
 
         <TextField
-          label="First Name"
+          label={t("firstName")}
           name="firstName"
           value={formData.firstName}
           onChange={handleFormChange}
@@ -358,7 +362,7 @@ export default function UserForm({
         />
 
         <TextField
-          label="Last Name"
+          label={t("lastName")}
           name="lastName"
           value={formData.lastName}
           onChange={handleFormChange}
@@ -370,7 +374,7 @@ export default function UserForm({
 
         <TextField
           select
-          label="Role"
+          label={t("role")}
           name="roleId"
           value={
             rolesOptions.some((role) => role.idRole === formData.roleId)
@@ -384,15 +388,15 @@ export default function UserForm({
           fullWidth
         >
           <MenuItem value={0} disabled>
-            Select a role
+            {t("selectRole")}
           </MenuItem>
 
           {rolesOptions.length === 0 ? (
-            <MenuItem disabled>No roles available</MenuItem>
+            <MenuItem disabled>{t("noRolesAvailable")}</MenuItem>
           ) : (
             rolesOptions.map((role) => (
               <MenuItem key={role.idRole} value={role.idRole}>
-                {role.name}
+                {tRoles(role.name)}
               </MenuItem>
             ))
           )}
@@ -400,7 +404,7 @@ export default function UserForm({
 
         <TextField
           select
-          label="Department"
+          label={t("department")}
           name="departmentId"
           value={
             departmentsOptions.some(
@@ -416,11 +420,11 @@ export default function UserForm({
           fullWidth
         >
           <MenuItem value={0} disabled>
-            Select a department
+            {t("selectDepartment")}
           </MenuItem>
 
           {departmentsOptions.length === 0 ? (
-            <MenuItem disabled>No departments available</MenuItem>
+            <MenuItem disabled>{t("noDepartmentsAvailable")}</MenuItem>
           ) : (
             departmentsOptions.map((department) => (
               <MenuItem
@@ -435,7 +439,7 @@ export default function UserForm({
 
         {formMode === FORM_MODES.CREATE && (
           <TextField
-            label="Password"
+            label={t("password")}
             name="password"
             type="password"
             value={formData.password}
@@ -456,23 +460,23 @@ export default function UserForm({
               disabled={formMode === FORM_MODES.VIEW || loading}
             />
           }
-          label="Enabled"
+          label={t("enabled")}
         />
 
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
         <Stack spacing={3} direction="row">
           <Button variant="outlined" onClick={onClose} disabled={loading}>
-            {formMode === FORM_MODES.VIEW ? "Back" : "Cancel"}
+            {formMode === FORM_MODES.VIEW ? t("back") : t("cancel")}
           </Button>
 
           {formMode !== FORM_MODES.VIEW && (
             <Button type="submit" variant="contained" disabled={loading}>
               {loading
-                ? "Saving..."
+                ? t("saving")
                 : formMode === FORM_MODES.CREATE
-                  ? "Create User"
-                  : "Save Changes"}
+                  ? t("createUser")
+                  : t("saveChanges")}
             </Button>
           )}
         </Stack>

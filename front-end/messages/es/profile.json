@@ -1,0 +1,44 @@
+{
+    "Content": {
+        "title": "Mi perfil",
+        "loadError": "Error al cargar el perfil."
+    },
+    "Information": {
+        "title": "Información de la cuenta",
+        "username": "Usuario",
+        "role": "Rol",
+        "firstName": "Nombre",
+        "lastName": "Apellidos",
+        "email": "Correo electrónico",
+        "department": "Departamento",
+        "noDepartment": "Sin departamento",
+        "editProfile": "Editar perfil"
+    },
+    "ChangePassword": {
+        "title": "Cambiar contraseña",
+        "currentPassword": "Contraseña actual",
+        "newPassword": "Nueva contraseña",
+        "confirmPassword": "Confirmar nueva contraseña",
+        "currentPasswordRequired": "Introduce tu contraseña actual.",
+        "newPasswordRequired": "Introduce una nueva contraseña.",
+        "confirmPasswordRequired": "Confirma tu nueva contraseña.",
+        "passwordsDoNotMatch": "Las contraseñas no coinciden.",
+        "success": "Contraseña cambiada correctamente.",
+        "error": "Error al cambiar la contraseña.",
+        "saving": "Guardando...",
+        "submit": "Cambiar contraseña"
+    },
+    "Form": {
+        "title": "Editar perfil",
+        "firstName": "Nombre",
+        "lastName": "Apellidos",
+        "email": "Correo electrónico",
+        "firstNameRequired": "Introduce un nombre.",
+        "lastNameRequired": "Introduce los apellidos.",
+        "emailRequired": "Introduce un correo electrónico.",
+        "updateError": "Error al actualizar el perfil.",
+        "cancel": "Cancelar",
+        "saving": "Guardando...",
+        "saveChanges": "Guardar cambios"
+    }
+}

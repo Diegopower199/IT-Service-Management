@@ -1,0 +1,34 @@
+{
+    "Header": {
+        "welcome": "Bienvenido, {username}",
+        "adminDescription": "Resumen del sistema y de la actividad del help desk.",
+        "technicianDescription": "Resumen de tus tickets asignados y de tu carga de trabajo actual.",
+        "userDescription": "Resumen de tu actividad en el help desk.",
+        "defaultDescription": "Resumen del help desk."
+    },
+    "Content": {
+        "ticketsLoadError": "Error al cargar los tickets.",
+        "statisticsLoadError": "Error al cargar las estadísticas."
+    },
+    "QuickActions": {
+        "title": "Acciones rápidas",
+        "assignToMe": "Asignarme ticket",
+        "viewUnassigned": "Ver tickets sin asignar",
+        "assign": "Asignar ticket",
+        "reassign": "Reasignar ticket"
+    },
+    "RecentTickets": {
+        "title": "Tickets recientes",
+        "id": "ID",
+        "ticketTitle": "Título",
+        "status": "Estado",
+        "priority": "Prioridad",
+        "assigned": "Asignado",
+        "updated": "Actualizado"
+    },
+    "Statistics": {
+        "myTickets": "Mis tickets",
+        "assignedTickets": "Tickets asignados",
+        "totalTickets": "Tickets totales"
+    }
+}

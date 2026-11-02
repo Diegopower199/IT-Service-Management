@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -22,13 +23,16 @@ import {
   Typography,
 } from "@mui/material";
 
-import type { PriorityResponse } from "@/types/priorityTypes";
+import {
+  isProtectedPriority,
+  type PriorityResponse,
+} from "@/types/priorityTypes";
 
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
-import { formatEnumName, getPriorityColor } from "@/utils/ticketUiUtils";
+import { getPriorityColor } from "@/utils/ticketUiUtils";
 
 import { changeTicketPriority } from "../../services/ticketService";
 
@@ -47,6 +51,9 @@ export default function ChangeTicketPriorityDialog({
   onClose,
   onTicketUpdated,
 }: ChangeTicketPriorityDialogProps) {
+  const t = useTranslations("Tickets.ChangePriorityDialog");
+  const tPriorities = useTranslations("Common.Priorities");
+
   const [priorities, setPriorities] = useState<PriorityResponse[]>([]);
 
   const [selectedPriorityId, setSelectedPriorityId] = useState("");
@@ -73,12 +80,20 @@ export default function ChangeTicketPriorityDialog({
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading priorities.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       }
     };
 
     loadPriorities();
-  }, []);
+  }, [ticketId, t]);
+
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (tPriorities.has(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
 
   const handlePriorityChange = (event: SelectChangeEvent) => {
     setSelectedPriorityId(event.target.value);
@@ -133,7 +148,7 @@ export default function ChangeTicketPriorityDialog({
         priorityId: Number(selectedPriorityId),
       });
 
-      setErrorMessage(apiError?.message ?? "Error changing ticket priority.");
+      setErrorMessage(apiError?.message ?? t("updateError"));
     } finally {
       setSaving(false);
     }
@@ -168,7 +183,7 @@ export default function ChangeTicketPriorityDialog({
             fontWeight: 600,
           }}
         >
-          Change Ticket Priority
+          {t("title")}
         </Typography>
 
         <Typography
@@ -180,7 +195,7 @@ export default function ChangeTicketPriorityDialog({
             mb: 0,
           }}
         >
-          Update the priority for ticket #{ticketId}.
+          {t("subtitle", { ticketId })}
         </Typography>
       </DialogTitle>
 
@@ -205,11 +220,11 @@ export default function ChangeTicketPriorityDialog({
                 letterSpacing: 0.5,
               }}
             >
-              Current priority
+              {t("currentPriority")}
             </Typography>
 
             <Chip
-              label={formatEnumName(currentPriority.name)}
+              label={getPriorityDisplayName(currentPriority.name)}
               color={getPriorityColor(currentPriority.name)}
               sx={{
                 fontWeight: 600,
@@ -225,15 +240,15 @@ export default function ChangeTicketPriorityDialog({
                 mb: 1,
               }}
             >
-              Select new priority
+              {t("selectNewPriority")}
             </Typography>
 
             <FormControl fullWidth error={Boolean(priorityError)}>
-              <InputLabel>Priority</InputLabel>
+              <InputLabel>{t("priority")}</InputLabel>
 
               <Select
                 value={selectedPriorityId || String(currentPriority.idPriority)}
-                label="Priority"
+                label={t("priority")}
                 onChange={handlePriorityChange}
                 disabled={saving}
                 sx={{
@@ -265,7 +280,7 @@ export default function ChangeTicketPriorityDialog({
                       />
 
                       <Typography variant="body2">
-                        {formatEnumName(priority.name)}
+                        {getPriorityDisplayName(priority.name)}
                       </Typography>
                     </Stack>
                   </MenuItem>
@@ -292,7 +307,7 @@ export default function ChangeTicketPriorityDialog({
         }}
       >
         <Button onClick={handleClose} disabled={saving} color="inherit">
-          Cancel
+          {t("cancel")}
         </Button>
 
         <Button
@@ -308,7 +323,7 @@ export default function ChangeTicketPriorityDialog({
             borderRadius: 2,
           }}
         >
-          {saving ? "Updating..." : "Update Priority"}
+          {saving ? t("updating") : t("updatePriority")}
         </Button>
       </DialogActions>
     </Dialog>

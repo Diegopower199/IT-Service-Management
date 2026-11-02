@@ -1,19 +1,22 @@
 "use client";
 
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { UserRole } from "@/types/roleTypes";
+
+import { isProtectedStatus } from "@/types/statusTypes";
+import { isProtectedPriority } from "@/types/priorityTypes";
+
+import { getPriorityColor, getStatusColor } from "@/utils/ticketUiUtils";
+
 import TicketOverview from "./TicketOverview";
 import TicketActions from "./TicketActions";
 import TicketComments from "../comments/TicketComments";
 import TicketHistory from "../history/TicketHistory";
-import {
-  formatEnumName,
-  getPriorityColor,
-  getStatusColor,
-} from "@/utils/ticketUiUtils";
-import { useState } from "react";
 
 interface TicketDetailsProps {
   ticket: TicketResponse;
@@ -30,8 +33,28 @@ export default function TicketDetails({
   onEdit,
   onTicketUpdated,
 }: TicketDetailsProps) {
+  const t = useTranslations("Tickets.Details");
+  const tStatuses = useTranslations("Common.Statuses");
+  const tPriorities = useTranslations("Common.Priorities");
+
   const [commentsUpdated, setCommentsUpdated] = useState(false);
   const [historyUpdated, setHistoryUpdated] = useState(false);
+
+  const getStatusDisplayName = (statusName: string) => {
+    if (tStatuses.has(statusName)) {
+      return tStatuses(statusName);
+    }
+
+    return statusName;
+  };
+
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (tPriorities.has(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
 
   const handleCommentsUpdated = () => {
     setCommentsUpdated((previous) => !previous);
@@ -50,7 +73,7 @@ export default function TicketDetails({
 
         <Stack direction="row" spacing={2}>
           <Chip
-            label={formatEnumName(ticket.status.name)}
+            label={getStatusDisplayName(ticket.status.name)}
             color={getStatusColor(ticket.status.name)}
             variant="outlined"
             sx={{
@@ -59,7 +82,7 @@ export default function TicketDetails({
           />
 
           <Chip
-            label={formatEnumName(ticket.priority.name)}
+            label={getPriorityDisplayName(ticket.priority.name)}
             color={getPriorityColor(ticket.priority.name)}
             sx={{
               fontWeight: 600,
@@ -114,7 +137,7 @@ export default function TicketDetails({
       </Box>
 
       <Button variant="outlined" onClick={onClose}>
-        Back to Tickets
+        {t("backToTickets")}
       </Button>
     </Box>
   );

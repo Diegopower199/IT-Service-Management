@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -46,6 +47,8 @@ export default function AddTicketCommentDialog({
 }: AddTicketCommentDialogProps) {
   const { user } = useAuth();
 
+  const t = useTranslations("Tickets.AddCommentDialog");
+
   const [formData, setFormData] = useState<CommentForm>({
     comment: "",
     internal: false,
@@ -82,7 +85,7 @@ export default function AddTicketCommentDialog({
     const errorMissingFields: Partial<Record<keyof CommentForm, string>> = {};
 
     if (!formData.comment.trim()) {
-      errorMissingFields.comment = "Please enter a comment.";
+      errorMissingFields.comment = t("commentRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -143,7 +146,7 @@ export default function AddTicketCommentDialog({
         ticketId,
       });
 
-      setErrorMessage(apiError?.message ?? "Error creating comment.");
+      setErrorMessage(apiError?.message ?? t("createError"));
     } finally {
       setSavingComment(false);
     }
@@ -178,7 +181,7 @@ export default function AddTicketCommentDialog({
             fontWeight: 600,
           }}
         >
-          Add Comment
+          {t("title")}
         </Typography>
 
         <Typography
@@ -190,7 +193,7 @@ export default function AddTicketCommentDialog({
             mb: 0,
           }}
         >
-          Add a comment to ticket #{ticketId}.
+          {t("subtitle", { ticketId })}
         </Typography>
       </DialogTitle>
 
@@ -200,7 +203,7 @@ export default function AddTicketCommentDialog({
         <Stack spacing={2}>
           <TextField
             name="comment"
-            label="Comment"
+            label={t("comment")}
             multiline
             minRows={4}
             fullWidth
@@ -222,7 +225,7 @@ export default function AddTicketCommentDialog({
                   disabled={savingComment}
                 />
               }
-              label="Internal comment"
+              label={t("internalComment")}
             />
           )}
 
@@ -240,7 +243,7 @@ export default function AddTicketCommentDialog({
         }}
       >
         <Button onClick={handleClose} disabled={savingComment} color="inherit">
-          Cancel
+          {t("cancel")}
         </Button>
 
         <Button
@@ -252,7 +255,7 @@ export default function AddTicketCommentDialog({
             borderRadius: 2,
           }}
         >
-          {savingComment ? "Adding..." : "Add Comment"}
+          {savingComment ? t("adding") : t("addComment")}
         </Button>
       </DialogActions>
     </Dialog>

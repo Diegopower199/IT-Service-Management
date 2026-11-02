@@ -1,0 +1,44 @@
+{
+    "Content": {
+        "title": "My Profile",
+        "loadError": "Error loading profile."
+    },
+    "Information": {
+        "title": "Account Information",
+        "username": "Username",
+        "role": "Role",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "email": "Email",
+        "department": "Department",
+        "noDepartment": "No department",
+        "editProfile": "Edit Profile"
+    },
+    "ChangePassword": {
+        "title": "Change Password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "currentPasswordRequired": "Please enter your current password.",
+        "newPasswordRequired": "Please enter a new password.",
+        "confirmPasswordRequired": "Please confirm your new password.",
+        "passwordsDoNotMatch": "Passwords do not match.",
+        "success": "Password changed successfully.",
+        "error": "Error changing password.",
+        "saving": "Saving...",
+        "submit": "Change Password"
+    },
+    "Form": {
+        "title": "Edit Profile",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "email": "Email",
+        "firstNameRequired": "Please enter a first name.",
+        "lastNameRequired": "Please enter a last name.",
+        "emailRequired": "Please enter an email.",
+        "updateError": "Error updating profile.",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "saveChanges": "Save Changes"
+    }
+}

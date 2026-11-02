@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -14,7 +15,12 @@ import {
 
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { CategoryResponse } from "@/types/categoryTypes";
-import type { PriorityResponse } from "@/types/priorityTypes";
+
+import {
+  isProtectedPriority,
+  type PriorityResponse,
+} from "@/types/priorityTypes";
+
 import type { UserSummaryResponse } from "@/types/userTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
@@ -73,6 +79,9 @@ export default function TicketForm({
   onClose,
   onSubmitSuccess,
 }: TicketFormProps) {
+  const t = useTranslations("Tickets.Form");
+  const tPriorities = useTranslations("Common.Priorities");
+
   const [formData, setFormData] = useState<TicketFormData>(
     getInitialFormData(formMode, selectedTicket),
   );
@@ -95,7 +104,7 @@ export default function TicketForm({
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchCategoriesOptions = async (): Promise<boolean> => {
+  const fetchCategoriesOptions = useCallback(async (): Promise<boolean> => {
     try {
       const categoriesResponse = await getAllCategories();
 
@@ -110,13 +119,13 @@ export default function TicketForm({
 
       const apiError = getApiError(error);
 
-      setErrorMessage(apiError?.message ?? "Error loading categories.");
+      setErrorMessage(apiError?.message ?? t("categoriesLoadError"));
 
       return false;
     }
-  };
+  }, [t]);
 
-  const fetchPrioritiesOptions = async (): Promise<boolean> => {
+  const fetchPrioritiesOptions = useCallback(async (): Promise<boolean> => {
     try {
       const prioritiesResponse = await getAllPriorities();
 
@@ -131,13 +140,13 @@ export default function TicketForm({
 
       const apiError = getApiError(error);
 
-      setErrorMessage(apiError?.message ?? "Error loading priorities.");
+      setErrorMessage(apiError?.message ?? t("prioritiesLoadError"));
 
       return false;
     }
-  };
+  }, [t]);
 
-  const fetchUsersOptions = async (): Promise<boolean> => {
+  const fetchUsersOptions = useCallback(async (): Promise<boolean> => {
     try {
       const usersResponse = await getAllTechnicians();
 
@@ -152,11 +161,11 @@ export default function TicketForm({
 
       const apiError = getApiError(error);
 
-      setErrorMessage(apiError?.message ?? "Error loading users.");
+      setErrorMessage(apiError?.message ?? t("usersLoadError"));
 
       return false;
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     const fetchFormOptions = async () => {
@@ -184,7 +193,20 @@ export default function TicketForm({
     };
 
     fetchFormOptions();
-  }, [formMode]);
+  }, [
+    formMode,
+    fetchCategoriesOptions,
+    fetchPrioritiesOptions,
+    fetchUsersOptions,
+  ]);
+
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (tPriorities.has(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -214,24 +236,24 @@ export default function TicketForm({
       {};
 
     if (!formData.title.trim()) {
-      errorMissingFields.title = "Please enter a title.";
+      errorMissingFields.title = t("titleRequired");
     }
 
     if (!formData.description.trim()) {
-      errorMissingFields.description = "Please enter a description.";
+      errorMissingFields.description = t("descriptionRequired");
     }
 
     if (!formData.categoryId) {
-      errorMissingFields.categoryId = "Please select a category.";
+      errorMissingFields.categoryId = t("categoryRequired");
     }
 
     if (formMode === FORM_MODES.CREATE) {
       if (!formData.requestedForId) {
-        errorMissingFields.requestedForId = "Please select a requested user.";
+        errorMissingFields.requestedForId = t("requestedForRequired");
       }
 
       if (!formData.priorityId) {
-        errorMissingFields.priorityId = "Please select a priority.";
+        errorMissingFields.priorityId = t("priorityRequired");
       }
     }
 
@@ -307,8 +329,8 @@ export default function TicketForm({
       setErrorMessage(
         apiError?.message ??
           (formMode === FORM_MODES.CREATE
-            ? "Error creating ticket."
-            : "Error updating ticket."),
+            ? t("createError")
+            : t("updateError")),
       );
     } finally {
       setLoading(false);
@@ -317,10 +339,10 @@ export default function TicketForm({
 
   const getTitle = () => {
     if (formMode === FORM_MODES.CREATE) {
-      return "Create Ticket";
+      return t("createTitle");
     }
 
-    return "Edit Ticket";
+    return t("editTitle");
   };
 
   return (
@@ -331,7 +353,7 @@ export default function TicketForm({
 
       <Stack spacing={3}>
         <TextField
-          label="Title"
+          label={t("title")}
           name="title"
           value={formData.title}
           onChange={handleFormChange}
@@ -342,7 +364,7 @@ export default function TicketForm({
         />
 
         <TextField
-          label="Description"
+          label={t("description")}
           name="description"
           value={formData.description}
           onChange={handleFormChange}
@@ -357,7 +379,7 @@ export default function TicketForm({
         {formMode === FORM_MODES.CREATE && (
           <TextField
             select
-            label="Requested For"
+            label={t("requestedFor")}
             name="requestedForId"
             value={
               usersOptions.some(
@@ -373,11 +395,11 @@ export default function TicketForm({
             fullWidth
           >
             <MenuItem value={0} disabled>
-              Select a user
+              {t("selectUser")}
             </MenuItem>
 
             {usersOptions.length === 0 ? (
-              <MenuItem disabled>No users available</MenuItem>
+              <MenuItem disabled>{t("noUsersAvailable")}</MenuItem>
             ) : (
               usersOptions.map((user) => (
                 <MenuItem key={user.idUser} value={user.idUser}>
@@ -390,7 +412,7 @@ export default function TicketForm({
 
         <TextField
           select
-          label="Category"
+          label={t("category")}
           name="categoryId"
           value={
             categoriesOptions.some(
@@ -406,11 +428,11 @@ export default function TicketForm({
           fullWidth
         >
           <MenuItem value={0} disabled>
-            Select a category
+            {t("selectCategory")}
           </MenuItem>
 
           {categoriesOptions.length === 0 ? (
-            <MenuItem disabled>No categories available</MenuItem>
+            <MenuItem disabled>{t("noCategoriesAvailable")}</MenuItem>
           ) : (
             categoriesOptions.map((category) => (
               <MenuItem key={category.idCategory} value={category.idCategory}>
@@ -423,7 +445,7 @@ export default function TicketForm({
         {formMode === FORM_MODES.CREATE && (
           <TextField
             select
-            label="Priority"
+            label={t("priority")}
             name="priorityId"
             value={
               prioritiesOptions.some(
@@ -439,15 +461,15 @@ export default function TicketForm({
             fullWidth
           >
             <MenuItem value={0} disabled>
-              Select a priority
+              {t("selectPriority")}
             </MenuItem>
 
             {prioritiesOptions.length === 0 ? (
-              <MenuItem disabled>No priorities available</MenuItem>
+              <MenuItem disabled>{t("noPrioritiesAvailable")}</MenuItem>
             ) : (
               prioritiesOptions.map((priority) => (
                 <MenuItem key={priority.idPriority} value={priority.idPriority}>
-                  {priority.name}
+                  {getPriorityDisplayName(priority.name)}
                 </MenuItem>
               ))
             )}
@@ -458,15 +480,15 @@ export default function TicketForm({
 
         <Stack spacing={3} direction="row">
           <Button variant="outlined" onClick={onClose} disabled={loading}>
-            Cancel
+            {t("cancel")}
           </Button>
 
           <Button type="submit" variant="contained" disabled={loading}>
             {loading
-              ? "Saving..."
+              ? t("saving")
               : formMode === FORM_MODES.CREATE
-                ? "Create Ticket"
-                : "Save Changes"}
+                ? t("createTicket")
+                : t("saveChanges")}
           </Button>
         </Stack>
       </Stack>

@@ -15,8 +15,10 @@
     "@mui/material": "^9.5.0",
     "@mui/x-data-grid": "^9.16.0",
     "axios": "^1.20.0",
+    "country-flag-icons": "^1.6.20",
     "dayjs": "^1.11.23",
     "next": "16.4.2",
+    "next-intl": "^4.14.9",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

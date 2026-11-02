@@ -1,6 +1,7 @@
 "use client";
 
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
 import { Box, Divider, Paper, Stack, Typography } from "@mui/material";
 
@@ -11,22 +12,23 @@ interface TicketOverviewProps {
 }
 
 export default function TicketOverview({ ticket }: TicketOverviewProps) {
+  const t = useTranslations("Tickets.Overview");
+
   return (
     <Paper
       variant="outlined"
       sx={{
         p: 3,
-        
       }}
     >
-      <Typography variant="h6">Overview</Typography>
+      <Typography variant="h6">{t("title")}</Typography>
 
       <Divider sx={{ my: 2 }} />
 
       <Stack spacing={3}>
         <Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            Description
+            {t("description")}
           </Typography>
 
           <Typography>{ticket.description}</Typography>
@@ -43,31 +45,33 @@ export default function TicketOverview({ ticket }: TicketOverviewProps) {
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            Created By
+            {t("createdBy")}
           </Typography>
 
           <Typography>{ticket.createdBy.username}</Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Requested For
+            {t("requestedFor")}
           </Typography>
 
           <Typography>{ticket.requestedFor.username}</Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Category
+            {t("category")}
           </Typography>
 
           <Typography>{ticket.category.name}</Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Assigned To
+            {t("assignedTo")}
           </Typography>
 
-          <Typography>{ticket.assignedTo?.username ?? "Unassigned"}</Typography>
+          <Typography>
+            {ticket.assignedTo?.username ?? t("unassigned")}
+          </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Created At
+            {t("createdAt")}
           </Typography>
 
           <Typography>
@@ -75,7 +79,7 @@ export default function TicketOverview({ ticket }: TicketOverviewProps) {
           </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Last Updated
+            {t("lastUpdated")}
           </Typography>
 
           <Typography>

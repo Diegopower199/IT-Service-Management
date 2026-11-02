@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Alert } from "@mui/material";
 
@@ -28,6 +29,9 @@ import { getAllRoles } from "../services/rolesService";
 export default function RolesContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
+
+  const t = useTranslations("Roles.Content");
+  const tRoles = useTranslations("Common.Roles");
 
   const [roles, setRoles] = useState<RoleResponse[]>([]);
 
@@ -66,26 +70,27 @@ export default function RolesContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading roles.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadRoles();
-  }, [isAuthReady, user, router]);
+  }, [isAuthReady, user, router, t]);
 
   const columns: GridColDef<RoleResponse>[] = [
     {
       field: "idRole",
-      headerName: "ID",
+      headerName: t("id"),
       width: 100,
     },
     {
       field: "name",
-      headerName: "Name",
+      headerName: t("name"),
       flex: 1,
       minWidth: 200,
+      renderCell: (params) => tRoles(params.row.name),
     },
   ];
 
@@ -99,7 +104,7 @@ export default function RolesContent() {
 
   return (
     <main>
-      <h1>Roles</h1>
+      <h1>{t("title")}</h1>
 
       {errorMessage && (
         <Alert

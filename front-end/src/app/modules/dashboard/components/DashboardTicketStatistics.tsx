@@ -1,7 +1,13 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import DashboardTicketStatisticCard from "./DashboardTicketStatisticCard";
+
 import { USER_ROLES, type UserRole } from "@/types/roleTypes";
+import type { TicketStatisticsResponse } from "@/types/ticketTypes";
+
 import styles from "../styles/dashboard.module.css";
-import { TicketStatisticsResponse } from "@/types/ticketTypes";
 
 interface DashboardTicketStatisticsProps {
   role: UserRole;
@@ -12,6 +18,10 @@ export default function DashboardTicketStatistics({
   role,
   statistics,
 }: DashboardTicketStatisticsProps) {
+  const t = useTranslations("Dashboard.Statistics");
+  const tStatuses = useTranslations("Common.Statuses");
+  const tPriorities = useTranslations("Common.Priorities");
+
   const { totalTickets, openTickets, inProgressTickets, criticalTickets } =
     statistics;
 
@@ -19,25 +29,25 @@ export default function DashboardTicketStatistics({
     return (
       <section className={styles.statistics}>
         <DashboardTicketStatisticCard
-          title="My Tickets"
+          title={t("myTickets")}
           value={totalTickets}
           href="/tickets"
         />
 
         <DashboardTicketStatisticCard
-          title="Open"
+          title={tStatuses("OPEN")}
           value={openTickets}
-          href="tickets?status=OPEN"
+          href="/tickets?status=OPEN"
         />
 
         <DashboardTicketStatisticCard
-          title="In Progress"
+          title={tStatuses("IN_PROGRESS")}
           value={inProgressTickets}
           href="/tickets?status=IN_PROGRESS"
         />
 
         <DashboardTicketStatisticCard
-          title="Critical"
+          title={tPriorities("CRITICAL")}
           value={criticalTickets}
           href="/tickets?priority=CRITICAL"
         />
@@ -49,25 +59,25 @@ export default function DashboardTicketStatistics({
     return (
       <section className={styles.statistics}>
         <DashboardTicketStatisticCard
-          title="Assigned Tickets"
+          title={t("assignedTickets")}
           value={totalTickets}
           href="/tickets"
         />
 
         <DashboardTicketStatisticCard
-          title="Open"
+          title={tStatuses("OPEN")}
           value={openTickets}
-          href="tickets?status=OPEN"
+          href="/tickets?status=OPEN"
         />
 
         <DashboardTicketStatisticCard
-          title="In Progress"
+          title={tStatuses("IN_PROGRESS")}
           value={inProgressTickets}
           href="/tickets?status=IN_PROGRESS"
         />
 
         <DashboardTicketStatisticCard
-          title="Critical"
+          title={tPriorities("CRITICAL")}
           value={criticalTickets}
           href="/tickets?priority=CRITICAL"
         />
@@ -79,25 +89,25 @@ export default function DashboardTicketStatistics({
     return (
       <section className={styles.statistics}>
         <DashboardTicketStatisticCard
-          title="Total Tickets"
+          title={t("totalTickets")}
           value={totalTickets}
           href="/tickets"
         />
 
         <DashboardTicketStatisticCard
-          title="Open"
+          title={tStatuses("OPEN")}
           value={openTickets}
-          href="tickets?status=OPEN"
+          href="/tickets?status=OPEN"
         />
 
         <DashboardTicketStatisticCard
-          title="In Progress"
+          title={tStatuses("IN_PROGRESS")}
           value={inProgressTickets}
           href="/tickets?status=IN_PROGRESS"
         />
 
         <DashboardTicketStatisticCard
-          title="Critical"
+          title={tPriorities("CRITICAL")}
           value={criticalTickets}
           href="/tickets?priority=CRITICAL"
         />

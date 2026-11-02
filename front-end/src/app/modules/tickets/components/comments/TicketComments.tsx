@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Alert, Button, Divider, Paper, Typography } from "@mui/material";
 
@@ -27,6 +28,8 @@ export default function TicketComments({
   commentsUpdated,
 }: TicketCommentsProps) {
   const router = useRouter();
+
+  const t = useTranslations("Tickets.CommentsPanel");
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
     [],
@@ -58,14 +61,14 @@ export default function TicketComments({
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading ticket comments.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadTicketComments();
-  }, [ticketId, commentsUpdated]);
+  }, [ticketId, commentsUpdated, t]);
 
   return (
     <Paper
@@ -75,7 +78,7 @@ export default function TicketComments({
         minHeight: 180,
       }}
     >
-      <Typography variant="h6">Comments</Typography>
+      <Typography variant="h6">{t("title")}</Typography>
 
       <Divider sx={{ my: 2 }} />
 
@@ -93,9 +96,7 @@ export default function TicketComments({
       {loading ? (
         <PageLoading />
       ) : ticketComments.length === 0 ? (
-        <Typography color="text.secondary">
-          No comments have been added yet.
-        </Typography>
+        <Typography color="text.secondary">{t("empty")}</Typography>
       ) : (
         ticketComments.map((ticketComment) => (
           <Paper
@@ -124,7 +125,7 @@ export default function TicketComments({
           variant="outlined"
           onClick={() => router.push(`/tickets/${ticketId}/comments`)}
         >
-          View all comments
+          {t("viewAll")}
         </Button>
       )}
     </Paper>

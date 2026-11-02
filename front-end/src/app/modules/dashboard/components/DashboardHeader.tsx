@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 interface DashboardHeaderProps {
   username: string;
   role: string;
@@ -7,25 +11,27 @@ export default function DashboardHeader({
   username,
   role,
 }: DashboardHeaderProps) {
+  const t = useTranslations("Dashboard.Header");
+
   const getDescription = () => {
     switch (role) {
       case "ADMIN":
-        return "System overview and help desk activity.";
+        return t("adminDescription");
 
       case "TECHNICIAN":
-        return "Overview of your assigned tickets and current workload.";
+        return t("technicianDescription");
 
       case "USER":
-        return "Overview of your help desk activity.";
+        return t("userDescription");
 
       default:
-        return "Help desk overview.";
+        return t("defaultDescription");
     }
   };
 
   return (
     <header>
-      <h1>Welcome, {username}</h1>
+      <h1>{t("welcome", { username })}</h1>
 
       <p>{getDescription()}</p>
     </header>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -11,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import type { StatusResponse } from "@/types/statusTypes";
+import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
@@ -56,6 +57,9 @@ export default function StatusForm({
   onClose,
   onSubmitSuccess,
 }: StatusFormProps) {
+  const t = useTranslations("Statuses.Form");
+  const tStatuses = useTranslations("Common.Statuses");
+
   const [formData, setFormData] = useState<StatusFormData>(
     getInitialFormData(formMode, selectedStatus),
   );
@@ -69,6 +73,14 @@ export default function StatusForm({
   const [errorMessage, setErrorMessage] = useState("");
 
   const isViewMode = formMode === FORM_MODES.VIEW;
+
+  const getStatusDisplayName = (statusName: string) => {
+    if (tStatuses.has(statusName)) {
+      return tStatuses(statusName);
+    }
+
+    return statusName;
+  };
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -93,7 +105,7 @@ export default function StatusForm({
       {};
 
     if (!formData.name.trim()) {
-      errorMissingFields.name = "Please enter a status name.";
+      errorMissingFields.name = t("nameRequired");
     }
 
     setRequiredFieldsIncomplete(errorMissingFields);
@@ -162,8 +174,8 @@ export default function StatusForm({
       setErrorMessage(
         apiError?.message ??
           (formMode === FORM_MODES.CREATE
-            ? "Error creating status."
-            : "Error updating status."),
+            ? t("createError")
+            : t("updateError")),
       );
     } finally {
       setLoading(false);
@@ -172,14 +184,14 @@ export default function StatusForm({
 
   const getTitle = () => {
     if (formMode === FORM_MODES.CREATE) {
-      return "Create Status";
+      return t("createTitle");
     }
 
     if (formMode === FORM_MODES.VIEW) {
-      return "Status Details";
+      return t("viewTitle");
     }
 
-    return "Edit Status";
+    return t("editTitle");
   };
 
   return (
@@ -190,9 +202,11 @@ export default function StatusForm({
 
       <Stack spacing={3}>
         <TextField
-          label="Name"
+          label={t("name")}
           name="name"
-          value={formData.name}
+          value={
+            isViewMode ? getStatusDisplayName(formData.name) : formData.name
+          }
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.name)}
           helperText={requiredFieldsIncomplete.name}
@@ -202,8 +216,8 @@ export default function StatusForm({
 
         {selectedStatus && formMode === FORM_MODES.VIEW && (
           <TextField
-            label="Status"
-            value={selectedStatus.active ? "Active" : "Inactive"}
+            label={t("status")}
+            value={selectedStatus.active ? t("active") : t("inactive")}
             disabled
             fullWidth
           />
@@ -218,16 +232,16 @@ export default function StatusForm({
             onClick={onClose}
             disabled={loading}
           >
-            {isViewMode ? "Back" : "Cancel"}
+            {isViewMode ? t("back") : t("cancel")}
           </Button>
 
           {!isViewMode && (
             <Button type="submit" variant="contained" disabled={loading}>
               {loading
-                ? "Saving..."
+                ? t("saving")
                 : formMode === FORM_MODES.CREATE
-                  ? "Create Status"
-                  : "Save Changes"}
+                  ? t("createStatus")
+                  : t("saveChanges")}
             </Button>
           )}
         </Stack>

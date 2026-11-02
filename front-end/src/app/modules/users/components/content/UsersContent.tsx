@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   DataGrid,
@@ -41,6 +42,9 @@ import PageLoading from "@/components/ui/PageLoading";
 export default function UsersContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
+
+  const t = useTranslations("Users.Content");
+  const tRoles = useTranslations("Common.Roles");
 
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -97,14 +101,14 @@ export default function UsersContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading users.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadUsers();
-  }, [isAuthReady, user, router, paginationModel, usersUpdated]);
+  }, [isAuthReady, user, router, paginationModel, usersUpdated, t]);
 
   const handleCreateUser = () => {
     setSelectedUser(null);
@@ -139,31 +143,31 @@ export default function UsersContent() {
   const columns: GridColDef<UserResponse>[] = [
     {
       field: "username",
-      headerName: "Username",
+      headerName: t("username"),
       flex: 1,
       minWidth: 150,
     },
     {
       field: "name",
-      headerName: "Name",
+      headerName: t("name"),
       flex: 1,
       minWidth: 180,
       valueGetter: (_, row) => `${row.firstName} ${row.lastName}`,
     },
     {
       field: "email",
-      headerName: "Email",
+      headerName: t("email"),
       flex: 1,
       minWidth: 220,
     },
     {
       field: "role",
-      headerName: "Role",
+      headerName: t("role"),
       width: 150,
       valueGetter: (_, row) => row.role.name,
       renderCell: (params) => (
         <Chip
-          label={params.row.role.name}
+          label={tRoles(params.row.role.name)}
           size="small"
           variant="outlined"
           sx={{
@@ -174,18 +178,18 @@ export default function UsersContent() {
     },
     {
       field: "department",
-      headerName: "Department",
+      headerName: t("department"),
       width: 170,
       valueGetter: (_, row) => row.department?.name ?? "",
       renderCell: (params) => params.row.department?.name ?? "-",
     },
     {
       field: "enabled",
-      headerName: "Status",
+      headerName: t("status"),
       width: 130,
       renderCell: (params) => (
         <Chip
-          label={params.row.enabled ? "Enabled" : "Disabled"}
+          label={params.row.enabled ? t("enabled") : t("disabled")}
           color={params.row.enabled ? "success" : "default"}
           size="small"
           variant="outlined"
@@ -198,19 +202,19 @@ export default function UsersContent() {
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("actions"),
       width: 120,
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="view"
           icon={<VisibilityIcon />}
-          label="View"
+          label={t("view")}
           onClick={() => handleViewUser(row)}
         />,
         <GridActionsCellItem
           key="edit"
           icon={<EditIcon />}
-          label="Edit"
+          label={t("edit")}
           onClick={() => handleEditUser(row)}
         />,
       ],
@@ -238,10 +242,10 @@ export default function UsersContent() {
 
   return (
     <main>
-      <h1>Users</h1>
+      <h1>{t("title")}</h1>
 
       <Button onClick={handleCreateUser}>
-        Create User <AddIcon />
+        {t("createUser")} <AddIcon />
       </Button>
 
       {errorMessage && (

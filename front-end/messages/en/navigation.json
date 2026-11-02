@@ -1,0 +1,16 @@
+{
+    "Header": {
+        "logout": "Logout"
+    },
+    "Sidebar": {
+        "dashboard": "Dashboard",
+        "tickets": "Tickets",
+        "users": "Users",
+        "departments": "Departments",
+        "categories": "Categories",
+        "priorities": "Priorities",
+        "statuses": "Statuses",
+        "roles": "Roles",
+        "profile": "Profile"
+    }
+}

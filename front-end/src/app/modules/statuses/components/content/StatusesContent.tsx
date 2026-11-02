@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -56,6 +57,9 @@ export default function StatusesContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
 
+  const t = useTranslations("Statuses.Content");
+  const tStatuses = useTranslations("Common.Statuses");
+
   const [statuses, setStatuses] = useState<StatusResponse[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -109,14 +113,22 @@ export default function StatusesContent() {
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading statuses.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadStatuses();
-  }, [isAuthReady, user, router, statusesUpdated]);
+  }, [isAuthReady, user, router, statusesUpdated, t]);
+
+  const getStatusDisplayName = (statusName: string) => {
+    if (tStatuses.has(statusName)) {
+      return tStatuses(statusName);
+    }
+
+    return statusName;
+  };
 
   const handleCreateStatus = () => {
     setSelectedStatus(null);
@@ -189,7 +201,7 @@ export default function StatusesContent() {
 
       const apiError = getApiError(error);
 
-      setStatusErrorMessage(apiError?.message ?? "Error changing status.");
+      setStatusErrorMessage(apiError?.message ?? t("statusChangeError"));
     } finally {
       setChangingStatus(false);
     }
@@ -207,22 +219,23 @@ export default function StatusesContent() {
   const columns: GridColDef<StatusResponse>[] = [
     {
       field: "idStatus",
-      headerName: "ID",
+      headerName: t("id"),
       width: 100,
     },
     {
       field: "name",
-      headerName: "Name",
+      headerName: t("name"),
       flex: 1,
       minWidth: 200,
+      renderCell: (params) => getStatusDisplayName(params.row.name),
     },
     {
       field: "active",
-      headerName: "Status",
+      headerName: t("status"),
       width: 150,
       renderCell: (params) => (
         <Chip
-          label={params.row.active ? "Active" : "Inactive"}
+          label={params.row.active ? t("active") : t("inactive")}
           color={params.row.active ? "success" : "default"}
           size="small"
           variant="outlined"
@@ -235,7 +248,7 @@ export default function StatusesContent() {
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("actions"),
       width: 170,
       getActions: ({ row }) => {
         const protectedStatus = isProtectedStatus(row.name);
@@ -244,14 +257,14 @@ export default function StatusesContent() {
           <GridActionsCellItem
             key="view"
             icon={<VisibilityIcon />}
-            label="View"
+            label={t("view")}
             onClick={() => handleViewStatus(row)}
           />,
 
           <GridActionsCellItem
             key="edit"
             icon={<EditIcon />}
-            label="Edit"
+            label={t("edit")}
             disabled={protectedStatus}
             onClick={() => handleEditStatus(row)}
           />,
@@ -259,7 +272,7 @@ export default function StatusesContent() {
           <GridActionsCellItem
             key="status"
             icon={<ChangeCircleIcon />}
-            label={row.active ? "Deactivate" : "Activate"}
+            label={row.active ? t("deactivate") : t("activate")}
             disabled={protectedStatus && row.active}
             onClick={() => handleOpenStatusDialog(row)}
           />,
@@ -289,10 +302,10 @@ export default function StatusesContent() {
 
   return (
     <main>
-      <h1>Statuses</h1>
+      <h1>{t("title")}</h1>
 
       <Button variant="contained" onClick={handleCreateStatus}>
-        Create Status <AddIcon />
+        {t("createStatus")} <AddIcon />
       </Button>
 
       {errorMessage && (
@@ -330,15 +343,21 @@ export default function StatusesContent() {
         maxWidth="xs"
       >
         <DialogTitle>
-          {statusToChange?.active ? "Deactivate Status" : "Activate Status"}
+          {statusToChange?.active ? t("deactivateTitle") : t("activateTitle")}
         </DialogTitle>
 
         <DialogContent>
-          <Typography>
-            Are you sure you want to{" "}
-            {statusToChange?.active ? "deactivate" : "activate"} status{" "}
-            <strong>{statusToChange?.name}</strong>?
-          </Typography>
+          {statusToChange && (
+            <Typography>
+              {statusToChange.active
+                ? t("deactivateConfirmation", {
+                    name: getStatusDisplayName(statusToChange.name),
+                  })
+                : t("activateConfirmation", {
+                    name: getStatusDisplayName(statusToChange.name),
+                  })}
+            </Typography>
+          )}
 
           {statusErrorMessage && (
             <Alert
@@ -359,7 +378,7 @@ export default function StatusesContent() {
             onClick={handleCloseStatusDialog}
             disabled={changingStatus}
           >
-            Cancel
+            {t("cancel")}
           </Button>
 
           <Button
@@ -369,10 +388,10 @@ export default function StatusesContent() {
             disabled={changingStatus}
           >
             {changingStatus
-              ? "Saving..."
+              ? t("saving")
               : statusToChange?.active
-                ? "Deactivate"
-                : "Activate"}
+                ? t("deactivate")
+                : t("activate")}
           </Button>
         </DialogActions>
       </Dialog>

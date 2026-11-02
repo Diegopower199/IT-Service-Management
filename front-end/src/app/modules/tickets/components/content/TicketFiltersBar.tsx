@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Button,
@@ -20,6 +21,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 import type { TicketFilters } from "@/types/ticketTypes";
+
+import { isProtectedStatus } from "@/types/statusTypes";
+import { isProtectedPriority } from "@/types/priorityTypes";
 
 interface TicketFiltersBarProps {
   filters: TicketFilters;
@@ -45,7 +49,33 @@ export default function TicketFiltersBar({
   onApply,
   onClear,
 }: TicketFiltersBarProps) {
+  const t = useTranslations("Tickets.Filters");
+  const tStatuses = useTranslations("Common.Statuses");
+  const tPriorities = useTranslations("Common.Priorities");
+
   const [draftFilters, setDraftFilters] = useState<TicketFilters>(filters);
+
+  /**
+   * Returns the translated status name when it is a protected system status.
+   */
+  const getStatusDisplayName = (statusName: string) => {
+    if (tStatuses.has(statusName)) {
+      return tStatuses(statusName);
+    }
+
+    return statusName;
+  };
+
+  /**
+   * Returns the translated priority name when it is a protected system priority.
+   */
+  const getPriorityDisplayName = (priorityName: string) => {
+    if (tPriorities.has(priorityName)) {
+      return tPriorities(priorityName);
+    }
+
+    return priorityName;
+  };
 
   /**
    * Updates one filter value locally without immediately applying it.
@@ -86,7 +116,7 @@ export default function TicketFiltersBar({
           <FilterAltOutlinedIcon color="primary" />
 
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            Filters
+            {t("title")}
           </Typography>
         </Stack>
 
@@ -104,7 +134,7 @@ export default function TicketFiltersBar({
           }}
         >
           <TextField
-            label="Search by title"
+            label={t("searchByTitle")}
             value={draftFilters.title ?? ""}
             onChange={(event) =>
               handleFilterChange("title", event.target.value)
@@ -132,10 +162,10 @@ export default function TicketFiltersBar({
               minWidth: 150,
             }}
           >
-            <InputLabel>Status</InputLabel>
+            <InputLabel>{t("status")}</InputLabel>
 
             <Select
-              label="Status"
+              label={t("status")}
               value={
                 statusOptions.includes(draftFilters.status ?? "")
                   ? draftFilters.status
@@ -145,11 +175,11 @@ export default function TicketFiltersBar({
                 handleFilterChange("status", event.target.value ?? "")
               }
             >
-              <MenuItem value="">All statuses</MenuItem>
+              <MenuItem value="">{t("allStatuses")}</MenuItem>
 
               {statusOptions.map((status) => (
                 <MenuItem key={status} value={status}>
-                  {status}
+                  {getStatusDisplayName(status)}
                 </MenuItem>
               ))}
             </Select>
@@ -162,10 +192,10 @@ export default function TicketFiltersBar({
               minWidth: 150,
             }}
           >
-            <InputLabel>Priority</InputLabel>
+            <InputLabel>{t("priority")}</InputLabel>
 
             <Select
-              label="Priority"
+              label={t("priority")}
               value={
                 priorityOptions.includes(draftFilters.priority ?? "")
                   ? draftFilters.priority
@@ -175,11 +205,11 @@ export default function TicketFiltersBar({
                 handleFilterChange("priority", event.target.value ?? "")
               }
             >
-              <MenuItem value="">All priorities</MenuItem>
+              <MenuItem value="">{t("allPriorities")}</MenuItem>
 
               {priorityOptions.map((priority) => (
                 <MenuItem key={priority} value={priority}>
-                  {priority}
+                  {getPriorityDisplayName(priority)}
                 </MenuItem>
               ))}
             </Select>
@@ -192,10 +222,10 @@ export default function TicketFiltersBar({
               minWidth: 150,
             }}
           >
-            <InputLabel>Category</InputLabel>
+            <InputLabel>{t("category")}</InputLabel>
 
             <Select
-              label="Category"
+              label={t("category")}
               value={
                 categoryOptions.includes(draftFilters.category ?? "")
                   ? draftFilters.category
@@ -205,7 +235,7 @@ export default function TicketFiltersBar({
                 handleFilterChange("category", event.target.value ?? "")
               }
             >
-              <MenuItem value="">All categories</MenuItem>
+              <MenuItem value="">{t("allCategories")}</MenuItem>
 
               {categoryOptions.map((category) => (
                 <MenuItem key={category} value={category}>
@@ -229,7 +259,7 @@ export default function TicketFiltersBar({
             onClick={handleClear}
             disabled={!hasFilters}
           >
-            Clear
+            {t("clear")}
           </Button>
 
           <Button
@@ -237,7 +267,7 @@ export default function TicketFiltersBar({
             startIcon={<FilterAltOutlinedIcon />}
             onClick={() => onApply(draftFilters)}
           >
-            Apply filters
+            {t("applyFilters")}
           </Button>
         </Stack>
       </Stack>

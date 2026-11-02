@@ -1,0 +1,20 @@
+{
+    "Statuses": {
+        "OPEN": "Open",
+        "IN_PROGRESS": "In Progress",
+        "WAITING": "Waiting",
+        "RESOLVED": "Resolved",
+        "CLOSED": "Closed"
+    },
+    "Priorities": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "CRITICAL": "Critical"
+    },
+    "Roles": {
+        "ADMIN": "Administrator",
+        "TECHNICIAN": "Technician",
+        "USER": "User"
+    }
+}

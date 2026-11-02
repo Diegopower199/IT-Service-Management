@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 
@@ -17,6 +18,9 @@ export default function ProfileInformation({
   profile,
   onSubmitSuccess,
 }: ProfileInformationProps) {
+  const t = useTranslations("Profile.Information");
+  const tRoles = useTranslations("Common.Roles");
+
   const [editing, setEditing] = useState(false);
 
   const handleEditProfile = () => {
@@ -51,28 +55,28 @@ export default function ProfileInformation({
       }}
     >
       <Typography variant="h6" gutterBottom>
-        Account Information
+        {t("title")}
       </Typography>
 
       <Stack spacing={2} sx={{ mt: 3 }}>
-        <ProfileRow label="Username" value={profile.username} />
+        <ProfileRow label={t("username")} value={profile.username} />
 
-        <ProfileRow label="Role" value={profile.role.name} />
+        <ProfileRow label={t("role")} value={tRoles(profile.role.name)} />
 
-        <ProfileRow label="First name" value={profile.firstName} />
+        <ProfileRow label={t("firstName")} value={profile.firstName} />
 
-        <ProfileRow label="Last name" value={profile.lastName} />
+        <ProfileRow label={t("lastName")} value={profile.lastName} />
 
-        <ProfileRow label="Email" value={profile.email} />
+        <ProfileRow label={t("email")} value={profile.email} />
 
         <ProfileRow
-          label="Department"
-          value={profile.department?.name ?? "No department"}
+          label={t("department")}
+          value={profile.department?.name ?? t("noDepartment")}
         />
       </Stack>
 
       <Button variant="contained" sx={{ mt: 3 }} onClick={handleEditProfile}>
-        Edit Profile
+        {t("editProfile")}
       </Button>
     </Paper>
   );

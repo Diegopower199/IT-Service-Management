@@ -1,6 +1,12 @@
-import Button from "@/components/ui/Button";
-import { USER_ROLES, type UserRole } from "@/types/roleTypes";
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+
+import Button from "@/components/ui/Button";
+
+import { USER_ROLES, type UserRole } from "@/types/roleTypes";
+
 import styles from "../styles/dashboard.module.css";
 
 interface DashboardQuickActionsProps {
@@ -10,6 +16,8 @@ interface DashboardQuickActionsProps {
 export default function DashboardQuickActions({
   role,
 }: DashboardQuickActionsProps) {
+  const t = useTranslations("Dashboard.QuickActions");
+
   if (role === USER_ROLES.USER) {
     return null;
   }
@@ -17,12 +25,12 @@ export default function DashboardQuickActions({
   if (role === USER_ROLES.TECHNICIAN) {
     return (
       <section className={styles.quickActions}>
-        <h2 className={styles.sectionTitle}>Quick Actions</h2>
+        <h2 className={styles.sectionTitle}>{t("title")}</h2>
 
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
             <Button type="button" variant="primary">
-              Assign Ticket to Me
+              {t("assignToMe")}
             </Button>
           </Link>
         </div>
@@ -30,7 +38,7 @@ export default function DashboardQuickActions({
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
             <Button type="button" variant="secondary">
-              View Unassigned Tickets
+              {t("viewUnassigned")}
             </Button>
           </Link>
         </div>
@@ -41,12 +49,12 @@ export default function DashboardQuickActions({
   if (role === USER_ROLES.ADMIN) {
     return (
       <section className={styles.quickActions}>
-        <h2 className={styles.sectionTitle}>Quick Actions</h2>
+        <h2 className={styles.sectionTitle}>{t("title")}</h2>
 
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
             <Button type="button" variant="primary">
-              Assign Ticket
+              {t("assign")}
             </Button>
           </Link>
         </div>
@@ -54,7 +62,7 @@ export default function DashboardQuickActions({
         <div className={styles.quickActionsLinks}>
           <Link href="/tickets">
             <Button type="button" variant="secondary">
-              Reassign Ticket
+              {t("reassign")}
             </Button>
           </Link>
         </div>

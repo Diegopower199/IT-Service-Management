@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import dayjs from "dayjs";
 
 import { Alert, Box, Button, Divider, Paper, Typography } from "@mui/material";
+
+import PageLoading from "@/components/ui/PageLoading";
 
 import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 
@@ -14,8 +17,6 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
-
-import PageLoading from "@/components/ui/PageLoading";
 
 interface TicketHistoryProps {
   ticketId: number;
@@ -27,6 +28,8 @@ export default function TicketHistory({
   historyUpdated,
 }: TicketHistoryProps) {
   const router = useRouter();
+
+  const t = useTranslations("Tickets.HistoryPanel");
 
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
     [],
@@ -58,14 +61,14 @@ export default function TicketHistory({
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading ticket history.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       } finally {
         setLoading(false);
       }
     };
 
     loadTicketHistory();
-  }, [ticketId, historyUpdated]);
+  }, [ticketId, historyUpdated, t]);
 
   return (
     <Paper
@@ -75,7 +78,7 @@ export default function TicketHistory({
         minHeight: 180,
       }}
     >
-      <Typography variant="h6">History</Typography>
+      <Typography variant="h6">{t("title")}</Typography>
 
       <Divider sx={{ my: 2 }} />
 
@@ -93,9 +96,7 @@ export default function TicketHistory({
       {loading ? (
         <PageLoading />
       ) : ticketHistory.length === 0 ? (
-        <Typography color="text.secondary">
-          No history has been recorded yet.
-        </Typography>
+        <Typography color="text.secondary">{t("empty")}</Typography>
       ) : (
         ticketHistory.map((history) => (
           <Paper
@@ -120,7 +121,7 @@ export default function TicketHistory({
                   mt: 1,
                 }}
               >
-                Field: {history.fieldName}
+                {t("field")}: {history.fieldName}
               </Typography>
             )}
 
@@ -149,7 +150,7 @@ export default function TicketHistory({
           variant="outlined"
           onClick={() => router.push(`/tickets/${ticketId}/history`)}
         >
-          View all history
+          {t("viewAll")}
         </Button>
       )}
     </Paper>

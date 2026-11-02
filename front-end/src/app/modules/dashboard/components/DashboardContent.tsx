@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Alert } from "@mui/material";
 
@@ -32,6 +33,8 @@ import styles from "../styles/dashboard.module.css";
 export default function DashboardContent() {
   const { user, isAuthReady } = useAuth();
   const router = useRouter();
+
+  const t = useTranslations("Dashboard.Content");
 
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
 
@@ -71,7 +74,7 @@ export default function DashboardContent() {
 
         const apiError = getApiError(error);
 
-        setTicketsErrorMessage(apiError?.message ?? "Error loading tickets.");
+        setTicketsErrorMessage(apiError?.message ?? t("ticketsLoadError"));
       }
     };
 
@@ -91,14 +94,14 @@ export default function DashboardContent() {
         const apiError = getApiError(error);
 
         setStatisticsErrorMessage(
-          apiError?.message ?? "Error loading statistics.",
+          apiError?.message ?? t("statisticsLoadError"),
         );
       }
     };
 
     loadTickets();
     loadStatistics();
-  }, [isAuthReady, user, router]);
+  }, [isAuthReady, user, router, t]);
 
   if (!isAuthReady || !user) {
     return <PageLoading />;

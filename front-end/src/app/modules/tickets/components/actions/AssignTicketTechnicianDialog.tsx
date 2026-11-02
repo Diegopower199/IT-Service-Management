@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Alert,
@@ -46,6 +47,8 @@ export default function AssignTicketTechnicianDialog({
   onClose,
   onTicketUpdated,
 }: AssignTicketTechnicianDialogProps) {
+  const t = useTranslations("Tickets.AssignTechnicianDialog");
+
   const [technicians, setTechnicians] = useState<UserSummaryResponse[]>([]);
 
   const [selectedTechnicianId, setSelectedTechnicianId] = useState("");
@@ -72,12 +75,12 @@ export default function AssignTicketTechnicianDialog({
 
         const apiError = getApiError(error);
 
-        setErrorMessage(apiError?.message ?? "Error loading technicians.");
+        setErrorMessage(apiError?.message ?? t("loadError"));
       }
     };
 
     loadTechnicians();
-  }, [ticketId]);
+  }, [ticketId, t]);
 
   const handleTechnicianChange = (event: SelectChangeEvent) => {
     setSelectedTechnicianId(event.target.value);
@@ -132,7 +135,7 @@ export default function AssignTicketTechnicianDialog({
         technicianId: Number(selectedTechnicianId),
       });
 
-      setErrorMessage(apiError?.message ?? "Error assigning technician.");
+      setErrorMessage(apiError?.message ?? t("assignError"));
     } finally {
       setSaving(false);
     }
@@ -167,7 +170,7 @@ export default function AssignTicketTechnicianDialog({
             fontWeight: 600,
           }}
         >
-          Assign Technician
+          {t("title")}
         </Typography>
 
         <Typography
@@ -179,7 +182,7 @@ export default function AssignTicketTechnicianDialog({
             mb: 0,
           }}
         >
-          Assign a technician to ticket #{ticketId}.
+          {t("subtitle", { ticketId })}
         </Typography>
       </DialogTitle>
 
@@ -204,7 +207,7 @@ export default function AssignTicketTechnicianDialog({
                 letterSpacing: 0.5,
               }}
             >
-              Current technician
+              {t("currentTechnician")}
             </Typography>
 
             {currentTechnician ? (
@@ -218,7 +221,7 @@ export default function AssignTicketTechnicianDialog({
               />
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No technician assigned
+                {t("noTechnicianAssigned")}
               </Typography>
             )}
           </Box>
@@ -231,18 +234,18 @@ export default function AssignTicketTechnicianDialog({
                 mb: 1,
               }}
             >
-              Select technician
+              {t("selectTechnician")}
             </Typography>
 
             <FormControl fullWidth error={Boolean(technicianError)}>
-              <InputLabel>Technician</InputLabel>
+              <InputLabel>{t("technician")}</InputLabel>
 
               <Select
                 value={
                   selectedTechnicianId ||
                   (currentTechnician ? String(currentTechnician.idUser) : "")
                 }
-                label="Technician"
+                label={t("technician")}
                 onChange={handleTechnicianChange}
                 disabled={saving}
                 sx={{
@@ -276,7 +279,7 @@ export default function AssignTicketTechnicianDialog({
         }}
       >
         <Button onClick={handleClose} disabled={saving} color="inherit">
-          Cancel
+          {t("cancel")}
         </Button>
 
         <Button
@@ -293,10 +296,10 @@ export default function AssignTicketTechnicianDialog({
           }}
         >
           {saving
-            ? "Assigning..."
+            ? t("assigning")
             : currentTechnician
-              ? "Reassign Technician"
-              : "Assign Technician"}
+              ? t("reassignTechnician")
+              : t("assignTechnician")}
         </Button>
       </DialogActions>
     </Dialog>
