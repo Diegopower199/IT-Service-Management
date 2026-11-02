@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -83,45 +83,49 @@ export default function PrioritiesContent() {
 
   const [prioritiesUpdated, setPrioritiesUpdated] = useState(false);
 
+  const fetchPriorities = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response = await getAllPriorities();
+
+      setPriorities(response);
+      setErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load priorities", error, {
+        component: "PrioritiesContent",
+        action: "fetchPriorities",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    if (user.role !== USER_ROLES.ADMIN) {
-      router.replace("/403");
-      return;
-    }
-
     const loadPriorities = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllPriorities();
-
-        setPriorities(response);
-      } catch (error) {
-        logger.error("Failed to load priorities", error, {
-          component: "PrioritiesContent",
-          action: "loadPriorities",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      if (user.role !== USER_ROLES.ADMIN) {
+        router.replace("/403");
+        return;
+      }
+
+      await fetchPriorities();
     };
 
     loadPriorities();
-  }, [isAuthReady, user, router, prioritiesUpdated, t]);
+  }, [isAuthReady, user, router, prioritiesUpdated, fetchPriorities]);
 
   const getPriorityDisplayName = (priorityName: string) => {
     if (tPriorities.has(priorityName)) {
