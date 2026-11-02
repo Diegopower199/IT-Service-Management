@@ -59,7 +59,7 @@ export default function TicketFiltersBar({
    * Returns the translated status name when it is a protected system status.
    */
   const getStatusDisplayName = (statusName: string) => {
-    if (isProtectedStatus(statusName) && tStatuses.has(statusName)) {
+    if (tStatuses.has(statusName)) {
       return tStatuses(statusName);
     }
 
@@ -70,7 +70,7 @@ export default function TicketFiltersBar({
    * Returns the translated priority name when it is a protected system priority.
    */
   const getPriorityDisplayName = (priorityName: string) => {
-    if (isProtectedPriority(priorityName) && tPriorities.has(priorityName)) {
+    if (tPriorities.has(priorityName)) {
       return tPriorities(priorityName);
     }
 

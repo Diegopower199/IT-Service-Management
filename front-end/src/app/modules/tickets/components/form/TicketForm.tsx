@@ -201,7 +201,7 @@ export default function TicketForm({
   ]);
 
   const getPriorityDisplayName = (priorityName: string) => {
-    if (isProtectedPriority(priorityName) && tPriorities.has(priorityName)) {
+    if (tPriorities.has(priorityName)) {
       return tPriorities(priorityName);
     }
 

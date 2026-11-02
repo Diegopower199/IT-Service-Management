@@ -254,7 +254,7 @@ export default function TicketsContent() {
   ]);
 
   const getStatusDisplayName = (statusName: string) => {
-    if (isProtectedStatus(statusName) && tStatuses.has(statusName)) {
+    if (tStatuses.has(statusName)) {
       return tStatuses(statusName);
     }
 
@@ -262,7 +262,7 @@ export default function TicketsContent() {
   };
 
   const getPriorityDisplayName = (priorityName: string) => {
-    if (isProtectedPriority(priorityName) && tPriorities.has(priorityName)) {
+    if (tPriorities.has(priorityName)) {
       return tPriorities(priorityName);
     }
 

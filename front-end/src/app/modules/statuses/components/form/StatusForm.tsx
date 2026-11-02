@@ -75,7 +75,7 @@ export default function StatusForm({
   const isViewMode = formMode === FORM_MODES.VIEW;
 
   const getStatusDisplayName = (statusName: string) => {
-    if (isProtectedStatus(statusName) && tStatuses.has(statusName)) {
+    if (tStatuses.has(statusName)) {
       return tStatuses(statusName);
     }
 

@@ -88,7 +88,7 @@ export default function ChangeTicketPriorityDialog({
   }, [ticketId, t]);
 
   const getPriorityDisplayName = (priorityName: string) => {
-    if (isProtectedPriority(priorityName) && tPriorities.has(priorityName)) {
+    if (tPriorities.has(priorityName)) {
       return tPriorities(priorityName);
     }
 
