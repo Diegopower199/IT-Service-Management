@@ -22,9 +22,6 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 import type { TicketFilters } from "@/types/ticketTypes";
 
-import { isProtectedStatus } from "@/types/statusTypes";
-import { isProtectedPriority } from "@/types/priorityTypes";
-
 interface TicketFiltersBarProps {
   filters: TicketFilters;
   statusOptions: string[];

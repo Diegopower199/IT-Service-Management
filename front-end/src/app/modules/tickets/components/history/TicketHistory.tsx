@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -39,36 +39,40 @@ export default function TicketHistory({
 
   const [errorMessage, setErrorMessage] = useState("");
 
+  const fetchTicketHistory = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response = await getAllTicketHistoryById(ticketId, {
+        page: 0,
+        size: 5,
+        sort: DEFAULT_TICKET_HISTORY_SORT,
+      });
+
+      setTicketHistory(response.content);
+      setErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load ticket history", error, {
+        component: "TicketHistory",
+        action: "fetchTicketHistory",
+        ticketId,
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId, t]);
+
   useEffect(() => {
     const loadTicketHistory = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllTicketHistoryById(ticketId, {
-          page: 0,
-          size: 5,
-          sort: DEFAULT_TICKET_HISTORY_SORT,
-        });
-
-        setTicketHistory(response.content);
-      } catch (error) {
-        logger.error("Failed to load ticket history", error, {
-          component: "TicketHistory",
-          action: "loadTicketHistory",
-          ticketId,
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
-      }
+      await fetchTicketHistory();
     };
 
     loadTicketHistory();
-  }, [ticketId, historyUpdated, t]);
+  }, [fetchTicketHistory, historyUpdated]);
 
   return (
     <Paper

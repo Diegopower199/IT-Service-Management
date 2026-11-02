@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -23,10 +23,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import {
-  isProtectedPriority,
-  type PriorityResponse,
-} from "@/types/priorityTypes";
+import type { PriorityResponse } from "@/types/priorityTypes";
 
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 
@@ -63,29 +60,39 @@ export default function ChangeTicketPriorityDialog({
   const [priorityError, setPriorityError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const fetchPriorities = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await getAllActivePriorities();
+
+      setPriorities(response);
+
+      return true;
+    } catch (error) {
+      logger.error("Failed to load priorities", error, {
+        component: "ChangeTicketPriorityDialog",
+        action: "fetchPriorities",
+        ticketId,
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+
+      return false;
+    }
+  }, [ticketId, t]);
+
   useEffect(() => {
     const loadPriorities = async () => {
-      try {
-        setErrorMessage("");
+      const prioritiesLoaded = await fetchPriorities();
 
-        const response = await getAllActivePriorities();
-
-        setPriorities(response);
-      } catch (error) {
-        logger.error("Failed to load priorities", error, {
-          component: "ChangeTicketPriorityDialog",
-          action: "loadPriorities",
-          ticketId,
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
+      if (!prioritiesLoaded) {
+        return;
       }
     };
 
     loadPriorities();
-  }, [ticketId, t]);
+  }, [fetchPriorities]);
 
   const getPriorityDisplayName = (priorityName: string) => {
     if (tPriorities.has(priorityName)) {

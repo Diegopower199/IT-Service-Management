@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -58,29 +58,39 @@ export default function AssignTicketTechnicianDialog({
   const [technicianError, setTechnicianError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const fetchTechnicians = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await getAllTechnicians();
+
+      setTechnicians(response);
+
+      return true;
+    } catch (error) {
+      logger.error("Failed to load technicians", error, {
+        component: "AssignTicketTechnicianDialog",
+        action: "fetchTechnicians",
+        ticketId,
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+
+      return false;
+    }
+  }, [ticketId, t]);
+
   useEffect(() => {
     const loadTechnicians = async () => {
-      try {
-        setErrorMessage("");
+      const techniciansLoaded = await fetchTechnicians();
 
-        const response = await getAllTechnicians();
-
-        setTechnicians(response);
-      } catch (error) {
-        logger.error("Failed to load technicians", error, {
-          component: "AssignTicketTechnicianDialog",
-          action: "loadTechnicians",
-          ticketId,
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
+      if (!techniciansLoaded) {
+        return;
       }
     };
 
     loadTechnicians();
-  }, [ticketId, t]);
+  }, [fetchTechnicians]);
 
   const handleTechnicianChange = (event: SelectChangeEvent) => {
     setSelectedTechnicianId(event.target.value);

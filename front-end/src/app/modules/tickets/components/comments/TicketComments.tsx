@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -39,36 +39,40 @@ export default function TicketComments({
 
   const [errorMessage, setErrorMessage] = useState("");
 
+  const fetchTicketComments = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await getAllTicketsCommentsById(ticketId, {
+        page: 0,
+        size: 5,
+        sort: DEFAULT_TICKET_COMMENTS_SORT,
+      });
+
+      setTicketComments(response.content);
+    } catch (error) {
+      logger.error("Failed to load ticket comments", error, {
+        component: "TicketComments",
+        action: "fetchTicketComments",
+        ticketId,
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId, t]);
+
   useEffect(() => {
     const loadTicketComments = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllTicketsCommentsById(ticketId, {
-          page: 0,
-          size: 5,
-          sort: DEFAULT_TICKET_COMMENTS_SORT,
-        });
-
-        setTicketComments(response.content);
-      } catch (error) {
-        logger.error("Failed to load ticket comments", error, {
-          component: "TicketComments",
-          action: "loadTicketComments",
-          ticketId,
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
-      }
+      await fetchTicketComments();
     };
 
     loadTicketComments();
-  }, [ticketId, commentsUpdated, t]);
+  }, [fetchTicketComments, commentsUpdated]);
 
   return (
     <Paper

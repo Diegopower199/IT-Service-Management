@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -23,7 +23,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
+import type { StatusResponse } from "@/types/statusTypes";
 
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 
@@ -60,29 +60,39 @@ export default function ChangeTicketStatusDialog({
   const [statusError, setStatusError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const fetchStatuses = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await getAllActiveStatuses();
+
+      setStatuses(response);
+
+      return true;
+    } catch (error) {
+      logger.error("Failed to load statuses", error, {
+        component: "ChangeTicketStatusDialog",
+        action: "fetchStatuses",
+        ticketId,
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+
+      return false;
+    }
+  }, [ticketId, t]);
+
   useEffect(() => {
     const loadStatuses = async () => {
-      try {
-        setErrorMessage("");
+      const statusesLoaded = await fetchStatuses();
 
-        const response = await getAllActiveStatuses();
-
-        setStatuses(response);
-      } catch (error) {
-        logger.error("Failed to load statuses", error, {
-          component: "ChangeTicketStatusDialog",
-          action: "loadStatuses",
-          ticketId,
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
+      if (!statusesLoaded) {
+        return;
       }
     };
 
     loadStatuses();
-  }, [ticketId, t]);
+  }, [fetchStatuses]);
 
   const getStatusDisplayName = (statusName: string) => {
     if (tStatuses.has(statusName)) {
