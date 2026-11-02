@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -41,6 +41,9 @@ import PageLoading from "@/components/ui/PageLoading";
 
 export default function UsersContent() {
   const { user, isAuthReady } = useAuth();
+
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+
   const router = useRouter();
 
   const t = useTranslations("Users.Content");
@@ -65,50 +68,54 @@ export default function UsersContent() {
     pageSize: DEFAULT_PAGE_SIZE,
   });
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await getAllUsers(
+        paginationModel.page,
+        paginationModel.pageSize,
+        "idUser,asc",
+      );
+
+      setUsers(response.content);
+      setTotalElements(response.totalElements);
+    } catch (error) {
+      logger.error("Failed to load users", error, {
+        component: "UsersContent",
+        action: "fetchUsers",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [paginationModel, t]);
+
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    if (user.role !== USER_ROLES.ADMIN) {
-      router.replace("/403");
-      return;
-    }
-
     const loadUsers = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllUsers(
-          paginationModel.page,
-          paginationModel.pageSize,
-          "idUser,asc",
-        );
-
-        setUsers(response.content);
-        setTotalElements(response.totalElements);
-      } catch (error) {
-        logger.error("Failed to load users", error, {
-          component: "UsersContent",
-          action: "loadUsers",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      if (!isAdmin) {
+        router.replace("/403");
+        return;
+      }
+
+      await fetchUsers();
     };
 
     loadUsers();
-  }, [isAuthReady, user, router, paginationModel, usersUpdated, t]);
+  }, [isAuthReady, user, isAdmin, router, usersUpdated, fetchUsers]);
 
   const handleCreateUser = () => {
     setSelectedUser(null);
@@ -167,7 +174,11 @@ export default function UsersContent() {
       valueGetter: (_, row) => row.role.name,
       renderCell: (params) => (
         <Chip
-          label={tRoles(params.row.role.name)}
+          label={
+            tRoles.has(params.row.role.name)
+              ? tRoles(params.row.role.name)
+              : params.row.role.name
+          }
           size="small"
           variant="outlined"
           sx={{
@@ -225,7 +236,7 @@ export default function UsersContent() {
     return <PageLoading />;
   }
 
-  if (user.role !== USER_ROLES.ADMIN) {
+  if (!isAdmin) {
     return <PageLoading />;
   }
 

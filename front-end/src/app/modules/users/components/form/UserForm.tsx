@@ -151,8 +151,6 @@ export default function UserForm({
 
   useEffect(() => {
     const fetchFormOptions = async () => {
-      setErrorMessage("");
-
       const rolesLoaded = await fetchRolesOptions();
 
       if (!rolesLoaded) {
