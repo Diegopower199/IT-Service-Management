@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -34,40 +34,44 @@ export default function ProfileContent() {
 
   const [profileUpdated, setProfileUpdated] = useState(false);
 
+  const fetchProfile = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response = await getCurrentUser();
+
+      setProfile(response);
+      setErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load profile", error, {
+        component: "ProfileContent",
+        action: "fetchProfile",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
     const loadProfile = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getCurrentUser();
-
-        setProfile(response);
-      } catch (error) {
-        logger.error("Failed to load profile", error, {
-          component: "ProfileContent",
-          action: "loadProfile",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      await fetchProfile();
     };
 
     loadProfile();
-  }, [isAuthReady, user, router, profileUpdated, t]);
+  }, [isAuthReady, user, router, profileUpdated, fetchProfile]);
 
   const handleProfileUpdated = () => {
     setProfileUpdated((previous) => !previous);

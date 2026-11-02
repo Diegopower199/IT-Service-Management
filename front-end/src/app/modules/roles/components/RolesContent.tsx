@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -39,45 +39,49 @@ export default function RolesContent() {
 
   const [errorMessage, setErrorMessage] = useState("");
 
+  const fetchRoles = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response = await getAllRoles();
+
+      setRoles(response);
+      setErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load roles", error, {
+        component: "RolesContent",
+        action: "fetchRoles",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    if (user.role !== USER_ROLES.ADMIN) {
-      router.replace("/403");
-      return;
-    }
-
     const loadRoles = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllRoles();
-
-        setRoles(response);
-      } catch (error) {
-        logger.error("Failed to load roles", error, {
-          component: "RolesContent",
-          action: "loadRoles",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      if (user.role !== USER_ROLES.ADMIN) {
+        router.replace("/403");
+        return;
+      }
+
+      await fetchRoles();
     };
 
     loadRoles();
-  }, [isAuthReady, user, router, t]);
+  }, [isAuthReady, user, router, fetchRoles]);
 
   const columns: GridColDef<RoleResponse>[] = [
     {

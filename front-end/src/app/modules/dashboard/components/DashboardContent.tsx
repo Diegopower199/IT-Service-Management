@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -45,63 +45,63 @@ export default function DashboardContent() {
   const [ticketsErrorMessage, setTicketsErrorMessage] = useState("");
   const [statisticsErrorMessage, setStatisticsErrorMessage] = useState("");
 
+  const fetchTickets = useCallback(async () => {
+    try {
+      const response = await getOwnTickets({
+        page: 0,
+        size: 20,
+        sort: "lastUpdated,desc",
+      });
+
+      setTickets(response.content);
+      setTicketsErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load dashboard tickets", error, {
+        component: "DashboardContent",
+        action: "fetchTickets",
+      });
+
+      const apiError = getApiError(error);
+
+      setTicketsErrorMessage(apiError?.message ?? t("ticketsLoadError"));
+    }
+  }, [t]);
+
+  const fetchStatistics = useCallback(async () => {
+    try {
+      const response = await getTicketStatistics();
+
+      setStatistics(response);
+      setStatisticsErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load dashboard statistics", error, {
+        component: "DashboardContent",
+        action: "fetchStatistics",
+      });
+
+      const apiError = getApiError(error);
+
+      setStatisticsErrorMessage(apiError?.message ?? t("statisticsLoadError"));
+    }
+  }, [t]);
+
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    const loadTickets = async () => {
-      try {
-        setTicketsErrorMessage("");
-
-        const response = await getOwnTickets({
-          page: 0,
-          size: 20,
-          sort: "lastUpdated,desc",
-        });
-
-        setTickets(response.content);
-      } catch (error) {
-        logger.error("Failed to load dashboard tickets", error, {
-          component: "DashboardContent",
-          action: "loadTickets",
-        });
-
-        const apiError = getApiError(error);
-
-        setTicketsErrorMessage(apiError?.message ?? t("ticketsLoadError"));
+    const loadDashboard = async () => {
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      await fetchTickets();
+      await fetchStatistics();
     };
 
-    const loadStatistics = async () => {
-      try {
-        setStatisticsErrorMessage("");
-
-        const response = await getTicketStatistics();
-
-        setStatistics(response);
-      } catch (error) {
-        logger.error("Failed to load dashboard statistics", error, {
-          component: "DashboardContent",
-          action: "loadStatistics",
-        });
-
-        const apiError = getApiError(error);
-
-        setStatisticsErrorMessage(
-          apiError?.message ?? t("statisticsLoadError"),
-        );
-      }
-    };
-
-    loadTickets();
-    loadStatistics();
-  }, [isAuthReady, user, router, t]);
+    loadDashboard();
+  }, [isAuthReady, user, router, fetchTickets, fetchStatistics]);
 
   if (!isAuthReady || !user) {
     return <PageLoading />;

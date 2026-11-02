@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import dayjs from "dayjs";
@@ -45,37 +45,41 @@ export default function TicketHistoryContent({
 
   const [errorMessage, setErrorMessage] = useState("");
 
+  const fetchTicketHistory = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await getAllTicketHistoryById(ticketId, {
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: DEFAULT_TICKET_HISTORY_SORT,
+      });
+
+      setTicketHistory(response.content);
+      setTotalElements(response.totalElements);
+    } catch (error) {
+      logger.error("Failed to load ticket history", error, {
+        component: "TicketHistoryContent",
+        action: "fetchTicketHistory",
+        ticketId,
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId, paginationModel.page, paginationModel.pageSize, t]);
+
   useEffect(() => {
     const loadTicketHistory = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllTicketHistoryById(ticketId, {
-          page: paginationModel.page,
-          size: paginationModel.pageSize,
-          sort: DEFAULT_TICKET_HISTORY_SORT,
-        });
-
-        setTicketHistory(response.content);
-        setTotalElements(response.totalElements);
-      } catch (error) {
-        logger.error("Failed to load ticket history", error, {
-          component: "TicketHistoryContent",
-          action: "loadTicketHistory",
-          ticketId,
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
-      }
+      await fetchTicketHistory();
     };
 
     loadTicketHistory();
-  }, [ticketId, paginationModel, t]);
+  }, [fetchTicketHistory]);
 
   const columns: GridColDef<TicketHistoryResponse>[] = [
     {

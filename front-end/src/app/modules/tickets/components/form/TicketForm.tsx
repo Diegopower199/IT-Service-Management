@@ -176,8 +176,6 @@ export default function TicketForm({
         return;
       }
 
-      setErrorMessage("");
-
       const categoriesLoaded = await fetchCategoriesOptions();
 
       if (!categoriesLoaded) {

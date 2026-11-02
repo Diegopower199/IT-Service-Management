@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -82,45 +82,49 @@ export default function StatusesContent() {
 
   const [statusesUpdated, setStatusesUpdated] = useState(false);
 
+  const fetchStatuses = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response = await getAllStatuses();
+
+      setStatuses(response);
+      setErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load statuses", error, {
+        component: "StatusesContent",
+        action: "fetchStatuses",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    if (user.role !== USER_ROLES.ADMIN) {
-      router.replace("/403");
-      return;
-    }
-
     const loadStatuses = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllStatuses();
-
-        setStatuses(response);
-      } catch (error) {
-        logger.error("Failed to load statuses", error, {
-          component: "StatusesContent",
-          action: "loadStatuses",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      if (user.role !== USER_ROLES.ADMIN) {
+        router.replace("/403");
+        return;
+      }
+
+      await fetchStatuses();
     };
 
     loadStatuses();
-  }, [isAuthReady, user, router, statusesUpdated, t]);
+  }, [isAuthReady, user, router, statusesUpdated, fetchStatuses]);
 
   const getStatusDisplayName = (statusName: string) => {
     if (tStatuses.has(statusName)) {

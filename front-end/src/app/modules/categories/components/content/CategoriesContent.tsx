@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -78,45 +78,49 @@ export default function CategoriesContent() {
 
   const [categoriesUpdated, setCategoriesUpdated] = useState(false);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const response = await getAllCategories();
+
+      setCategories(response);
+      setErrorMessage("");
+    } catch (error) {
+      logger.error("Failed to load categories", error, {
+        component: "CategoriesContent",
+        action: "fetchCategories",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("loadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
-    if (user.role !== USER_ROLES.ADMIN) {
-      router.replace("/403");
-      return;
-    }
-
     const loadCategories = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        const response = await getAllCategories();
-
-        setCategories(response);
-      } catch (error) {
-        logger.error("Failed to load categories", error, {
-          component: "CategoriesContent",
-          action: "loadCategories",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      if (user.role !== USER_ROLES.ADMIN) {
+        router.replace("/403");
+        return;
+      }
+
+      await fetchCategories();
     };
 
     loadCategories();
-  }, [isAuthReady, user, router, categoriesUpdated, t]);
+  }, [isAuthReady, user, router, categoriesUpdated, fetchCategories]);
 
   const handleCreateCategory = () => {
     setSelectedCategory(null);

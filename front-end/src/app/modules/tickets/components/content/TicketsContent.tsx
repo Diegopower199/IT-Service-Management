@@ -174,6 +174,70 @@ export default function TicketsContent() {
     }
   }, [t]);
 
+  const fetchTickets = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      let response;
+
+      if (isAdmin) {
+        response = await getAllTickets({
+          page: paginationModel.page,
+          size: paginationModel.pageSize,
+          sort: DEFAULT_TICKET_SORT,
+          title: titleFilter,
+          status: statusFilter,
+          priority: priorityFilter,
+          category: categoryFilter,
+        });
+      } else if (isTechnician) {
+        response = await getAssignedTickets({
+          page: paginationModel.page,
+          size: paginationModel.pageSize,
+          sort: DEFAULT_TICKET_SORT,
+          title: titleFilter,
+          status: statusFilter,
+          priority: priorityFilter,
+          category: categoryFilter,
+        });
+      } else {
+        response = await getOwnTickets({
+          page: paginationModel.page,
+          size: paginationModel.pageSize,
+          sort: DEFAULT_TICKET_SORT,
+          title: titleFilter,
+          status: statusFilter,
+          priority: priorityFilter,
+          category: categoryFilter,
+        });
+      }
+
+      setTickets(response.content);
+      setTotalElements(response.totalElements);
+    } catch (error) {
+      logger.error("Failed to load tickets", error, {
+        component: "TicketsContent",
+        action: "fetchTickets",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("ticketsLoadError"));
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    isAdmin,
+    isTechnician,
+    paginationModel,
+    titleFilter,
+    statusFilter,
+    priorityFilter,
+    categoryFilter,
+    t,
+  ]);
+
   useEffect(() => {
     const fetchFilterOptions = async () => {
       if (!isAuthReady || !user) {
@@ -212,85 +276,21 @@ export default function TicketsContent() {
   ]);
 
   useEffect(() => {
-    if (!isAuthReady) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-
     const loadTickets = async () => {
-      try {
-        setLoading(true);
-        setErrorMessage("");
-
-        let response;
-
-        if (isAdmin) {
-          response = await getAllTickets({
-            page: paginationModel.page,
-            size: paginationModel.pageSize,
-            sort: DEFAULT_TICKET_SORT,
-            title: titleFilter,
-            status: statusFilter,
-            priority: priorityFilter,
-            category: categoryFilter,
-          });
-        } else if (isTechnician) {
-          response = await getAssignedTickets({
-            page: paginationModel.page,
-            size: paginationModel.pageSize,
-            sort: DEFAULT_TICKET_SORT,
-            title: titleFilter,
-            status: statusFilter,
-            priority: priorityFilter,
-            category: categoryFilter,
-          });
-        } else {
-          response = await getOwnTickets({
-            page: paginationModel.page,
-            size: paginationModel.pageSize,
-            sort: DEFAULT_TICKET_SORT,
-            title: titleFilter,
-            status: statusFilter,
-            priority: priorityFilter,
-            category: categoryFilter,
-          });
-        }
-
-        setTickets(response.content);
-        setTotalElements(response.totalElements);
-      } catch (error) {
-        logger.error("Failed to load tickets", error, {
-          component: "TicketsContent",
-          action: "loadTickets",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("ticketsLoadError"));
-      } finally {
-        setLoading(false);
+      if (!isAuthReady) {
+        return;
       }
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
+      await fetchTickets();
     };
 
     loadTickets();
-  }, [
-    isAuthReady,
-    user,
-    router,
-    paginationModel,
-    ticketsUpdated,
-    titleFilter,
-    statusFilter,
-    priorityFilter,
-    categoryFilter,
-    isAdmin,
-    isTechnician,
-    t,
-  ]);
+  }, [isAuthReady, user, router, ticketsUpdated, fetchTickets]);
 
   const getStatusDisplayName = (statusName: string) => {
     if (tStatuses.has(statusName)) {

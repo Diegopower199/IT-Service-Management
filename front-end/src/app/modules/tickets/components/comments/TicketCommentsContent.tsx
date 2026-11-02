@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+
 import dayjs from "dayjs";
 
 import {
@@ -78,37 +79,49 @@ export default function TicketCommentsContent({
   const canCreateInternalComment =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TECHNICIAN;
 
+  const fetchTicketComments = useCallback(async (): Promise<boolean> => {
+    try {
+      setLoading(true);
+
+      const response = await getAllTicketsCommentsById(ticketId, {
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: DEFAULT_TICKET_COMMENTS_SORT,
+      });
+
+      setTicketComments(response.content);
+      setTotalElements(response.totalElements);
+      setLoadErrorMessage("");
+
+      return true;
+    } catch (error) {
+      logger.error("Failed to load ticket comments", error, {
+        component: "TicketCommentsContent",
+        action: "fetchTicketComments",
+        ticketId,
+      });
+
+      const apiError = getApiError(error);
+
+      setLoadErrorMessage(apiError?.message ?? t("loadError"));
+
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId, paginationModel.page, paginationModel.pageSize, t]);
+
   useEffect(() => {
     const loadTicketComments = async () => {
-      try {
-        setLoading(true);
-        setLoadErrorMessage("");
+      const commentsLoaded = await fetchTicketComments();
 
-        const response = await getAllTicketsCommentsById(ticketId, {
-          page: paginationModel.page,
-          size: paginationModel.pageSize,
-          sort: DEFAULT_TICKET_COMMENTS_SORT,
-        });
-
-        setTicketComments(response.content);
-        setTotalElements(response.totalElements);
-      } catch (error) {
-        logger.error("Failed to load ticket comments", error, {
-          component: "TicketCommentsContent",
-          action: "loadTicketComments",
-          ticketId,
-        });
-
-        const apiError = getApiError(error);
-
-        setLoadErrorMessage(apiError?.message ?? t("loadError"));
-      } finally {
-        setLoading(false);
+      if (!commentsLoaded) {
+        return;
       }
     };
 
     loadTicketComments();
-  }, [ticketId, paginationModel, t]);
+  }, [fetchTicketComments]);
 
   const handlePageChange = (newPage: number) => {
     setPaginationModel({
@@ -185,26 +198,7 @@ export default function TicketCommentsContent({
           pageSize: paginationModel.pageSize,
         });
       } else {
-        try {
-          const response = await getAllTicketsCommentsById(ticketId, {
-            page: lastPage,
-            size: paginationModel.pageSize,
-            sort: DEFAULT_TICKET_COMMENTS_SORT,
-          });
-
-          setTicketComments(response.content);
-          setTotalElements(response.totalElements);
-        } catch (error) {
-          logger.error("Failed to reload ticket comments", error, {
-            component: "TicketCommentsContent",
-            action: "reloadTicketComments",
-            ticketId,
-          });
-
-          const apiError = getApiError(error);
-
-          setLoadErrorMessage(apiError?.message ?? t("reloadError"));
-        }
+        await fetchTicketComments();
       }
     } catch (error) {
       const apiError = getApiError(error);
