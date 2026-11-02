@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -21,8 +21,9 @@ import dayjs from "dayjs";
 import { useAuth } from "@/hooks/useAuth";
 
 import type { TicketFilters, TicketResponse } from "@/types/ticketTypes";
-
 import type { CategoryResponse } from "@/types/categoryTypes";
+import type { StatusResponse } from "@/types/statusTypes";
+import type { PriorityResponse } from "@/types/priorityTypes";
 
 import { USER_ROLES } from "@/types/roleTypes";
 
@@ -57,11 +58,13 @@ import PageLoading from "@/components/ui/PageLoading";
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 import { getAllActiveCategories } from "@/app/modules/categories/services/categoryService";
-import { StatusResponse } from "@/types/statusTypes";
-import { PriorityResponse } from "@/types/priorityTypes";
 
 export default function TicketsContent() {
   const { user, isAuthReady } = useAuth();
+
+  const isTechnician = user?.role === USER_ROLES.TECHNICIAN;
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isUser = user?.role === USER_ROLES.USER;
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -81,10 +84,6 @@ export default function TicketsContent() {
     priority: priorityFilter,
     category: categoryFilter,
   };
-
-  const isTechnician = user?.role === USER_ROLES.TECHNICIAN;
-  const isAdmin = user?.role === USER_ROLES.ADMIN;
-  const isUser = user?.role === USER_ROLES.USER;
 
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -112,66 +111,105 @@ export default function TicketsContent() {
     pageSize: DEFAULT_PAGE_SIZE,
   });
 
-  useEffect(() => {
-    if (!isAuthReady || !user) {
-      return;
+  const fetchStatuses = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await getAllActiveStatuses();
+
+      setStatuses(response);
+
+      return true;
+    } catch (error) {
+      logger.error("Failed to load statuses", error, {
+        component: "TicketsContent",
+        action: "fetchStatuses",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("statusesLoadError"));
+
+      return false;
     }
+  }, [t]);
 
-    const loadStatuses = async () => {
-      try {
-        const response = await getAllActiveStatuses();
+  const fetchPriorities = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await getAllActivePriorities();
 
-        setStatuses(response);
-      } catch (error) {
-        logger.error("Failed to load statuses", error, {
-          component: "TicketsContent",
-          action: "loadStatuses",
-        });
+      setPriorities(response);
 
-        const apiError = getApiError(error);
+      return true;
+    } catch (error) {
+      logger.error("Failed to load priorities", error, {
+        component: "TicketsContent",
+        action: "fetchPriorities",
+      });
 
-        setErrorMessage(apiError?.message ?? t("statusesLoadError"));
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("prioritiesLoadError"));
+
+      return false;
+    }
+  }, [t]);
+
+  const fetchCategories = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await getAllActiveCategories();
+
+      setCategories(response);
+
+      return true;
+    } catch (error) {
+      logger.error("Failed to load categories", error, {
+        component: "TicketsContent",
+        action: "fetchCategories",
+      });
+
+      const apiError = getApiError(error);
+
+      setErrorMessage(apiError?.message ?? t("categoriesLoadError"));
+
+      return false;
+    }
+  }, [t]);
+
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      if (!isAuthReady || !user) {
+        return;
+      }
+
+      const categoriesLoaded = await fetchCategories();
+
+      if (!categoriesLoaded) {
+        return;
+      }
+
+      if (!isUser) {
+        const statusesLoaded = await fetchStatuses();
+
+        if (!statusesLoaded) {
+          return;
+        }
+
+        const prioritiesLoaded = await fetchPriorities();
+
+        if (!prioritiesLoaded) {
+          return;
+        }
       }
     };
 
-    const loadPriorities = async () => {
-      try {
-        const response = await getAllActivePriorities();
-
-        setPriorities(response);
-      } catch (error) {
-        logger.error("Failed to load priorities", error, {
-          component: "TicketsContent",
-          action: "loadPriorities",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("prioritiesLoadError"));
-      }
-    };
-
-    const loadCategories = async () => {
-      try {
-        const response = await getAllActiveCategories();
-
-        setCategories(response);
-      } catch (error) {
-        logger.error("Failed to load categories", error, {
-          component: "TicketsContent",
-          action: "loadCategories",
-        });
-
-        const apiError = getApiError(error);
-
-        setErrorMessage(apiError?.message ?? t("categoriesLoadError"));
-      }
-    };
-
-    loadStatuses();
-    loadPriorities();
-    loadCategories();
-  }, [isAuthReady, user, t]);
+    fetchFilterOptions();
+  }, [
+    isAuthReady,
+    user,
+    isUser,
+    fetchCategories,
+    fetchStatuses,
+    fetchPriorities,
+  ]);
 
   useEffect(() => {
     if (!isAuthReady) {
@@ -251,7 +289,6 @@ export default function TicketsContent() {
     categoryFilter,
     isAdmin,
     isTechnician,
-    isUser,
     t,
   ]);
 
@@ -500,7 +537,7 @@ export default function TicketsContent() {
       <h1>
         {isAdmin
           ? t("allTickets")
-          : user.role === USER_ROLES.TECHNICIAN
+          : isTechnician
             ? t("assignedTickets")
             : t("myTickets")}
       </h1>
