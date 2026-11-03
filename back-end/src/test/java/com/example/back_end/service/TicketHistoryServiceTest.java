@@ -1,15 +1,17 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,18 +19,24 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.example.back_end.dtos.ticketHistory.TicketHistoryResponse;
+import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.enums.TicketHistoryAction;
-import com.example.back_end.model.DepartmentModel;
+import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.TicketHistoryModel;
 import com.example.back_end.model.TicketModel;
 import com.example.back_end.model.UserModel;
 import com.example.back_end.repository.TicketHistoryRepository;
+import com.example.back_end.repository.TicketRepository;
+import com.example.back_end.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class TicketHistoryServiceTest {
@@ -36,297 +44,399 @@ class TicketHistoryServiceTest {
     @Mock
     private TicketHistoryRepository ticketHistoryRepository;
 
+    @Mock
+    private TicketRepository ticketRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private Pageable pageable;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private TicketModel ticket;
+
+    @Mock
+    private UserModel currentUser;
+
+    @Mock
+    private UserModel createdBy;
+
+    @Mock
+    private UserModel requestedFor;
+
+    @Mock
+    private RoleModel role;
+
     @InjectMocks
     private TicketHistoryService ticketHistoryService;
 
-    // =========================================================
-    // GET ALL HISTORY
-    // =========================================================
-    // =========================================================
-    // GET ALL HISTORY
-    // =========================================================
-
-    @Test
-    void shouldReturnAllHistory() {
-
-        RoleModel adminRole = new RoleModel(
-                1L,
-                "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel user = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketHistoryModel history1 = new TicketHistoryModel();
-        history1.setIdHistory(1L);
-        history1.setTicket(ticket);
-        history1.setUser(user);
-        history1.setAction(TicketHistoryAction.TICKET_CREATED);
-        history1.setFieldName(null);
-        history1.setOldValue(null);
-        history1.setNewValue(null);
-        history1.setCreatedAt(now);
-
-        TicketHistoryModel history2 = new TicketHistoryModel();
-        history2.setIdHistory(2L);
-        history2.setTicket(ticket);
-        history2.setUser(user);
-        history2.setAction(TicketHistoryAction.STATUS_CHANGED);
-        history2.setFieldName("status");
-        history2.setOldValue("OPEN");
-        history2.setNewValue("IN_PROGRESS");
-        history2.setCreatedAt(now);
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<TicketHistoryModel> historyPage = new PageImpl<>(
-                List.of(
-                        history1,
-                        history2),
-                pageable,
-                2);
-
-        when(ticketHistoryRepository.findAll(pageable))
-                .thenReturn(historyPage);
-
-        Page<TicketHistoryResponse> response = ticketHistoryService.getAllHistory(pageable);
-
-        assertEquals(
-                2,
-                response.getTotalElements());
-
-        assertEquals(
-                2,
-                response.getContent().size());
-
-        assertEquals(
-                1L,
-                response.getContent()
-                        .get(0)
-                        .getIdHistory());
-
-        assertEquals(
-                1L,
-                response.getContent()
-                        .get(0)
-                        .getTicketId());
-
-        assertEquals(
-                "admin",
-                response.getContent()
-                        .get(0)
-                        .getUser()
-                        .getUsername());
-
-        assertEquals(
-                TicketHistoryAction.TICKET_CREATED,
-                response.getContent()
-                        .get(0)
-                        .getAction());
-
-        assertNull(
-                response.getContent()
-                        .get(0)
-                        .getFieldName());
-
-        assertEquals(
-                TicketHistoryAction.STATUS_CHANGED,
-                response.getContent()
-                        .get(1)
-                        .getAction());
-
-        assertEquals(
-                "status",
-                response.getContent()
-                        .get(1)
-                        .getFieldName());
-
-        assertEquals(
-                "OPEN",
-                response.getContent()
-                        .get(1)
-                        .getOldValue());
-
-        assertEquals(
-                "IN_PROGRESS",
-                response.getContent()
-                        .get(1)
-                        .getNewValue());
-
-        verify(ticketHistoryRepository)
-                .findAll(pageable);
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
-    void shouldReturnEmptyPageWhenNoHistoryExists() {
+    void getAllHistoryShouldReturnHistoryPage() {
 
-        Pageable pageable = PageRequest.of(0, 10);
-
-        when(ticketHistoryRepository.findAll(pageable))
-                .thenReturn(Page.empty(pageable));
-
-        Page<TicketHistoryResponse> response = ticketHistoryService.getAllHistory(pageable);
-
-        assertTrue(response.isEmpty());
-
-        assertEquals(
-                0,
-                response.getTotalElements());
-
-        verify(ticketHistoryRepository)
-                .findAll(pageable);
-    }
-
-    // =========================================================
-    // CREATE HISTORY
-    // =========================================================
-    @Test
-    void shouldCreateHistorySuccessfully() {
-
-        RoleModel adminRole = new RoleModel(
+        TicketHistoryModel history = createHistory(
                 1L,
-                "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-
-        when(ticketHistoryRepository
-                .save(any(TicketHistoryModel.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        ticketHistoryService.createHistory(
-                ticket,
-                admin,
                 TicketHistoryAction.STATUS_CHANGED,
                 "status",
                 "OPEN",
                 "IN_PROGRESS");
 
-        ArgumentCaptor<TicketHistoryModel> captor = ArgumentCaptor.forClass(
-                TicketHistoryModel.class);
+        Page<TicketHistoryModel> historyPage = new PageImpl<>(List.of(history));
+
+        when(ticketHistoryRepository.findAll(pageable))
+                .thenReturn(historyPage);
+
+        Page<TicketHistoryResponse> result = ticketHistoryService.getAllHistory(pageable);
+
+        assertThat(result.getContent())
+                .hasSize(1);
+
+        TicketHistoryResponse expected = new TicketHistoryResponse(
+                1L,
+                10L,
+                new UserSummaryResponse(
+                        1L,
+                        "john"),
+                TicketHistoryAction.STATUS_CHANGED,
+                "status",
+                "OPEN",
+                "IN_PROGRESS",
+                history.getCreatedAt());
+
+        assertThat(result.getContent().get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(expected);
 
         verify(ticketHistoryRepository)
-                .save(captor.capture());
-
-        TicketHistoryModel savedHistory = captor.getValue();
-
-        assertEquals(
-                ticket,
-                savedHistory.getTicket());
-
-        assertEquals(
-                admin,
-                savedHistory.getUser());
-
-        assertEquals(
-                TicketHistoryAction.STATUS_CHANGED,
-                savedHistory.getAction());
-
-        assertEquals(
-                "status",
-                savedHistory.getFieldName());
-
-        assertEquals(
-                "OPEN",
-                savedHistory.getOldValue());
-
-        assertEquals(
-                "IN_PROGRESS",
-                savedHistory.getNewValue());
-
-        assertTrue(
-                savedHistory.getCreatedAt() != null);
+                .findAll(pageable);
     }
 
     @Test
-    void shouldCreateTicketCreatedHistory() {
+    void getHistoryByTicketIdShouldReturnHistoryForUserWhoCreatedTicket() {
 
-        RoleModel userRole = new RoleModel(
-                3L,
+        Long ticketId = 10L;
+
+        configureAuthenticatedUser(
+                "john",
                 "USER");
 
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
+        when(currentUser.getIdUser())
+                .thenReturn(1L);
 
-        UserModel user = new UserModel(
+        configureTicketAccess(
                 1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
+                2L);
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
+        TicketHistoryModel history = createHistory(
+                1L,
+                TicketHistoryAction.STATUS_CHANGED,
+                "status",
+                "OPEN",
+                "IN_PROGRESS");
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(ticketHistoryRepository.findByTicket(
+                ticket,
+                pageable))
+                .thenReturn(
+                        new PageImpl<>(
+                                List.of(history)));
+
+        Page<TicketHistoryResponse> result = ticketHistoryService.getHistoryByTicketId(
+                ticketId,
+                pageable);
+
+        assertThat(result.getContent())
+                .hasSize(1);
+
+        verify(ticketHistoryRepository)
+                .findByTicket(
+                        ticket,
+                        pageable);
+    }
+
+    @Test
+    void getHistoryByTicketIdShouldReturnHistoryForRequestedUser() {
+
+        Long ticketId = 10L;
+
+        configureAuthenticatedUser(
+                "john",
+                "USER");
+
+        when(currentUser.getIdUser())
+                .thenReturn(2L);
+
+        configureTicketAccess(
+                1L,
+                2L);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(ticketHistoryRepository.findByTicket(
+                ticket,
+                pageable))
+                .thenReturn(Page.empty());
+
+        Page<TicketHistoryResponse> result = ticketHistoryService.getHistoryByTicketId(
+                ticketId,
+                pageable);
+
+        assertThat(result)
+                .isEmpty();
+
+        verify(ticketHistoryRepository)
+                .findByTicket(
+                        ticket,
+                        pageable);
+    }
+
+    @Test
+    void getHistoryByTicketIdShouldThrowAccessDeniedWhenUserCannotAccessTicket() {
+
+        Long ticketId = 10L;
+
+        configureAuthenticatedUser(
+                "john",
+                "USER");
+
+        when(currentUser.getIdUser())
+                .thenReturn(3L);
+
+        configureTicketAccess(
+                1L,
+                2L);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(
+                () -> ticketHistoryService.getHistoryByTicketId(
+                        ticketId,
+                        pageable))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "You do not have permission to view the history of this ticket");
+
+        verify(ticketHistoryRepository, never())
+                .findByTicket(
+                        any(),
+                        any());
+    }
+
+    @Test
+    void getHistoryByTicketIdShouldReturnHistoryForTechnician() {
+
+        Long ticketId = 10L;
+
+        configureAuthenticatedUser(
+                "technician",
+                "TECHNICIAN");
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(ticketHistoryRepository.findByTicket(
+                ticket,
+                pageable))
+                .thenReturn(Page.empty());
+
+        Page<TicketHistoryResponse> result = ticketHistoryService.getHistoryByTicketId(
+                ticketId,
+                pageable);
+
+        assertThat(result)
+                .isEmpty();
+
+        verify(ticketHistoryRepository)
+                .findByTicket(
+                        ticket,
+                        pageable);
+    }
+
+    @Test
+    void getHistoryByTicketIdShouldThrowExceptionWhenTicketDoesNotExist() {
+
+        Long ticketId = 10L;
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> ticketHistoryService.getHistoryByTicketId(
+                        ticketId,
+                        pageable))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Ticket with id " + ticketId + " not found");
+
+        verify(userRepository, never())
+                .findByUsername(any());
+    }
+
+    @Test
+    void getHistoryByTicketIdShouldThrowExceptionWhenAuthenticatedUserDoesNotExist() {
+
+        Long ticketId = 10L;
+
+        configureAuthentication("unknown");
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(userRepository.findByUsername("unknown"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> ticketHistoryService.getHistoryByTicketId(
+                        ticketId,
+                        pageable))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "User with username 'unknown' not found");
+
+        verify(ticketHistoryRepository, never())
+                .findByTicket(
+                        any(),
+                        any());
+    }
+
+    @Test
+    void createHistoryShouldCreateAndSaveHistory() {
+
+        TicketHistoryAction action = TicketHistoryAction.STATUS_CHANGED;
+
+        String fieldName = "status";
+        String oldValue = "OPEN";
+        String newValue = "IN_PROGRESS";
+
+        LocalDateTime beforeCreation = LocalDateTime.now();
 
         ticketHistoryService.createHistory(
                 ticket,
-                user,
-                TicketHistoryAction.TICKET_CREATED,
-                null,
-                null,
-                null);
+                currentUser,
+                action,
+                fieldName,
+                oldValue,
+                newValue);
 
-        ArgumentCaptor<TicketHistoryModel> captor = ArgumentCaptor.forClass(
+        LocalDateTime afterCreation = LocalDateTime.now();
+
+        ArgumentCaptor<TicketHistoryModel> historyCaptor = ArgumentCaptor.forClass(
                 TicketHistoryModel.class);
 
         verify(ticketHistoryRepository)
-                .save(captor.capture());
+                .save(historyCaptor.capture());
 
-        TicketHistoryModel savedHistory = captor.getValue();
+        TicketHistoryModel savedHistory = historyCaptor.getValue();
 
-        assertEquals(
-                TicketHistoryAction.TICKET_CREATED,
-                savedHistory.getAction());
+        assertThat(savedHistory.getTicket())
+                .isSameAs(ticket);
 
-        assertNull(
-                savedHistory.getFieldName());
+        assertThat(savedHistory.getUser())
+                .isSameAs(currentUser);
 
-        assertNull(
-                savedHistory.getOldValue());
+        assertThat(savedHistory.getAction())
+                .isEqualTo(action);
 
-        assertNull(
-                savedHistory.getNewValue());
+        assertThat(savedHistory.getFieldName())
+                .isEqualTo(fieldName);
 
-        assertTrue(
-                savedHistory.getCreatedAt() != null);
+        assertThat(savedHistory.getOldValue())
+                .isEqualTo(oldValue);
+
+        assertThat(savedHistory.getNewValue())
+                .isEqualTo(newValue);
+
+        assertThat(savedHistory.getCreatedAt())
+                .isBetween(
+                        beforeCreation,
+                        afterCreation);
+    }
+
+    private void configureAuthentication(
+            String username) {
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+
+        when(authentication.getName())
+                .thenReturn(username);
+
+        context.setAuthentication(authentication);
+
+        SecurityContextHolder.setContext(context);
+    }
+
+    private void configureAuthenticatedUser(
+            String username,
+            String roleName) {
+
+        configureAuthentication(username);
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(currentUser));
+
+        when(currentUser.getRole())
+                .thenReturn(role);
+
+        when(role.getName())
+                .thenReturn(roleName);
+    }
+
+    private void configureTicketAccess(
+            Long createdById,
+            Long requestedForId) {
+
+        when(ticket.getCreatedBy())
+                .thenReturn(createdBy);
+
+        when(ticket.getRequestedFor())
+                .thenReturn(requestedFor);
+
+        when(createdBy.getIdUser())
+                .thenReturn(createdById);
+
+        when(requestedFor.getIdUser())
+                .thenReturn(requestedForId);
+    }
+
+    private TicketHistoryModel createHistory(
+            Long historyId,
+            TicketHistoryAction action,
+            String fieldName,
+            String oldValue,
+            String newValue) {
+
+        UserModel historyUser = new UserModel();
+        historyUser.setIdUser(1L);
+        historyUser.setUsername("john");
+
+        TicketModel historyTicket = new TicketModel();
+        historyTicket.setIdTicket(10L);
+
+        TicketHistoryModel history = new TicketHistoryModel();
+
+        history.setIdHistory(historyId);
+        history.setTicket(historyTicket);
+        history.setUser(historyUser);
+        history.setAction(action);
+        history.setFieldName(fieldName);
+        history.setOldValue(oldValue);
+        history.setNewValue(newValue);
+        history.setCreatedAt(
+                LocalDateTime.now());
+
+        return history;
     }
 }

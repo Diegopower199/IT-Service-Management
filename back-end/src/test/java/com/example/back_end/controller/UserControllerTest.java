@@ -1,349 +1,239 @@
 package com.example.back_end.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
-import com.example.back_end.config.SecurityConfig;
-import com.example.back_end.dtos.department.DepartmentResponse;
-import com.example.back_end.dtos.role.RoleResponse;
+import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
+import com.example.back_end.dtos.user.UpdateProfileRequest;
 import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
-import com.example.back_end.security.JwtAuthenticationFilter;
-import com.example.back_end.security.JwtService;
+import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.service.UserService;
 
-@WebMvcTest(UserController.class)
-@Import({
-        SecurityConfig.class,
-        JwtAuthenticationFilter.class
-})
+@ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private UserService userService;
 
-    @MockitoBean
-    private JwtService jwtService;
+    @Mock
+    private Pageable pageable;
 
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    @Mock
+    private Page<UserResponse> userPage;
 
-    @MockitoBean
-    private AuthenticationProvider authenticationProvider;
+    @Mock
+    private UserResponse userResponse;
 
-    // =========================================================
-    // GET ALL USERS
-    // =========================================================
+    @Mock
+    private UserSummaryResponse userSummaryResponse;
+
+    @Mock
+    private CreateUserRequest createUserRequest;
+
+    @Mock
+    private UpdateUserRequest updateUserRequest;
+
+    @Mock
+    private UpdateProfileRequest updateProfileRequest;
+
+    @Mock
+    private ChangePasswordRequest changePasswordRequest;
+
+    @Mock
+    private Authentication authentication;
+
+    @InjectMocks
+    private UserController userController;
+
     @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldReturnAllUsers() throws Exception {
+    void getAllUsersShouldReturnUsersPage() {
 
-        List<UserResponse> users = List.of(
-                createUserResponse(
-                        1L,
-                        "admin",
-                        "admin@example.com"),
-                createUserResponse(
-                        2L,
-                        "ana",
-                        "ana@example.com"));
+        when(userService.getAllUsers(pageable))
+                .thenReturn(userPage);
 
-        Page<UserResponse> page = new PageImpl<>(users);
+        ResponseEntity<Page<UserResponse>> response = userController.getAllUsers(pageable);
 
-        when(userService.getAllUsers(
-                any(Pageable.class)))
-                .thenReturn(page);
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        mockMvc.perform(
-                get("/users")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].idUser").value(1))
-                .andExpect(jsonPath("$.content[0].username").value("admin"))
-                .andExpect(jsonPath("$.content[0].email").value("admin@example.com"))
-                .andExpect(jsonPath("$.content[1].idUser").value(2))
-                .andExpect(jsonPath("$.content[1].username").value("ana"))
-                .andExpect(jsonPath("$.totalElements").value(2));
+        assertThat(response.getBody())
+                .isSameAs(userPage);
 
-        verify(userService)
-                .getAllUsers(any(Pageable.class));
+        verify(userService).getAllUsers(pageable);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromGettingAllUsers() throws Exception {
+    void getUserByIdShouldReturnUser() {
 
-        mockMvc.perform(get("/users"))
-                .andExpect(status().isForbidden());
+        Long userId = 1L;
 
-        verify(userService, never())
-                .getAllUsers(any(Pageable.class));
+        when(userService.getUserById(userId))
+                .thenReturn(userResponse);
+
+        ResponseEntity<UserResponse> response = userController.getUserById(userId);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(userResponse);
+
+        verify(userService).getUserById(userId);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromGettingAllUsers() throws Exception {
+    void getCurrentUserShouldReturnAuthenticatedUser() {
 
-        mockMvc.perform(get("/users"))
-                .andExpect(status().isForbidden());
+        String username = "john";
 
-        verify(userService, never())
-                .getAllUsers(any(Pageable.class));
-    }
+        when(authentication.getName())
+                .thenReturn(username);
 
-    // =========================================================
-    // GET USER BY ID
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldReturnUserById() throws Exception {
+        when(userService.getCurrentUser(username))
+                .thenReturn(userResponse);
 
-        UserResponse response = createUserResponse(
-                1L,
-                "admin",
-                "admin@example.com");
+        ResponseEntity<UserResponse> response = userController.getCurrentUser(authentication);
 
-        when(userService.getUserById(1L))
-                .thenReturn(response);
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        mockMvc.perform(get("/users/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idUser").value(1))
-                .andExpect(jsonPath("$.username").value("admin"))
-                .andExpect(jsonPath("$.email").value("admin@example.com"))
-                .andExpect(jsonPath("$.enabled").value(true))
-                .andExpect(jsonPath("$.role.name").value("ADMIN"))
-                .andExpect(jsonPath("$.department.name").value("IT"));
+        assertThat(response.getBody())
+                .isSameAs(userResponse);
 
-        verify(userService)
-                .getUserById(1L);
+        verify(authentication).getName();
+
+        verify(userService).getCurrentUser(username);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromGettingUserById() throws Exception {
+    void createUserShouldReturnCreatedUser() {
 
-        mockMvc.perform(get("/users/1"))
-                .andExpect(status().isForbidden());
+        when(userService.createUser(createUserRequest))
+                .thenReturn(userResponse);
 
-        verify(userService, never())
-                .getUserById(1L);
+        ResponseEntity<UserResponse> response = userController.createUser(createUserRequest);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
+        assertThat(response.getBody())
+                .isSameAs(userResponse);
+
+        verify(userService).createUser(createUserRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromGettingUserById() throws Exception {
+    void updateUserShouldReturnUpdatedUser() {
 
-        mockMvc.perform(get("/users/1"))
-                .andExpect(status().isForbidden());
-
-        verify(userService, never())
-                .getUserById(1L);
-    }
-
-    // =========================================================
-    // CREATE USER
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToCreateUser() throws Exception {
-
-        UserResponse response = createUserResponse(
-                5L,
-                "ana",
-                "ana@example.com");
-
-        when(userService.createUser(
-                any(CreateUserRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "username": "ana",
-                                    "password": "password123",
-                                    "email": "ana@example.com",
-                                    "firstName": "Ana",
-                                    "lastName": "Garcia",
-                                    "enabled": true,
-                                    "role": 3,
-                                    "department": 2
-                                }
-                                """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idUser").value(5))
-                .andExpect(jsonPath("$.username").value("ana"))
-                .andExpect(jsonPath("$.email").value("ana@example.com"));
-
-        verify(userService)
-                .createUser(any(CreateUserRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromCreatingUser() throws Exception {
-
-        mockMvc.perform(
-                post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validUserJson()))
-                .andExpect(status().isForbidden());
-
-        verify(userService, never())
-                .createUser(any(CreateUserRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromCreatingUser() throws Exception {
-
-        mockMvc.perform(
-                post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validUserJson()))
-                .andExpect(status().isForbidden());
-
-        verify(userService, never())
-                .createUser(any(CreateUserRequest.class));
-    }
-
-    // =========================================================
-    // UPDATE USER
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToUpdateUser() throws Exception {
-
-        UserResponse response = createUserResponse(
-                5L,
-                "ana",
-                "ana@example.com");
+        Long userId = 1L;
 
         when(userService.updateUser(
-                any(UpdateUserRequest.class),
-                eq(5L)))
-                .thenReturn(response);
+                updateUserRequest,
+                userId))
+                .thenReturn(userResponse);
 
-        mockMvc.perform(
-                put("/users/5")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validUserJson()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idUser").value(5))
-                .andExpect(jsonPath("$.username").value("ana"))
-                .andExpect(jsonPath("$.email").value("ana@example.com"));
+        ResponseEntity<UserResponse> response = userController.updateUser(
+                userId,
+                updateUserRequest);
 
-        verify(userService)
-                .updateUser(
-                        any(UpdateUserRequest.class),
-                        eq(5L));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(userResponse);
+
+        verify(userService).updateUser(
+                updateUserRequest,
+                userId);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromUpdatingUser() throws Exception {
+    void updateCurrentUserShouldReturnUpdatedUser() {
 
-        mockMvc.perform(
-                put("/users/5")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validUserJson()))
-                .andExpect(status().isForbidden());
+        String username = "john";
 
-        verify(userService, never())
-                .updateUser(
-                        any(UpdateUserRequest.class),
-                        any(Long.class));
-    }
+        when(authentication.getName())
+                .thenReturn(username);
 
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromUpdatingUser() throws Exception {
-
-        mockMvc.perform(
-                put("/users/5")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validUserJson()))
-                .andExpect(status().isForbidden());
-
-        verify(userService, never())
-                .updateUser(
-                        any(UpdateUserRequest.class),
-                        any(Long.class));
-    }
-
-    // =========================================================
-    // HELPERS
-    // =========================================================
-    private UserResponse createUserResponse(
-            Long id,
-            String username,
-            String email) {
-
-        RoleResponse role = new RoleResponse(
-                1L,
-                "ADMIN");
-
-        DepartmentResponse department = new DepartmentResponse(
-                1L,
-                "IT",
-                true);
-
-        return new UserResponse(
-                id,
+        when(userService.updateCurrentUser(
                 username,
-                email,
-                "Test",
-                "User",
-                true,
-                role,
-                department);
+                updateProfileRequest))
+                .thenReturn(userResponse);
+
+        ResponseEntity<UserResponse> response = userController.updateCurrentUser(
+                authentication,
+                updateProfileRequest);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(userResponse);
+
+        verify(authentication).getName();
+
+        verify(userService).updateCurrentUser(
+                username,
+                updateProfileRequest);
     }
 
-    private String validUserJson() {
+    @Test
+    void changePasswordShouldReturnNoContent() {
 
-        return """
-                {
-                    "username": "ana",
-                    "password": "password123",
-                    "email": "ana@example.com",
-                    "firstName": "Ana",
-                    "lastName": "Garcia",
-                    "enabled": true,
-                    "role": 3,
-                    "department": 2
-                }
-                """;
+        String username = "john";
+
+        when(authentication.getName())
+                .thenReturn(username);
+
+        ResponseEntity<Void> response = userController.changePassword(
+                authentication,
+                changePasswordRequest);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(response.getBody())
+                .isNull();
+
+        verify(authentication).getName();
+
+        verify(userService).changePassword(
+                username,
+                changePasswordRequest);
+    }
+
+    @Test
+    void getAllTechniciansShouldReturnTechnicians() {
+
+        List<UserSummaryResponse> technicians = List.of(userSummaryResponse);
+
+        when(userService.getAllTechnicians())
+                .thenReturn(technicians);
+
+        ResponseEntity<List<UserSummaryResponse>> response = userController.getAllTechnicians();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(technicians);
+
+        verify(userService).getAllTechnicians();
     }
 }

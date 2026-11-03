@@ -1,129 +1,215 @@
 package com.example.back_end.controller;
 
-
-import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.auth.AuthLoginResponse;
 import com.example.back_end.dtos.auth.AuthLoginResult;
 import com.example.back_end.dtos.auth.LoginRequest;
-import com.example.back_end.security.JwtAuthenticationEntryPoint;
-import com.example.back_end.security.JwtAuthenticationFilter;
-import com.example.back_end.security.JwtService;
+import com.example.back_end.dtos.auth.RefreshTokenResponse;
+import com.example.back_end.dtos.auth.RefreshTokenResult;
 import com.example.back_end.service.AuthService;
 
-@WebMvcTest(
-        value = AuthController.class,
-        properties = {
-                "jwt.refresh-token-expiration-days=7",
-                "app.cookie.secure=false"
-        })
-@Import({
-        SecurityConfig.class,
-        JwtAuthenticationFilter.class
-})
+@ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private AuthService authService;
 
-    @MockitoBean
-    private JwtService jwtService;
+    @Mock
+    private AuthLoginResult authLoginResult;
 
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    @Mock
+    private AuthLoginResponse authLoginResponse;
 
-    @MockitoBean
-    private AuthenticationProvider authenticationProvider;
+    @Mock
+    private RefreshTokenResult refreshTokenResult;
 
-    @MockitoBean
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Mock
+    private RefreshTokenResponse refreshTokenResponse;
 
-    // =========================================================
-    // LOGIN
-    // =========================================================
+    @InjectMocks
+    private AuthController authController;
+
+    @BeforeEach
+    void setUp() {
+
+        ReflectionTestUtils.setField(
+                authController,
+                "refreshTokenExpirationDays",
+                7L);
+
+        ReflectionTestUtils.setField(
+                authController,
+                "cookieSecure",
+                false);
+    }
 
     @Test
-    void shouldLoginSuccessfully()
-            throws Exception {
+    void loginShouldReturnAuthResponseAndRefreshTokenCookie() {
 
-        AuthLoginResponse response =
-                new AuthLoginResponse(
-                        "jwt-token",
-                        1L,
-                        "ana",
-                        "USER");
+        LoginRequest request = new LoginRequest();
 
-        AuthLoginResult result =
-                new AuthLoginResult(
-                        response,
-                        "refresh-token");
+        when(authService.login(request))
+                .thenReturn(authLoginResult);
 
-        when(authService.login(
-                any(LoginRequest.class)))
-                .thenReturn(result);
+        when(authLoginResult.getRefreshToken())
+                .thenReturn("refresh-token");
 
-        mockMvc.perform(
-                post("/api/v1/auth/login")
-                        .servletPath("/api/v1")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "username": "ana",
-                                    "password": "password123"
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.token")
-                                .value("jwt-token"))
-                .andExpect(
-                        jsonPath("$.username")
-                                .value("ana"))
-                .andExpect(
-                        jsonPath("$.role")
-                                .value("USER"))
-                .andExpect(
-                        header().string(
-                                HttpHeaders.SET_COOKIE,
-                                containsString(
-                                        "refreshToken=refresh-token")))
-                .andExpect(
-                        header().string(
-                                HttpHeaders.SET_COOKIE,
-                                containsString(
-                                        "HttpOnly")))
-                .andExpect(
-                        header().string(
-                                HttpHeaders.SET_COOKIE,
-                                containsString(
-                                        "SameSite=Strict")));
+        when(authLoginResult.getAuthLoginResponse())
+                .thenReturn(authLoginResponse);
 
-        verify(authService)
-                .login(
-                        any(LoginRequest.class));
+        ResponseEntity<AuthLoginResponse> response = authController.login(request);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(authLoginResponse);
+
+        String cookie = response.getHeaders()
+                .getFirst(HttpHeaders.SET_COOKIE);
+
+        assertThat(cookie)
+                .isNotNull()
+                .contains("refreshToken=refresh-token")
+                .contains("Path=/api/v1/auth")
+                .contains("Max-Age=604800")
+                .contains("HttpOnly")
+                .contains("SameSite=Strict");
+
+        verify(authService).login(request);
+    }
+
+    @Test
+    void refreshShouldReturnNewAccessTokenAndRotateRefreshTokenCookie() {
+
+        String refreshToken = "old-refresh-token";
+
+        when(authService.refresh(refreshToken))
+                .thenReturn(refreshTokenResult);
+
+        when(refreshTokenResult.getRefreshToken())
+                .thenReturn("new-refresh-token");
+
+        when(refreshTokenResult.getResponse())
+                .thenReturn(refreshTokenResponse);
+
+        ResponseEntity<RefreshTokenResponse> response = authController.refresh(refreshToken);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(refreshTokenResponse);
+
+        String cookie = response.getHeaders()
+                .getFirst(HttpHeaders.SET_COOKIE);
+
+        assertThat(cookie)
+                .isNotNull()
+                .contains("refreshToken=new-refresh-token")
+                .contains("Path=/api/v1/auth")
+                .contains("Max-Age=604800")
+                .contains("HttpOnly")
+                .contains("SameSite=Strict");
+
+        verify(authService).refresh(refreshToken);
+    }
+
+    @Test
+    void logoutShouldRevokeRefreshTokenAndExpireCookie() {
+
+        String refreshToken = "refresh-token";
+
+        ResponseEntity<Void> response = authController.logout(refreshToken);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(response.getBody())
+                .isNull();
+
+        String cookie = response.getHeaders()
+                .getFirst(HttpHeaders.SET_COOKIE);
+
+        assertThat(cookie)
+                .isNotNull()
+                .contains("refreshToken=")
+                .contains("Path=/api/v1/auth")
+                .contains("Max-Age=0")
+                .contains("HttpOnly")
+                .contains("SameSite=Strict");
+
+        verify(authService).logout(refreshToken);
+    }
+
+    @Test
+    void logoutShouldNotRevokeRefreshTokenWhenCookieIsMissing() {
+
+        ResponseEntity<Void> response = authController.logout(null);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(response.getBody())
+                .isNull();
+
+        String cookie = response.getHeaders()
+                .getFirst(HttpHeaders.SET_COOKIE);
+
+        assertThat(cookie)
+                .isNotNull()
+                .contains("refreshToken=")
+                .contains("Path=/api/v1/auth")
+                .contains("Max-Age=0")
+                .contains("HttpOnly")
+                .contains("SameSite=Strict");
+
+        verify(authService, never()).logout(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void loginShouldCreateSecureCookieWhenCookieSecureIsEnabled() {
+
+        ReflectionTestUtils.setField(
+                authController,
+                "cookieSecure",
+                true);
+
+        LoginRequest request = new LoginRequest();
+
+        when(authService.login(request))
+                .thenReturn(authLoginResult);
+
+        when(authLoginResult.getRefreshToken())
+                .thenReturn("refresh-token");
+
+        when(authLoginResult.getAuthLoginResponse())
+                .thenReturn(authLoginResponse);
+
+        ResponseEntity<AuthLoginResponse> response = authController.login(request);
+
+        String cookie = response.getHeaders()
+                .getFirst(HttpHeaders.SET_COOKIE);
+
+        assertThat(cookie)
+                .isNotNull()
+                .contains("Secure");
+
+        verify(authService).login(request);
     }
 }

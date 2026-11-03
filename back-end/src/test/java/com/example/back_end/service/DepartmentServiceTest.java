@@ -1,10 +1,7 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +11,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,325 +24,468 @@ import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.repository.DepartmentRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class DepartmentServiceTest {
+class DepartmentServiceTest {
 
     @Mock
     private DepartmentRepository departmentRepository;
 
+    @Mock
+    private DepartmentRequest departmentRequest;
+
     @InjectMocks
     private DepartmentService departmentService;
 
-    // =========================================================
-    // GET ALL DEPARTMENTS
-    // =========================================================
     @Test
-    void shouldReturnAllDepartments() {
+    void getAllDepartmentsShouldReturnAllDepartments() {
 
-        DepartmentModel department1 = new DepartmentModel(1L, "IT", true);
-
-        DepartmentModel department2 = new DepartmentModel(2L, "Finance", true);
-
-        List<DepartmentModel> departments = List.of(department1, department2);
+        DepartmentModel department = createDepartment(
+                1L,
+                "IT",
+                true);
 
         when(departmentRepository.findAllOrderedById())
-                .thenReturn(departments);
+                .thenReturn(List.of(department));
 
-        List<DepartmentResponse> response = departmentService.getAllDepartments();
+        List<DepartmentResponse> result = departmentService.getAllDepartments();
 
-        assertEquals(2, response.size());
-        assertEquals("IT", response.get(0).getName());
-        assertEquals("Finance", response.get(1).getName());
+        assertThat(result)
+                .hasSize(1);
+
+        assertThat(result.get(0).getIdDepartment())
+                .isEqualTo(1L);
+
+        assertThat(result.get(0).getName())
+                .isEqualTo("IT");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(departmentRepository).findAllOrderedById();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoDepartmentsExist() {
+    void getActiveDepartmentsShouldReturnActiveDepartments() {
 
-        when(departmentRepository.findAllOrderedById())
-                .thenReturn(List.of());
-
-        List<DepartmentResponse> response = departmentService.getAllDepartments();
-
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET ACTIVE DEPARTMENTS
-    // =========================================================
-    @Test
-    void shouldReturnActiveDepartments() {
-
-        DepartmentModel department1 = new DepartmentModel(1L, "IT", true);
-
-        DepartmentModel department2 = new DepartmentModel(2L, "Finance", true);
-
-        List<DepartmentModel> departments = List.of(department1, department2);
+        DepartmentModel department = createDepartment(
+                1L,
+                "IT",
+                true);
 
         when(departmentRepository.findByActiveTrueOrderByIdDepartmentAsc())
-                .thenReturn(departments);
+                .thenReturn(List.of(department));
 
-        List<DepartmentResponse> response = departmentService.getActiveDepartments();
+        List<DepartmentResponse> result = departmentService.getActiveDepartments();
 
-        assertEquals(2, response.size());
+        assertThat(result)
+                .hasSize(1);
 
-        assertEquals("IT", response.get(0).getName());
-        assertEquals("Finance", response.get(1).getName());
+        assertThat(result.get(0).getIdDepartment())
+                .isEqualTo(1L);
 
-        assertTrue(response.get(0).isActive());
-        assertTrue(response.get(1).isActive());
+        assertThat(result.get(0).getName())
+                .isEqualTo("IT");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(departmentRepository)
+                .findByActiveTrueOrderByIdDepartmentAsc();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoActiveDepartmentsExist() {
+    void getDepartmentByIdShouldReturnDepartment() {
 
-        when(departmentRepository.findByActiveTrueOrderByIdDepartmentAsc())
-                .thenReturn(List.of());
+        Long departmentId = 1L;
 
-        List<DepartmentResponse> response = departmentService.getActiveDepartments();
+        DepartmentModel department = createDepartment(
+                departmentId,
+                "IT",
+                true);
 
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET DEPARTMENT BY ID
-    // =========================================================
-    @Test
-    void shouldReturnDepartmentById() {
-
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
-
-        when(departmentRepository.findById(1L))
+        when(departmentRepository.findById(departmentId))
                 .thenReturn(Optional.of(department));
 
-        DepartmentResponse response = departmentService.getDepartmentById(1L);
+        DepartmentResponse result = departmentService.getDepartmentById(departmentId);
 
-        assertEquals(1L, response.getIdDepartment());
-        assertEquals("IT", response.getName());
-        assertTrue(response.isActive());
+        assertThat(result.getIdDepartment())
+                .isEqualTo(departmentId);
+
+        assertThat(result.getName())
+                .isEqualTo("IT");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        verify(departmentRepository)
+                .findById(departmentId);
     }
 
     @Test
-    void shouldThrowExceptionWhenDepartmentByIdDoesNotExist() {
+    void getDepartmentByIdShouldThrowExceptionWhenDepartmentDoesNotExist() {
 
-        when(departmentRepository.findById(99L))
+        Long departmentId = 1L;
+
+        when(departmentRepository.findById(departmentId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> departmentService.getDepartmentById(99L));
+        assertThatThrownBy(
+                () -> departmentService.getDepartmentById(departmentId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Department with id " + departmentId + " not found");
+
+        verify(departmentRepository)
+                .findById(departmentId);
     }
 
-    // =========================================================
-    // CREATE DEPARTMENT
-    // =========================================================
     @Test
-    void shouldCreateDepartmentSuccessfully() {
+    void createDepartmentShouldCreateAndReturnDepartment() {
 
-        DepartmentRequest request = new DepartmentRequest("IT");
-
-        DepartmentModel savedDepartment = new DepartmentModel(1L, "IT", true);
+        when(departmentRequest.getName())
+                .thenReturn("IT");
 
         when(departmentRepository.existsByName("IT"))
                 .thenReturn(false);
 
-        when(departmentRepository.save(any(DepartmentModel.class)))
-                .thenReturn(savedDepartment);
+        when(departmentRepository.save(
+                org.mockito.ArgumentMatchers.any(DepartmentModel.class)))
+                .thenAnswer(invocation -> {
 
-        DepartmentResponse response = departmentService.createDepartment(request);
+                    DepartmentModel department = invocation.getArgument(0);
 
-        assertEquals(1L, response.getIdDepartment());
-        assertEquals("IT", response.getName());
-        assertTrue(response.isActive());
+                    department.setIdDepartment(1L);
+
+                    return department;
+                });
+
+        DepartmentResponse result = departmentService.createDepartment(departmentRequest);
+
+        assertThat(result.getIdDepartment())
+                .isEqualTo(1L);
+
+        assertThat(result.getName())
+                .isEqualTo("IT");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        ArgumentCaptor<DepartmentModel> departmentCaptor = ArgumentCaptor.forClass(DepartmentModel.class);
+
+        verify(departmentRepository)
+                .save(departmentCaptor.capture());
+
+        DepartmentModel savedDepartment = departmentCaptor.getValue();
+
+        assertThat(savedDepartment.getName())
+                .isEqualTo("IT");
+
+        assertThat(savedDepartment.isActive())
+                .isTrue();
 
         verify(departmentRepository)
                 .existsByName("IT");
-
-        verify(departmentRepository)
-                .save(any(DepartmentModel.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenDepartmentAlreadyExists() {
+    void createDepartmentShouldThrowExceptionWhenDepartmentAlreadyExists() {
 
-        DepartmentRequest request = new DepartmentRequest("IT");
+        when(departmentRequest.getName())
+                .thenReturn("IT");
 
         when(departmentRepository.existsByName("IT"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> departmentService.createDepartment(request));
+        assertThatThrownBy(
+                () -> departmentService.createDepartment(departmentRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Department 'IT' already exists");
 
         verify(departmentRepository)
                 .existsByName("IT");
 
         verify(departmentRepository, never())
-                .save(any(DepartmentModel.class));
+                .save(
+                        org.mockito.ArgumentMatchers.any(
+                                DepartmentModel.class));
     }
 
-    // =========================================================
-    // UPDATE DEPARTMENT
-    // =========================================================
     @Test
-    void shouldUpdateDepartmentSuccessfully() {
+    void updateDepartmentShouldUpdateDepartment() {
 
-        DepartmentRequest request = new DepartmentRequest("Finance");
+        Long departmentId = 1L;
 
-        DepartmentModel existingDepartment = new DepartmentModel(1L, "IT", true);
+        DepartmentModel existingDepartment = createDepartment(
+                departmentId,
+                "IT",
+                true);
 
-        DepartmentModel updatedDepartment = new DepartmentModel(1L, "Finance", true);
+        when(departmentRequest.getName())
+                .thenReturn("Finance");
 
-        when(departmentRepository.findById(1L))
+        when(departmentRepository.findById(departmentId))
                 .thenReturn(Optional.of(existingDepartment));
 
         when(departmentRepository.existsByName("Finance"))
                 .thenReturn(false);
 
-        when(departmentRepository.save(any(DepartmentModel.class)))
-                .thenReturn(updatedDepartment);
+        when(departmentRepository.save(existingDepartment))
+                .thenReturn(existingDepartment);
 
-        DepartmentResponse response = departmentService.updateDepartment(1L, request);
+        DepartmentResponse result = departmentService.updateDepartment(
+                departmentId,
+                departmentRequest);
 
-        assertEquals(1L, response.getIdDepartment());
-        assertEquals("Finance", response.getName());
-        assertTrue(response.isActive());
+        assertThat(result.getIdDepartment())
+                .isEqualTo(departmentId);
+
+        assertThat(result.getName())
+                .isEqualTo("Finance");
+
+        assertThat(result.isActive())
+                .isTrue();
 
         verify(departmentRepository)
-                .findById(1L);
+                .findById(departmentId);
 
         verify(departmentRepository)
                 .existsByName("Finance");
 
         verify(departmentRepository)
-                .save(any(DepartmentModel.class));
+                .save(existingDepartment);
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingDepartment() {
+    void updateDepartmentShouldNotCheckDuplicateWhenNameDoesNotChange() {
 
-        DepartmentRequest request = new DepartmentRequest("Finance");
+        Long departmentId = 1L;
 
-        when(departmentRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        DepartmentModel existingDepartment = createDepartment(
+                departmentId,
+                "IT",
+                true);
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> departmentService.updateDepartment(99L, request));
+        when(departmentRequest.getName())
+                .thenReturn("IT");
+
+        when(departmentRepository.findById(departmentId))
+                .thenReturn(Optional.of(existingDepartment));
+
+        when(departmentRepository.save(existingDepartment))
+                .thenReturn(existingDepartment);
+
+        DepartmentResponse result = departmentService.updateDepartment(
+                departmentId,
+                departmentRequest);
+
+        assertThat(result.getName())
+                .isEqualTo("IT");
 
         verify(departmentRepository)
-                .findById(99L);
+                .findById(departmentId);
 
         verify(departmentRepository, never())
-                .save(any(DepartmentModel.class));
+                .existsByName("IT");
+
+        verify(departmentRepository)
+                .save(existingDepartment);
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingDepartmentWithExistingName() {
+    void updateDepartmentShouldNotCheckDuplicateWhenOnlyCaseChanges() {
 
-        DepartmentRequest request = new DepartmentRequest("Finance");
+        Long departmentId = 1L;
 
-        DepartmentModel existingDepartment = new DepartmentModel(1L, "IT", true);
+        DepartmentModel existingDepartment = createDepartment(
+                departmentId,
+                "IT",
+                true);
 
-        when(departmentRepository.findById(1L))
+        when(departmentRequest.getName())
+                .thenReturn("it");
+
+        when(departmentRepository.findById(departmentId))
+                .thenReturn(Optional.of(existingDepartment));
+
+        when(departmentRepository.save(existingDepartment))
+                .thenReturn(existingDepartment);
+
+        DepartmentResponse result = departmentService.updateDepartment(
+                departmentId,
+                departmentRequest);
+
+        assertThat(result.getName())
+                .isEqualTo("it");
+
+        verify(departmentRepository)
+                .findById(departmentId);
+
+        verify(departmentRepository, never())
+                .existsByName("it");
+
+        verify(departmentRepository)
+                .save(existingDepartment);
+    }
+
+    @Test
+    void updateDepartmentShouldThrowExceptionWhenNewNameAlreadyExists() {
+
+        Long departmentId = 1L;
+
+        DepartmentModel existingDepartment = createDepartment(
+                departmentId,
+                "IT",
+                true);
+
+        when(departmentRequest.getName())
+                .thenReturn("Finance");
+
+        when(departmentRepository.findById(departmentId))
                 .thenReturn(Optional.of(existingDepartment));
 
         when(departmentRepository.existsByName("Finance"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> departmentService.updateDepartment(1L, request));
+        assertThatThrownBy(
+                () -> departmentService.updateDepartment(
+                        departmentId,
+                        departmentRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Department 'Finance' already exists");
 
         verify(departmentRepository)
-                .findById(1L);
+                .findById(departmentId);
 
         verify(departmentRepository)
                 .existsByName("Finance");
 
         verify(departmentRepository, never())
-                .save(any(DepartmentModel.class));
+                .save(existingDepartment);
     }
 
-    // =========================================================
-    // DEACTIVATE DEPARTMENT
-    // =========================================================
     @Test
-    void shouldDeactivateDepartmentSuccessfully() {
+    void updateDepartmentShouldThrowExceptionWhenDepartmentDoesNotExist() {
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
+        Long departmentId = 1L;
 
-        when(departmentRepository.findById(1L))
-                .thenReturn(Optional.of(department));
+        when(departmentRepository.findById(departmentId))
+                .thenReturn(Optional.empty());
 
-        when(departmentRepository.save(any(DepartmentModel.class)))
-                .thenReturn(department);
-
-        departmentService.deactivateDepartment(1L);
-
-        assertFalse(department.isActive());
+        assertThatThrownBy(
+                () -> departmentService.updateDepartment(
+                        departmentId,
+                        departmentRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Department with id " + departmentId + " not found");
 
         verify(departmentRepository)
-                .findById(1L);
+                .findById(departmentId);
+
+        verify(departmentRepository, never())
+                .save(
+                        org.mockito.ArgumentMatchers.any(
+                                DepartmentModel.class));
+    }
+
+    @Test
+    void deactivateDepartmentShouldDeactivateDepartment() {
+
+        Long departmentId = 1L;
+
+        DepartmentModel department = createDepartment(
+                departmentId,
+                "IT",
+                true);
+
+        when(departmentRepository.findById(departmentId))
+                .thenReturn(Optional.of(department));
+
+        departmentService.deactivateDepartment(departmentId);
+
+        assertThat(department.isActive())
+                .isFalse();
+
+        verify(departmentRepository)
+                .findById(departmentId);
 
         verify(departmentRepository)
                 .save(department);
     }
 
     @Test
-    void shouldThrowExceptionWhenDeactivatingNonExistingDepartment() {
+    void deactivateDepartmentShouldThrowExceptionWhenDepartmentDoesNotExist() {
 
-        when(departmentRepository.findById(99L))
+        Long departmentId = 1L;
+
+        when(departmentRepository.findById(departmentId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> departmentService.deactivateDepartment(99L));
+        assertThatThrownBy(
+                () -> departmentService.deactivateDepartment(departmentId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Department with id " + departmentId + " not found");
 
         verify(departmentRepository)
-                .findById(99L);
-
-        verify(departmentRepository, never())
-                .save(any(DepartmentModel.class));
+                .findById(departmentId);
     }
 
-    // =========================================================
-    // ACTIVATE DEPARTMENT
-    // =========================================================
     @Test
-    void shouldActivateDepartmentSuccessfully() {
+    void activateDepartmentShouldActivateDepartment() {
 
-        DepartmentModel department = new DepartmentModel(1L, "IT", false);
+        Long departmentId = 1L;
 
-        when(departmentRepository.findById(1L))
+        DepartmentModel department = createDepartment(
+                departmentId,
+                "IT",
+                false);
+
+        when(departmentRepository.findById(departmentId))
                 .thenReturn(Optional.of(department));
 
-        when(departmentRepository.save(any(DepartmentModel.class)))
-                .thenReturn(department);
+        departmentService.activateDepartment(departmentId);
 
-        departmentService.activateDepartment(1L);
-
-        assertTrue(department.isActive());
+        assertThat(department.isActive())
+                .isTrue();
 
         verify(departmentRepository)
-                .findById(1L);
+                .findById(departmentId);
 
         verify(departmentRepository)
                 .save(department);
     }
 
     @Test
-    void shouldThrowExceptionWhenActivatingNonExistingDepartment() {
+    void activateDepartmentShouldThrowExceptionWhenDepartmentDoesNotExist() {
 
-        when(departmentRepository.findById(99L))
+        Long departmentId = 1L;
+
+        when(departmentRepository.findById(departmentId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> departmentService.activateDepartment(99L));
+        assertThatThrownBy(
+                () -> departmentService.activateDepartment(departmentId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Department with id " + departmentId + " not found");
 
         verify(departmentRepository)
-                .findById(99L);
+                .findById(departmentId);
+    }
 
-        verify(departmentRepository, never())
-                .save(any(DepartmentModel.class));
+    private DepartmentModel createDepartment(
+            Long id,
+            String name,
+            boolean active) {
+
+        DepartmentModel department = new DepartmentModel();
+
+        department.setIdDepartment(id);
+        department.setName(name);
+        department.setActive(active);
+
+        return department;
     }
 }

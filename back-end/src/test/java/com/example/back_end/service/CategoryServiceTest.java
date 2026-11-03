@@ -1,10 +1,7 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +11,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,293 +24,420 @@ import com.example.back_end.model.CategoryModel;
 import com.example.back_end.repository.CategoryRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class CategoryServiceTest {
+class CategoryServiceTest {
 
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private CategoryRequest categoryRequest;
+
     @InjectMocks
     private CategoryService categoryService;
 
-    // =========================================================
-    // GET ALL CATEGORIES
-    // =========================================================
     @Test
-    void shouldReturnAllCategories() {
-        CategoryModel category1 = new CategoryModel(1L, "Hardware", true);
-        CategoryModel category2 = new CategoryModel(2L, "Software", true);
+    void getAllCategoriesShouldReturnAllCategories() {
 
-        List<CategoryModel> categories = List.of(category1, category2);
+        CategoryModel category = createCategory(
+                1L,
+                "Hardware",
+                true);
 
         when(categoryRepository.findAllOrderedById())
-                .thenReturn(categories);
+                .thenReturn(List.of(category));
 
-        List<CategoryResponse> response = categoryService.getAllCategories();
+        List<CategoryResponse> result = categoryService.getAllCategories();
 
-        assertEquals(2, response.size());
-        assertEquals("Hardware", response.get(0).getName());
-        assertEquals("Software", response.get(1).getName());
+        assertThat(result)
+                .hasSize(1);
+
+        assertThat(result.get(0).getIdCategory())
+                .isEqualTo(1L);
+
+        assertThat(result.get(0).getName())
+                .isEqualTo("Hardware");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(categoryRepository).findAllOrderedById();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoCategoriesExist() {
-        when(categoryRepository.findAllOrderedById())
-                .thenReturn(List.of());
+    void getActiveCategoriesShouldReturnActiveCategories() {
 
-        List<CategoryResponse> response = categoryService.getAllCategories();
-
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET ACTIVE CATEGORIES
-    // =========================================================
-    @Test
-    void shouldReturnActiveCategories() {
-        CategoryModel category1 = new CategoryModel(1L, "Hardware", true);
-        CategoryModel category2 = new CategoryModel(2L, "Software", true);
-
-        List<CategoryModel> categories = List.of(category1, category2);
+        CategoryModel category = createCategory(
+                1L,
+                "Software",
+                true);
 
         when(categoryRepository.findByActiveTrueOrderByIdCategoryAsc())
-                .thenReturn(categories);
+                .thenReturn(List.of(category));
 
-        List<CategoryResponse> response = categoryService.getActiveCategories();
+        List<CategoryResponse> result = categoryService.getActiveCategories();
 
-        assertEquals(2, response.size());
-        assertEquals("Hardware", response.get(0).getName());
-        assertEquals("Software", response.get(1).getName());
-        assertTrue(response.get(0).isActive());
-        assertTrue(response.get(1).isActive());
+        assertThat(result)
+                .hasSize(1);
+
+        assertThat(result.get(0).getIdCategory())
+                .isEqualTo(1L);
+
+        assertThat(result.get(0).getName())
+                .isEqualTo("Software");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(categoryRepository)
+                .findByActiveTrueOrderByIdCategoryAsc();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoActiveCategoriesExist() {
-        when(categoryRepository.findByActiveTrueOrderByIdCategoryAsc())
-                .thenReturn(List.of());
+    void getCategoryByIdShouldReturnCategory() {
 
-        List<CategoryResponse> response = categoryService.getActiveCategories();
+        Long categoryId = 1L;
 
-        assertTrue(response.isEmpty());
-    }
+        CategoryModel category = createCategory(
+                categoryId,
+                "Hardware",
+                true);
 
-    // =========================================================
-    // GET CATEGORY BY ID
-    // =========================================================
-    @Test
-    void shouldReturnCategoryById() {
-        CategoryModel category = new CategoryModel(1L, "Hardware", true);
-
-        when(categoryRepository.findById(1L))
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.of(category));
 
-        CategoryResponse response = categoryService.getCategoryById(1L);
+        CategoryResponse result = categoryService.getCategoryById(categoryId);
 
-        assertEquals(1L, response.getIdCategory());
-        assertEquals("Hardware", response.getName());
-        assertTrue(response.isActive());
+        assertThat(result.getIdCategory())
+                .isEqualTo(categoryId);
+
+        assertThat(result.getName())
+                .isEqualTo("Hardware");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        verify(categoryRepository).findById(categoryId);
     }
 
     @Test
-    void shouldThrowExceptionWhenCategoryByIdDoesNotExist() {
-        when(categoryRepository.findById(99L))
+    void getCategoryByIdShouldThrowExceptionWhenCategoryDoesNotExist() {
+
+        Long categoryId = 1L;
+
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> categoryService.getCategoryById(99L));
+        assertThatThrownBy(
+                () -> categoryService.getCategoryById(categoryId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Category with id " + categoryId + " not found");
+
+        verify(categoryRepository).findById(categoryId);
     }
 
-    // =========================================================
-    // CREATE CATEGORY
-    // =========================================================
     @Test
-    void shouldCreateCategorySuccessfully() {
+    void createCategoryShouldCreateAndReturnCategory() {
 
-        CategoryRequest request = new CategoryRequest("Hardware");
-
-        CategoryModel savedCategory = new CategoryModel(1L, "Hardware", true);
+        when(categoryRequest.getName())
+                .thenReturn("Hardware");
 
         when(categoryRepository.existsByName("Hardware"))
                 .thenReturn(false);
 
-        when(categoryRepository.save(any(CategoryModel.class)))
-                .thenReturn(savedCategory);
+        when(categoryRepository.save(
+                org.mockito.ArgumentMatchers.any(CategoryModel.class)))
+                .thenAnswer(invocation -> {
 
-        CategoryResponse response = categoryService.createCategory(request);
+                    CategoryModel category = invocation.getArgument(0);
 
-        assertEquals(1L, response.getIdCategory());
-        assertEquals("Hardware", response.getName());
-        assertTrue(response.isActive());
+                    category.setIdCategory(1L);
 
-        verify(categoryRepository).existsByName("Hardware");
-        verify(categoryRepository).save(any(CategoryModel.class));
+                    return category;
+                });
+
+        CategoryResponse result = categoryService.createCategory(categoryRequest);
+
+        assertThat(result.getIdCategory())
+                .isEqualTo(1L);
+
+        assertThat(result.getName())
+                .isEqualTo("Hardware");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        ArgumentCaptor<CategoryModel> categoryCaptor = ArgumentCaptor.forClass(CategoryModel.class);
+
+        verify(categoryRepository)
+                .save(categoryCaptor.capture());
+
+        CategoryModel savedCategory = categoryCaptor.getValue();
+
+        assertThat(savedCategory.getName())
+                .isEqualTo("Hardware");
+
+        assertThat(savedCategory.isActive())
+                .isTrue();
+
+        verify(categoryRepository)
+                .existsByName("Hardware");
     }
 
     @Test
-    void shouldThrowExceptionWhenCategoryAlreadyExists() {
+    void createCategoryShouldThrowExceptionWhenCategoryAlreadyExists() {
 
-        CategoryRequest request = new CategoryRequest("Hardware");
+        when(categoryRequest.getName())
+                .thenReturn("Hardware");
 
         when(categoryRepository.existsByName("Hardware"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> categoryService.createCategory(request));
+        assertThatThrownBy(
+                () -> categoryService.createCategory(categoryRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Category 'Hardware' already exists");
 
-        verify(categoryRepository).existsByName("Hardware");
+        verify(categoryRepository)
+                .existsByName("Hardware");
+
         verify(categoryRepository, never())
-                .save(any(CategoryModel.class));
+                .save(
+                        org.mockito.ArgumentMatchers.any(
+                                CategoryModel.class));
     }
 
-    // =========================================================
-    // UPDATE CATEGORY
-    // =========================================================
     @Test
-    void shouldUpdateCategorySuccessfully() {
+    void updateCategoryShouldUpdateCategory() {
 
-        CategoryRequest request = new CategoryRequest("Peripherals");
+        Long categoryId = 1L;
 
-        CategoryModel existingCategory = new CategoryModel(1L, "Hardware", true);
+        CategoryModel existingCategory = createCategory(
+                categoryId,
+                "Hardware",
+                true);
 
-        CategoryModel updatedCategory = new CategoryModel(1L, "Peripherals", true);
+        when(categoryRequest.getName())
+                .thenReturn("Software");
 
-        when(categoryRepository.findById(1L))
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.of(existingCategory));
 
-        when(categoryRepository.existsByName("Peripherals"))
+        when(categoryRepository.existsByName("Software"))
                 .thenReturn(false);
 
-        when(categoryRepository.save(any(CategoryModel.class)))
-                .thenReturn(updatedCategory);
+        when(categoryRepository.save(existingCategory))
+                .thenReturn(existingCategory);
 
-        CategoryResponse response = categoryService.updateCategory(request, 1L);
+        CategoryResponse result = categoryService.updateCategory(
+                categoryRequest,
+                categoryId);
 
-        assertEquals(1L, response.getIdCategory());
-        assertEquals("Peripherals", response.getName());
-        assertTrue(response.isActive());
+        assertThat(result.getIdCategory())
+                .isEqualTo(categoryId);
 
-        verify(categoryRepository).findById(1L);
-        verify(categoryRepository).existsByName("Peripherals");
-        verify(categoryRepository).save(any(CategoryModel.class));
+        assertThat(result.getName())
+                .isEqualTo("Software");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        verify(categoryRepository).findById(categoryId);
+
+        verify(categoryRepository)
+                .existsByName("Software");
+
+        verify(categoryRepository)
+                .save(existingCategory);
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingCategory() {
+    void updateCategoryShouldNotCheckDuplicateWhenNameDoesNotChange() {
 
-        CategoryRequest request = new CategoryRequest("Peripherals");
+        Long categoryId = 1L;
 
-        when(categoryRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        CategoryModel existingCategory = createCategory(
+                categoryId,
+                "Hardware",
+                true);
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> categoryService.updateCategory(request, 99L));
+        when(categoryRequest.getName())
+                .thenReturn("Hardware");
 
-        verify(categoryRepository).findById(99L);
+        when(categoryRepository.findById(categoryId))
+                .thenReturn(Optional.of(existingCategory));
+
+        when(categoryRepository.save(existingCategory))
+                .thenReturn(existingCategory);
+
+        CategoryResponse result = categoryService.updateCategory(
+                categoryRequest,
+                categoryId);
+
+        assertThat(result.getName())
+                .isEqualTo("Hardware");
+
+        verify(categoryRepository).findById(categoryId);
 
         verify(categoryRepository, never())
-                .save(any(CategoryModel.class));
+                .existsByName("Hardware");
+
+        verify(categoryRepository)
+                .save(existingCategory);
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingCategoryWithExistingName() {
+    void updateCategoryShouldThrowExceptionWhenNewNameAlreadyExists() {
 
-        CategoryRequest request = new CategoryRequest("Software");
+        Long categoryId = 1L;
 
-        CategoryModel existingCategory = new CategoryModel(1L, "Hardware", true);
+        CategoryModel existingCategory = createCategory(
+                categoryId,
+                "Hardware",
+                true);
 
-        when(categoryRepository.findById(1L))
+        when(categoryRequest.getName())
+                .thenReturn("Software");
+
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.of(existingCategory));
 
         when(categoryRepository.existsByName("Software"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> categoryService.updateCategory(request, 1L));
+        assertThatThrownBy(
+                () -> categoryService.updateCategory(
+                        categoryRequest,
+                        categoryId))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Category 'Software' already exists");
 
-        verify(categoryRepository).findById(1L);
-        verify(categoryRepository).existsByName("Software");
+        verify(categoryRepository).findById(categoryId);
+
+        verify(categoryRepository)
+                .existsByName("Software");
 
         verify(categoryRepository, never())
-                .save(any(CategoryModel.class));
+                .save(existingCategory);
     }
 
-    // =========================================================
-    // DEACTIVATE CATEGORY
-    // =========================================================
     @Test
-    void shouldDeactivateCategorySuccessfully() {
+    void updateCategoryShouldThrowExceptionWhenCategoryDoesNotExist() {
 
-        CategoryModel category = new CategoryModel(1L, "Hardware", true);
+        Long categoryId = 1L;
 
-        when(categoryRepository.findById(1L))
+        when(categoryRepository.findById(categoryId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> categoryService.updateCategory(
+                        categoryRequest,
+                        categoryId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Category with id " + categoryId + " not found");
+
+        verify(categoryRepository).findById(categoryId);
+
+        verify(categoryRepository, never())
+                .save(
+                        org.mockito.ArgumentMatchers.any(
+                                CategoryModel.class));
+    }
+
+    @Test
+    void deactivateCategoryShouldDeactivateCategory() {
+
+        Long categoryId = 1L;
+
+        CategoryModel category = createCategory(
+                categoryId,
+                "Hardware",
+                true);
+
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.of(category));
 
-        when(categoryRepository.save(any(CategoryModel.class)))
-                .thenReturn(category);
+        categoryService.deactivateCategory(categoryId);
 
-        categoryService.deactivateCategory(1L);
+        assertThat(category.isActive())
+                .isFalse();
 
-        assertFalse(category.isActive());
+        verify(categoryRepository).findById(categoryId);
 
-        verify(categoryRepository).findById(1L);
         verify(categoryRepository).save(category);
     }
 
     @Test
-    void shouldThrowExceptionWhenDeactivatingNonExistingCategory() {
+    void deactivateCategoryShouldThrowExceptionWhenCategoryDoesNotExist() {
 
-        when(categoryRepository.findById(99L))
+        Long categoryId = 1L;
+
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> categoryService.deactivateCategory(99L));
+        assertThatThrownBy(
+                () -> categoryService.deactivateCategory(categoryId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Category with id " + categoryId + " not found");
 
-        verify(categoryRepository).findById(99L);
-
-        verify(categoryRepository, never())
-                .save(any(CategoryModel.class));
+        verify(categoryRepository).findById(categoryId);
     }
 
-    // =========================================================
-    // ACTIVATE CATEGORY
-    // =========================================================
     @Test
-    void shouldActivateCategorySuccessfully() {
+    void activateCategoryShouldActivateCategory() {
 
-        CategoryModel category = new CategoryModel(1L, "Hardware", false);
+        Long categoryId = 1L;
 
-        when(categoryRepository.findById(1L))
+        CategoryModel category = createCategory(
+                categoryId,
+                "Hardware",
+                false);
+
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.of(category));
 
-        when(categoryRepository.save(any(CategoryModel.class)))
-                .thenReturn(category);
+        categoryService.activateCategory(categoryId);
 
-        categoryService.activateCategory(1L);
+        assertThat(category.isActive())
+                .isTrue();
 
-        assertTrue(category.isActive());
+        verify(categoryRepository).findById(categoryId);
 
-        verify(categoryRepository).findById(1L);
         verify(categoryRepository).save(category);
     }
 
     @Test
-    void shouldThrowExceptionWhenActivatingNonExistingCategory() {
+    void activateCategoryShouldThrowExceptionWhenCategoryDoesNotExist() {
 
-        when(categoryRepository.findById(99L))
+        Long categoryId = 1L;
+
+        when(categoryRepository.findById(categoryId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> categoryService.activateCategory(99L));
+        assertThatThrownBy(
+                () -> categoryService.activateCategory(categoryId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Category with id " + categoryId + " not found");
 
-        verify(categoryRepository).findById(99L);
+        verify(categoryRepository).findById(categoryId);
+    }
 
-        verify(categoryRepository, never())
-                .save(any(CategoryModel.class));
+    private CategoryModel createCategory(
+            Long id,
+            String name,
+            boolean active) {
+
+        CategoryModel category = new CategoryModel();
+
+        category.setIdCategory(id);
+        category.setName(name);
+        category.setActive(active);
+
+        return category;
     }
 }

@@ -1,350 +1,541 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.back_end.dtos.status.StatusRequest;
 import com.example.back_end.dtos.status.StatusResponse;
+import com.example.back_end.enums.ProtectedStatus;
+import com.example.back_end.exception.ProtectedResourceException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.StatusModel;
 import com.example.back_end.repository.StatusRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class StatusServiceTest {
+class StatusServiceTest {
 
     @Mock
     private StatusRepository statusRepository;
 
+    @Mock
+    private StatusRequest statusRequest;
+
     @InjectMocks
     private StatusService statusService;
 
-    // =========================================================
-    // GET ALL STATUSES
-    // =========================================================
     @Test
-    void shouldReturnAllStatuses() {
+    void getAllStatusesShouldReturnAllStatuses() {
 
-        StatusModel status1 = new StatusModel(1L, "OPEN", true);
-
-        StatusModel status2 = new StatusModel(2L, "IN_PROGRESS", true);
-
-        List<StatusModel> statuses = List.of(status1, status2);
+        StatusModel status = createStatus(
+                1L,
+                "CUSTOM",
+                true);
 
         when(statusRepository.findAllOrderedById())
-                .thenReturn(statuses);
+                .thenReturn(List.of(status));
 
-        List<StatusResponse> response = statusService.getAllStatuses();
+        List<StatusResponse> result = statusService.getAllStatuses();
 
-        assertEquals(2, response.size());
-        assertEquals("OPEN", response.get(0).getName());
-        assertEquals("IN_PROGRESS", response.get(1).getName());
+        assertThat(result)
+                .hasSize(1);
+
+        assertThat(result.get(0).getIdStatus())
+                .isEqualTo(1L);
+
+        assertThat(result.get(0).getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(statusRepository).findAllOrderedById();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoStatusesExist() {
+    void getActiveStatusesShouldReturnActiveStatuses() {
 
-        when(statusRepository.findAllOrderedById())
-                .thenReturn(List.of());
-
-        List<StatusResponse> response = statusService.getAllStatuses();
-
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET ACTIVE STATUSES
-    // =========================================================
-    @Test
-    void shouldReturnActiveStatuses() {
-
-        StatusModel status1 = new StatusModel(1L, "OPEN", true);
-
-        StatusModel status2 = new StatusModel(2L, "IN_PROGRESS", true);
-
-        List<StatusModel> statuses = List.of(status1, status2);
+        StatusModel status = createStatus(
+                1L,
+                "CUSTOM",
+                true);
 
         when(statusRepository.findByActiveTrueOrderByIdStatusAsc())
-                .thenReturn(statuses);
+                .thenReturn(List.of(status));
 
-        List<StatusResponse> response = statusService.getActiveStatuses();
+        List<StatusResponse> result = statusService.getActiveStatuses();
 
-        assertEquals(2, response.size());
+        assertThat(result)
+                .hasSize(1);
 
-        assertEquals("OPEN", response.get(0).getName());
-        assertEquals("IN_PROGRESS", response.get(1).getName());
+        assertThat(result.get(0).getIdStatus())
+                .isEqualTo(1L);
 
-        assertTrue(response.get(0).isActive());
-        assertTrue(response.get(1).isActive());
+        assertThat(result.get(0).getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(statusRepository)
+                .findByActiveTrueOrderByIdStatusAsc();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoActiveStatusesExist() {
+    void getStatusByIdShouldReturnStatus() {
 
-        when(statusRepository.findByActiveTrueOrderByIdStatusAsc())
-                .thenReturn(List.of());
+        Long statusId = 1L;
 
-        List<StatusResponse> response = statusService.getActiveStatuses();
+        StatusModel status = createStatus(
+                statusId,
+                "CUSTOM",
+                true);
 
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET STATUS BY ID
-    // =========================================================
-    @Test
-    void shouldReturnStatusById() {
-
-        StatusModel status = new StatusModel(1L, "OPEN", true);
-
-        when(statusRepository.findById(1L))
+        when(statusRepository.findById(statusId))
                 .thenReturn(Optional.of(status));
 
-        StatusResponse response = statusService.getStatusById(1L);
+        StatusResponse result = statusService.getStatusById(statusId);
 
-        assertEquals(1L, response.getIdStatus());
-        assertEquals("OPEN", response.getName());
-        assertTrue(response.isActive());
+        assertThat(result.getIdStatus())
+                .isEqualTo(statusId);
+
+        assertThat(result.getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        verify(statusRepository).findById(statusId);
     }
 
     @Test
-    void shouldThrowExceptionWhenStatusByIdDoesNotExist() {
+    void getStatusByIdShouldThrowExceptionWhenStatusDoesNotExist() {
 
-        when(statusRepository.findById(99L))
+        Long statusId = 1L;
+
+        when(statusRepository.findById(statusId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> statusService.getStatusById(99L));
+        assertThatThrownBy(
+                () -> statusService.getStatusById(statusId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Status with id " + statusId + " not found");
+
+        verify(statusRepository).findById(statusId);
     }
 
-    // =========================================================
-    // CREATE STATUS
-    // =========================================================
     @Test
-    void shouldCreateStatusSuccessfully() {
+    void createStatusShouldCreateAndReturnStatus() {
 
-        StatusRequest request = new StatusRequest("OPEN");
+        when(statusRequest.getName())
+                .thenReturn("CUSTOM");
 
-        StatusModel savedStatus = new StatusModel(1L, "OPEN", true);
-
-        when(statusRepository.existsByName("OPEN"))
+        when(statusRepository.existsByName("CUSTOM"))
                 .thenReturn(false);
 
         when(statusRepository.save(any(StatusModel.class)))
-                .thenReturn(savedStatus);
+                .thenAnswer(invocation -> {
 
-        StatusResponse response = statusService.createStatus(request);
+                    StatusModel status = invocation.getArgument(0);
 
-        assertEquals(1L, response.getIdStatus());
-        assertEquals("OPEN", response.getName());
-        assertTrue(response.isActive());
+                    status.setIdStatus(1L);
+
+                    return status;
+                });
+
+        StatusResponse result = statusService.createStatus(statusRequest);
+
+        assertThat(result.getIdStatus())
+                .isEqualTo(1L);
+
+        assertThat(result.getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        ArgumentCaptor<StatusModel> statusCaptor = ArgumentCaptor.forClass(StatusModel.class);
 
         verify(statusRepository)
-                .existsByName("OPEN");
+                .save(statusCaptor.capture());
+
+        StatusModel savedStatus = statusCaptor.getValue();
+
+        assertThat(savedStatus.getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(savedStatus.isActive())
+                .isTrue();
 
         verify(statusRepository)
-                .save(any(StatusModel.class));
+                .existsByName("CUSTOM");
     }
 
     @Test
-    void shouldThrowExceptionWhenStatusAlreadyExists() {
+    void createStatusShouldThrowExceptionWhenStatusAlreadyExists() {
 
-        StatusRequest request = new StatusRequest("OPEN");
+        when(statusRequest.getName())
+                .thenReturn("CUSTOM");
 
-        when(statusRepository.existsByName("OPEN"))
+        when(statusRepository.existsByName("CUSTOM"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> statusService.createStatus(request));
+        assertThatThrownBy(
+                () -> statusService.createStatus(statusRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Status 'CUSTOM' already exists");
 
         verify(statusRepository)
-                .existsByName("OPEN");
-
-        verify(statusRepository, never())
-                .save(any(StatusModel.class));
-    }
-
-    // =========================================================
-    // UPDATE STATUS
-    // =========================================================
-    @Test
-    void shouldUpdateStatusSuccessfully() {
-
-        StatusRequest request = new StatusRequest("IN_PROGRESS");
-
-        StatusModel existingStatus = new StatusModel(1L, "OPEN", true);
-
-        StatusModel updatedStatus = new StatusModel(1L, "IN_PROGRESS", true);
-
-        when(statusRepository.findById(1L))
-                .thenReturn(Optional.of(existingStatus));
-
-        when(statusRepository.existsByName("IN_PROGRESS"))
-                .thenReturn(false);
-
-        when(statusRepository.save(any(StatusModel.class)))
-                .thenReturn(updatedStatus);
-
-        StatusResponse response = statusService.updateStatus(request, 1L);
-
-        assertEquals(1L, response.getIdStatus());
-        assertEquals("IN_PROGRESS", response.getName());
-        assertTrue(response.isActive());
-
-        verify(statusRepository)
-                .findById(1L);
-
-        verify(statusRepository)
-                .existsByName("IN_PROGRESS");
-
-        verify(statusRepository)
-                .save(any(StatusModel.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingStatus() {
-
-        StatusRequest request = new StatusRequest("IN_PROGRESS");
-
-        when(statusRepository.findById(99L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> statusService.updateStatus(request, 99L));
-
-        verify(statusRepository)
-                .findById(99L);
+                .existsByName("CUSTOM");
 
         verify(statusRepository, never())
                 .save(any(StatusModel.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingStatusWithExistingName() {
+    void updateStatusShouldUpdateStatus() {
 
-        StatusRequest request = new StatusRequest("IN_PROGRESS");
+        Long statusId = 1L;
 
-        StatusModel existingStatus = new StatusModel(1L, "OPEN", true);
+        StatusModel status = createStatus(
+                statusId,
+                "CUSTOM",
+                true);
 
-        when(statusRepository.findById(1L))
-                .thenReturn(Optional.of(existingStatus));
+        when(statusRequest.getName())
+                .thenReturn("NEW_STATUS");
 
-        when(statusRepository.existsByName("IN_PROGRESS"))
-                .thenReturn(true);
-
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> statusService.updateStatus(request, 1L));
-
-        verify(statusRepository)
-                .findById(1L);
-
-        verify(statusRepository)
-                .existsByName("IN_PROGRESS");
-
-        verify(statusRepository, never())
-                .save(any(StatusModel.class));
-    }
-
-    // =========================================================
-    // DEACTIVATE STATUS
-    // =========================================================
-    @Test
-    void shouldDeactivateStatusSuccessfully() {
-
-        StatusModel status = new StatusModel(1L, "OPEN", true);
-
-        when(statusRepository.findById(1L))
+        when(statusRepository.findById(statusId))
                 .thenReturn(Optional.of(status));
 
-        when(statusRepository.save(any(StatusModel.class)))
+        when(statusRepository.existsByName("NEW_STATUS"))
+                .thenReturn(false);
+
+        when(statusRepository.save(status))
                 .thenReturn(status);
 
-        statusService.deactivateStatus(1L);
+        StatusResponse result = statusService.updateStatus(
+                statusRequest,
+                statusId);
 
-        assertFalse(status.isActive());
+        assertThat(result.getIdStatus())
+                .isEqualTo(statusId);
+
+        assertThat(result.getName())
+                .isEqualTo("NEW_STATUS");
+
+        assertThat(result.isActive())
+                .isTrue();
 
         verify(statusRepository)
-                .findById(1L);
+                .findById(statusId);
+
+        verify(statusRepository)
+                .existsByName("NEW_STATUS");
 
         verify(statusRepository)
                 .save(status);
     }
 
     @Test
-    void shouldThrowExceptionWhenDeactivatingNonExistingStatus() {
+    void updateStatusShouldNotCheckDuplicateWhenNameDoesNotChange() {
 
-        when(statusRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        Long statusId = 1L;
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> statusService.deactivateStatus(99L));
+        StatusModel status = createStatus(
+                statusId,
+                "CUSTOM",
+                true);
 
-        verify(statusRepository)
-                .findById(99L);
+        when(statusRequest.getName())
+                .thenReturn("CUSTOM");
 
-        verify(statusRepository, never())
-                .save(any(StatusModel.class));
-    }
-
-    // =========================================================
-    // ACTIVATE STATUS
-    // =========================================================
-    @Test
-    void shouldActivateStatusSuccessfully() {
-
-        StatusModel status = new StatusModel(1L, "OPEN", false);
-
-        when(statusRepository.findById(1L))
+        when(statusRepository.findById(statusId))
                 .thenReturn(Optional.of(status));
 
-        when(statusRepository.save(any(StatusModel.class)))
+        when(statusRepository.save(status))
                 .thenReturn(status);
 
-        statusService.activateStatus(1L);
+        StatusResponse result = statusService.updateStatus(
+                statusRequest,
+                statusId);
 
-        assertTrue(status.isActive());
+        assertThat(result.getName())
+                .isEqualTo("CUSTOM");
 
-        verify(statusRepository)
-                .findById(1L);
+        verify(statusRepository, never())
+                .existsByName("CUSTOM");
 
         verify(statusRepository)
                 .save(status);
     }
 
     @Test
-    void shouldThrowExceptionWhenActivatingNonExistingStatus() {
+    void updateStatusShouldNotCheckDuplicateWhenOnlyCaseChanges() {
 
-        when(statusRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        Long statusId = 1L;
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> statusService.activateStatus(99L));
+        StatusModel status = createStatus(
+                statusId,
+                "CUSTOM",
+                true);
+
+        when(statusRequest.getName())
+                .thenReturn("custom");
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.of(status));
+
+        when(statusRepository.save(status))
+                .thenReturn(status);
+
+        StatusResponse result = statusService.updateStatus(
+                statusRequest,
+                statusId);
+
+        assertThat(result.getName())
+                .isEqualTo("custom");
+
+        verify(statusRepository, never())
+                .existsByName("custom");
 
         verify(statusRepository)
-                .findById(99L);
+                .save(status);
+    }
+
+    @Test
+    void updateStatusShouldThrowExceptionWhenNewNameAlreadyExists() {
+
+        Long statusId = 1L;
+
+        StatusModel status = createStatus(
+                statusId,
+                "CUSTOM",
+                true);
+
+        when(statusRequest.getName())
+                .thenReturn("EXISTING_STATUS");
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.of(status));
+
+        when(statusRepository.existsByName("EXISTING_STATUS"))
+                .thenReturn(true);
+
+        assertThatThrownBy(
+                () -> statusService.updateStatus(
+                        statusRequest,
+                        statusId))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Status 'EXISTING_STATUS' already exists");
+
+        verify(statusRepository, never())
+                .save(status);
+    }
+
+    @Test
+    void updateStatusShouldThrowExceptionWhenStatusDoesNotExist() {
+
+        Long statusId = 1L;
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> statusService.updateStatus(
+                        statusRequest,
+                        statusId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Status with id " + statusId + " not found");
 
         verify(statusRepository, never())
                 .save(any(StatusModel.class));
+    }
+
+    @Test
+    void updateStatusShouldThrowExceptionWhenStatusIsProtected() {
+
+        Long statusId = 1L;
+
+        String protectedStatusName = getProtectedStatusName();
+
+        StatusModel status = createStatus(
+                statusId,
+                protectedStatusName,
+                true);
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.of(status));
+
+        assertThatThrownBy(
+                () -> statusService.updateStatus(
+                        statusRequest,
+                        statusId))
+                .isInstanceOf(ProtectedResourceException.class)
+                .hasMessage(
+                        "System status '"
+                                + protectedStatusName
+                                + "' cannot be modified");
+
+        verify(statusRepository, never())
+                .save(status);
+    }
+
+    @Test
+    void deactivateStatusShouldDeactivateStatus() {
+
+        Long statusId = 1L;
+
+        StatusModel status = createStatus(
+                statusId,
+                "CUSTOM",
+                true);
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.of(status));
+
+        statusService.deactivateStatus(statusId);
+
+        assertThat(status.isActive())
+                .isFalse();
+
+        verify(statusRepository)
+                .findById(statusId);
+
+        verify(statusRepository)
+                .save(status);
+    }
+
+    @Test
+    void deactivateStatusShouldThrowExceptionWhenStatusIsProtected() {
+
+        Long statusId = 1L;
+
+        String protectedStatusName = getProtectedStatusName();
+
+        StatusModel status = createStatus(
+                statusId,
+                protectedStatusName,
+                true);
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.of(status));
+
+        assertThatThrownBy(
+                () -> statusService.deactivateStatus(statusId))
+                .isInstanceOf(ProtectedResourceException.class)
+                .hasMessage(
+                        "System status '"
+                                + protectedStatusName
+                                + "' cannot be deactivated");
+
+        assertThat(status.isActive())
+                .isTrue();
+
+        verify(statusRepository, never())
+                .save(status);
+    }
+
+    @Test
+    void deactivateStatusShouldThrowExceptionWhenStatusDoesNotExist() {
+
+        Long statusId = 1L;
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> statusService.deactivateStatus(statusId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Status with id " + statusId + " not found");
+
+        verify(statusRepository, never())
+                .save(any(StatusModel.class));
+    }
+
+    @Test
+    void activateStatusShouldActivateStatus() {
+
+        Long statusId = 1L;
+
+        StatusModel status = createStatus(
+                statusId,
+                "CUSTOM",
+                false);
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.of(status));
+
+        statusService.activateStatus(statusId);
+
+        assertThat(status.isActive())
+                .isTrue();
+
+        verify(statusRepository)
+                .findById(statusId);
+
+        verify(statusRepository)
+                .save(status);
+    }
+
+    @Test
+    void activateStatusShouldThrowExceptionWhenStatusDoesNotExist() {
+
+        Long statusId = 1L;
+
+        when(statusRepository.findById(statusId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> statusService.activateStatus(statusId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Status with id " + statusId + " not found");
+
+        verify(statusRepository, never())
+                .save(any(StatusModel.class));
+    }
+
+    private StatusModel createStatus(
+            Long id,
+            String name,
+            boolean active) {
+
+        StatusModel status = new StatusModel();
+
+        status.setIdStatus(id);
+        status.setName(name);
+        status.setActive(active);
+
+        return status;
+    }
+
+    private String getProtectedStatusName() {
+
+        return Arrays.stream(ProtectedStatus.values())
+                .map(Enum::name)
+                .filter(ProtectedStatus::isProtectedStatus)
+                .findFirst()
+                .orElseThrow();
     }
 }

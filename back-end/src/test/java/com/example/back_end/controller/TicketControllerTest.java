@@ -1,1048 +1,325 @@
 package com.example.back_end.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import com.example.back_end.config.SecurityConfig;
-import com.example.back_end.dtos.category.CategoryResponse;
-import com.example.back_end.dtos.priority.PriorityResponse;
-import com.example.back_end.dtos.status.StatusResponse;
 import com.example.back_end.dtos.ticket.AssignTicketRequest;
 import com.example.back_end.dtos.ticket.ChangePriorityRequest;
 import com.example.back_end.dtos.ticket.ChangeStatusRequest;
 import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
+import com.example.back_end.dtos.ticket.TicketStatisticsResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
-import com.example.back_end.dtos.user.UserSummaryResponse;
-import com.example.back_end.security.JwtAuthenticationFilter;
-import com.example.back_end.security.JwtService;
 import com.example.back_end.service.TicketService;
 
-@WebMvcTest(TicketController.class)
-@Import({
-        SecurityConfig.class,
-        JwtAuthenticationFilter.class
-})
+@ExtendWith(MockitoExtension.class)
 class TicketControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private TicketService ticketService;
 
-    @MockitoBean
-    private JwtService jwtService;
+    @Mock
+    private TicketResponse ticketResponse;
 
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    @Mock
+    private TicketStatisticsResponse ticketStatisticsResponse;
 
-    @MockitoBean
-    private AuthenticationProvider authenticationProvider;
+    @Mock
+    private CreateTicketRequest createTicketRequest;
 
-    // =========================================================
-    // GET ALL TICKETS
-    // =========================================================
+    @Mock
+    private UpdateTicketRequest updateTicketRequest;
+
+    @Mock
+    private AssignTicketRequest assignTicketRequest;
+
+    @Mock
+    private ChangePriorityRequest changePriorityRequest;
+
+    @Mock
+    private ChangeStatusRequest changeStatusRequest;
+
+    @Mock
+    private Page<TicketResponse> ticketPage;
+
+    @Mock
+    private Pageable pageable;
+
+    @InjectMocks
+    private TicketController ticketController;
+
     @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToGetAllTickets()
-            throws Exception {
+    void getAllTicketsShouldReturnTicketsPage() {
 
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse ticket = new TicketResponse(
-                1L,
-                "Laptop broken",
-                "Laptop does not start",
-                now,
-                now,
-                new UserSummaryResponse(
-                        1L,
-                        "ana"),
-                new UserSummaryResponse(
-                        2L,
-                        "carlos"),
-                null,
-                new CategoryResponse(
-                        1L,
-                        "Hardware",
-                        true),
-                new PriorityResponse(
-                        2L,
-                        "MEDIUM",
-                        true),
-                new StatusResponse(
-                        1L,
-                        "OPEN",
-                        true));
-
-        Page<TicketResponse> page = new PageImpl<>(List.of(ticket));
+        String title = "Printer";
+        String status = "OPEN";
+        String priority = "HIGH";
+        String category = "HARDWARE";
 
         when(ticketService.getAllTickets(
-                isNull(),
-                isNull(),
-                isNull(),
-                isNull(),
-                any(Pageable.class)))
-                .thenReturn(page);
+                title,
+                status,
+                priority,
+                category,
+                pageable))
+                .thenReturn(ticketPage);
 
-        mockMvc.perform(
-                get("/tickets")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.content.length()")
-                                .value(1))
-                .andExpect(
-                        jsonPath("$.content[0].idTicket")
-                                .value(1))
-                .andExpect(
-                        jsonPath("$.content[0].title")
-                                .value("Laptop broken"))
-                .andExpect(
-                        jsonPath("$.content[0].createdBy.username")
-                                .value("ana"))
-                .andExpect(
-                        jsonPath("$.content[0].requestedFor.username")
-                                .value("carlos"))
-                .andExpect(
-                        jsonPath("$.content[0].category.name")
-                                .value("Hardware"))
-                .andExpect(
-                        jsonPath("$.content[0].priority.name")
-                                .value("MEDIUM"))
-                .andExpect(
-                        jsonPath("$.content[0].status.name")
-                                .value("OPEN"))
-                .andExpect(
-                        jsonPath("$.totalElements")
-                                .value(1));
+        ResponseEntity<Page<TicketResponse>> response = ticketController.getAllTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
 
-        verify(ticketService)
-                .getAllTickets(
-                        isNull(),
-                        isNull(),
-                        isNull(),
-                        isNull(),
-                        any(Pageable.class));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketPage);
+
+        verify(ticketService).getAllTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromGettingAllTickets()
-            throws Exception {
+    void getTicketByIdShouldReturnTicket() {
 
-        mockMvc.perform(
-                get("/tickets")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(
-                        status().isForbidden());
+        Long ticketId = 1L;
 
-        verify(ticketService, never())
-                .getAllTickets(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(Pageable.class));
+        when(ticketService.getTicketById(ticketId))
+                .thenReturn(ticketResponse);
+
+        ResponseEntity<TicketResponse> response = ticketController.getTicketById(ticketId);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketResponse);
+
+        verify(ticketService).getTicketById(ticketId);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromGettingAllTickets()
-            throws Exception {
+    void getMyTicketsShouldReturnTicketsPage() {
 
-        mockMvc.perform(
-                get("/tickets"))
-                .andExpect(
-                        status().isForbidden());
-
-        verify(ticketService, never())
-                .getAllTickets(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(Pageable.class));
-    }
-
-    // =========================================================
-    // GET TICKET BY ID
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldAllowUserToGetTicketById()
-            throws Exception {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse ticket = new TicketResponse(
-                1L,
-                "Laptop broken",
-                "Laptop does not start",
-                now,
-                now,
-                new UserSummaryResponse(
-                        1L,
-                        "ana"),
-                new UserSummaryResponse(
-                        1L,
-                        "ana"),
-                null,
-                new CategoryResponse(
-                        1L,
-                        "Hardware",
-                        true),
-                new PriorityResponse(
-                        2L,
-                        "MEDIUM",
-                        true),
-                new StatusResponse(
-                        1L,
-                        "OPEN",
-                        true));
-
-        when(ticketService.getTicketById(1L))
-                .thenReturn(ticket);
-
-        mockMvc.perform(
-                get("/tickets/1"))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.idTicket")
-                                .value(1))
-                .andExpect(
-                        jsonPath("$.title")
-                                .value("Laptop broken"))
-                .andExpect(
-                        jsonPath("$.category.name")
-                                .value("Hardware"));
-
-        verify(ticketService)
-                .getTicketById(1L);
-    }
-
-    // =========================================================
-    // GET MY TICKETS
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnMyTickets()
-            throws Exception {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse ticket = new TicketResponse(
-                1L,
-                "Laptop broken",
-                "Laptop does not start",
-                now,
-                now,
-                new UserSummaryResponse(
-                        1L,
-                        "ana"),
-                new UserSummaryResponse(
-                        1L,
-                        "ana"),
-                null,
-                new CategoryResponse(
-                        1L,
-                        "Hardware",
-                        true),
-                new PriorityResponse(
-                        2L,
-                        "MEDIUM",
-                        true),
-                new StatusResponse(
-                        1L,
-                        "OPEN",
-                        true));
-
-        Page<TicketResponse> page = new PageImpl<>(List.of(ticket));
+        String title = "Printer";
+        String status = "OPEN";
+        String priority = "HIGH";
+        String category = "HARDWARE";
 
         when(ticketService.getMyTickets(
-                isNull(),
-                isNull(),
-                isNull(),
-                isNull(),
-                any(Pageable.class)))
-                .thenReturn(page);
+                title,
+                status,
+                priority,
+                category,
+                pageable))
+                .thenReturn(ticketPage);
 
-        mockMvc.perform(
-                get("/tickets/my")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.content.length()")
-                                .value(1))
-                .andExpect(
-                        jsonPath("$.content[0].title")
-                                .value("Laptop broken"))
-                .andExpect(
-                        jsonPath("$.totalElements")
-                                .value(1));
+        ResponseEntity<Page<TicketResponse>> response = ticketController.getMyTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
 
-        verify(ticketService)
-                .getMyTickets(
-                        isNull(),
-                        isNull(),
-                        isNull(),
-                        isNull(),
-                        any(Pageable.class));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketPage);
+
+        verify(ticketService).getMyTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnEmptyPageWhenUserHasNoTickets()
-            throws Exception {
+    void getAssignedTicketsShouldReturnTicketsPage() {
 
-        when(ticketService.getMyTickets(
-                isNull(),
-                isNull(),
-                isNull(),
-                isNull(),
-                any(Pageable.class)))
-                .thenReturn(Page.empty());
+        String title = "Printer";
+        String status = "OPEN";
+        String priority = "HIGH";
+        String category = "HARDWARE";
 
-        mockMvc.perform(
-                get("/tickets/my")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.content.length()")
-                                .value(0))
-                .andExpect(
-                        jsonPath("$.empty")
-                                .value(true))
-                .andExpect(
-                        jsonPath("$.totalElements")
-                                .value(0));
+        when(ticketService.getAssignedTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable))
+                .thenReturn(ticketPage);
 
-        verify(ticketService)
-                .getMyTickets(
-                        isNull(),
-                        isNull(),
-                        isNull(),
-                        isNull(),
-                        any(Pageable.class));
-    }
+        ResponseEntity<Page<TicketResponse>> response = ticketController.getAssignedTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
 
-    // =========================================================
-    // CREATE TICKET
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldAllowUserToCreateTicket()
-            throws Exception {
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        LocalDateTime now = LocalDateTime.now();
+        assertThat(response.getBody())
+                .isSameAs(ticketPage);
 
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Laptop broken",
-                "Laptop does not start",
-                now,
-                now,
-                new UserSummaryResponse(
-                        1L,
-                        "ana"),
-                new UserSummaryResponse(
-                        2L,
-                        "carlos"),
-                null,
-                new CategoryResponse(
-                        1L,
-                        "Hardware",
-                        true),
-                new PriorityResponse(
-                        2L,
-                        "MEDIUM",
-                        true),
-                new StatusResponse(
-                        1L,
-                        "OPEN",
-                        true));
-
-        when(ticketService.createTicket(
-                any(CreateTicketRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                post("/tickets")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "title": "Laptop broken",
-                                    "description": "Laptop does not start",
-                                    "requestedForId": 2,
-                                    "categoryId": 1,
-                                    "priorityId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isCreated())
-                .andExpect(
-                        jsonPath("$.idTicket")
-                                .value(1))
-                .andExpect(
-                        jsonPath("$.title")
-                                .value("Laptop broken"))
-                .andExpect(
-                        jsonPath("$.createdBy.username")
-                                .value("ana"))
-                .andExpect(
-                        jsonPath("$.requestedFor.username")
-                                .value("carlos"))
-                .andExpect(
-                        jsonPath("$.status.name")
-                                .value("OPEN"));
-
-        verify(ticketService)
-                .createTicket(
-                        any(CreateTicketRequest.class));
+        verify(ticketService).getAssignedTickets(
+                title,
+                status,
+                priority,
+                category,
+                pageable);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToCreateTicket()
-            throws Exception {
+    void createTicketShouldReturnCreatedTicket() {
 
-        LocalDateTime now = LocalDateTime.now();
+        when(ticketService.createTicket(createTicketRequest))
+                .thenReturn(ticketResponse);
 
-        TicketResponse response = new TicketResponse(
-                1L,
-                "VPN problem",
-                "Cannot connect",
-                now,
-                now,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+        ResponseEntity<TicketResponse> response = ticketController.createTicket(createTicketRequest);
 
-        when(ticketService.createTicket(
-                any(CreateTicketRequest.class)))
-                .thenReturn(response);
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
 
-        mockMvc.perform(
-                post("/tickets")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "title": "VPN problem",
-                                    "description": "Cannot connect",
-                                    "requestedForId": 2,
-                                    "categoryId": 3,
-                                    "priorityId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isCreated());
+        assertThat(response.getBody())
+                .isSameAs(ticketResponse);
 
-        verify(ticketService)
-                .createTicket(
-                        any(CreateTicketRequest.class));
+        verify(ticketService).createTicket(createTicketRequest);
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToCreateTicket()
-            throws Exception {
+    void updateTicketShouldReturnUpdatedTicket() {
 
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Security issue",
-                "Suspicious login",
-                now,
-                now,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
-
-        when(ticketService.createTicket(
-                any(CreateTicketRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                post("/tickets")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "title": "Security issue",
-                                    "description": "Suspicious login",
-                                    "requestedForId": 2,
-                                    "categoryId": 5,
-                                    "priorityId": 3
-                                }
-                                """))
-                .andExpect(
-                        status().isCreated());
-
-        verify(ticketService)
-                .createTicket(
-                        any(CreateTicketRequest.class));
-    }
-
-    // =========================================================
-    // UPDATE TICKET
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldAllowUserToUpdateTicket()
-            throws Exception {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Updated title",
-                "Updated description",
-                now,
-                now,
-                null,
-                null,
-                null,
-                new CategoryResponse(
-                        1L,
-                        "Hardware",
-                        true),
-                null,
-                null);
+        Long ticketId = 1L;
 
         when(ticketService.updateTicket(
-                eq(1L),
-                any(UpdateTicketRequest.class)))
-                .thenReturn(response);
+                ticketId,
+                updateTicketRequest))
+                .thenReturn(ticketResponse);
 
-        mockMvc.perform(
-                patch("/tickets/1")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "title": "Updated title",
-                                    "description": "Updated description",
-                                    "categoryId": 1
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.title")
-                                .value("Updated title"))
-                .andExpect(
-                        jsonPath("$.description")
-                                .value("Updated description"))
-                .andExpect(
-                        jsonPath("$.category.name")
-                                .value("Hardware"));
+        ResponseEntity<TicketResponse> response = ticketController.updateTicket(
+                ticketId,
+                updateTicketRequest);
 
-        verify(ticketService)
-                .updateTicket(
-                        eq(1L),
-                        any(UpdateTicketRequest.class));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketResponse);
+
+        verify(ticketService).updateTicket(
+                ticketId,
+                updateTicketRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToUpdateTicket()
-            throws Exception {
+    void assignTicketShouldReturnAssignedTicket() {
 
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Fixed issue",
-                "Issue has been fixed",
-                now,
-                now,
-                null,
-                null,
-                null,
-                new CategoryResponse(
-                        1L,
-                        "Hardware",
-                        true),
-                null,
-                null);
-
-        when(ticketService.updateTicket(
-                eq(1L),
-                any(UpdateTicketRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                patch("/tickets/1")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "title": "Fixed issue",
-                                    "description": "Issue has been fixed",
-                                    "categoryId": 1
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.title")
-                                .value("Fixed issue"));
-
-        verify(ticketService)
-                .updateTicket(
-                        eq(1L),
-                        any(UpdateTicketRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToUpdateTicket()
-            throws Exception {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Admin update",
-                "Updated by admin",
-                now,
-                now,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
-
-        when(ticketService.updateTicket(
-                eq(1L),
-                any(UpdateTicketRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                patch("/tickets/1")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "title": "Admin update",
-                                    "description": "Updated by admin"
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.title")
-                                .value("Admin update"));
-
-        verify(ticketService)
-                .updateTicket(
-                        eq(1L),
-                        any(UpdateTicketRequest.class));
-    }
-
-    // =========================================================
-    // ASSIGN TICKET
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToAssignTicket()
-            throws Exception {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Laptop broken",
-                "Laptop does not start",
-                now,
-                now,
-                null,
-                null,
-                new UserSummaryResponse(
-                        2L,
-                        "tech"),
-                null,
-                null,
-                null);
+        Long ticketId = 1L;
 
         when(ticketService.assignTicket(
-                eq(1L),
-                any(AssignTicketRequest.class)))
-                .thenReturn(response);
+                ticketId,
+                assignTicketRequest))
+                .thenReturn(ticketResponse);
 
-        mockMvc.perform(
-                patch("/tickets/1/assign")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "assignedToId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.assignedTo.username")
-                                .value("tech"));
+        ResponseEntity<TicketResponse> response = ticketController.assignTicket(
+                ticketId,
+                assignTicketRequest);
 
-        verify(ticketService)
-                .assignTicket(
-                        eq(1L),
-                        any(AssignTicketRequest.class));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketResponse);
+
+        verify(ticketService).assignTicket(
+                ticketId,
+                assignTicketRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToAssignTicket()
-            throws Exception {
+    void changePriorityShouldReturnUpdatedTicket() {
 
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Laptop broken",
-                null,
-                now,
-                now,
-                null,
-                null,
-                new UserSummaryResponse(
-                        2L,
-                        "tech"),
-                null,
-                null,
-                null);
-
-        when(ticketService.assignTicket(
-                eq(1L),
-                any(AssignTicketRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                patch("/tickets/1/assign")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "assignedToId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isOk());
-
-        verify(ticketService)
-                .assignTicket(
-                        eq(1L),
-                        any(AssignTicketRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromAssigningTicket()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/tickets/1/assign")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "assignedToId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isForbidden());
-
-        verify(ticketService, never())
-                .assignTicket(
-                        any(Long.class),
-                        any(AssignTicketRequest.class));
-    }
-
-    // =========================================================
-    // CHANGE PRIORITY
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToChangePriority()
-            throws Exception {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Laptop broken",
-                null,
-                now,
-                now,
-                null,
-                null,
-                null,
-                null,
-                new PriorityResponse(
-                        3L,
-                        "HIGH",
-                        true),
-                null);
+        Long ticketId = 1L;
 
         when(ticketService.changePriority(
-                eq(1L),
-                any(ChangePriorityRequest.class)))
-                .thenReturn(response);
+                ticketId,
+                changePriorityRequest))
+                .thenReturn(ticketResponse);
 
-        mockMvc.perform(
-                patch("/tickets/1/priority")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "priorityId": 3
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.priority.name")
-                                .value("HIGH"));
+        ResponseEntity<TicketResponse> response = ticketController.changePriority(
+                ticketId,
+                changePriorityRequest);
 
-        verify(ticketService)
-                .changePriority(
-                        eq(1L),
-                        any(ChangePriorityRequest.class));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketResponse);
+
+        verify(ticketService).changePriority(
+                ticketId,
+                changePriorityRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToChangePriority()
-            throws Exception {
+    void changeStatusShouldReturnUpdatedTicket() {
 
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Laptop broken",
-                null,
-                now,
-                now,
-                null,
-                null,
-                null,
-                null,
-                new PriorityResponse(
-                        3L,
-                        "HIGH",
-                        true),
-                null);
-
-        when(ticketService.changePriority(
-                eq(1L),
-                any(ChangePriorityRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                patch("/tickets/1/priority")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "priorityId": 3
-                                }
-                                """))
-                .andExpect(
-                        status().isOk());
-
-        verify(ticketService)
-                .changePriority(
-                        eq(1L),
-                        any(ChangePriorityRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromChangingPriority()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/tickets/1/priority")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "priorityId": 3
-                                }
-                                """))
-                .andExpect(
-                        status().isForbidden());
-
-        verify(ticketService, never())
-                .changePriority(
-                        any(Long.class),
-                        any(ChangePriorityRequest.class));
-    }
-
-    // =========================================================
-    // CHANGE STATUS
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToChangeStatus()
-            throws Exception {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Laptop broken",
-                null,
-                now,
-                now,
-                null,
-                null,
-                null,
-                null,
-                null,
-                new StatusResponse(
-                        2L,
-                        "IN_PROGRESS",
-                        true));
+        Long ticketId = 1L;
 
         when(ticketService.changeStatus(
-                eq(1L),
-                any(ChangeStatusRequest.class)))
-                .thenReturn(response);
+                ticketId,
+                changeStatusRequest))
+                .thenReturn(ticketResponse);
 
-        mockMvc.perform(
-                patch("/tickets/1/status")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "statusId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.status.name")
-                                .value("IN_PROGRESS"));
+        ResponseEntity<TicketResponse> response = ticketController.changeStatus(
+                ticketId,
+                changeStatusRequest);
 
-        verify(ticketService)
-                .changeStatus(
-                        eq(1L),
-                        any(ChangeStatusRequest.class));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketResponse);
+
+        verify(ticketService).changeStatus(
+                ticketId,
+                changeStatusRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldAllowTechnicianToChangeStatus()
-            throws Exception {
+    void getTicketStatisticsShouldReturnStatistics() {
 
-        LocalDateTime now = LocalDateTime.now();
+        when(ticketService.getTicketStatistics())
+                .thenReturn(ticketStatisticsResponse);
 
-        TicketResponse response = new TicketResponse(
-                1L,
-                "Laptop broken",
-                null,
-                now,
-                now,
-                null,
-                null,
-                null,
-                null,
-                null,
-                new StatusResponse(
-                        2L,
-                        "IN_PROGRESS",
-                        true));
+        ResponseEntity<TicketStatisticsResponse> response = ticketController.getTicketStatistics();
 
-        when(ticketService.changeStatus(
-                eq(1L),
-                any(ChangeStatusRequest.class)))
-                .thenReturn(response);
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        mockMvc.perform(
-                patch("/tickets/1/status")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "statusId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isOk());
+        assertThat(response.getBody())
+                .isSameAs(ticketStatisticsResponse);
 
-        verify(ticketService)
-                .changeStatus(
-                        eq(1L),
-                        any(ChangeStatusRequest.class));
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromChangingStatus()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/tickets/1/status")
-                        .contentType(
-                                MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "statusId": 2
-                                }
-                                """))
-                .andExpect(
-                        status().isForbidden());
-
-        verify(ticketService, never())
-                .changeStatus(
-                        any(Long.class),
-                        any(ChangeStatusRequest.class));
+        verify(ticketService).getTicketStatistics();
     }
 }

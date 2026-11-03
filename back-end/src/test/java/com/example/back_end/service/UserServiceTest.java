@@ -1,10 +1,8 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,18 +12,23 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.example.back_end.dtos.user.ChangePasswordRequest;
 import com.example.back_end.dtos.user.CreateUserRequest;
+import com.example.back_end.dtos.user.UpdateProfileRequest;
 import com.example.back_end.dtos.user.UpdateUserRequest;
 import com.example.back_end.dtos.user.UserResponse;
+import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.RoleName;
+import com.example.back_end.exception.InvalidPasswordException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.DepartmentModel;
@@ -36,13 +39,13 @@ import com.example.back_end.repository.RoleRepository;
 import com.example.back_end.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
 
     @Mock
-    private RoleRepository rolRepository;
+    private RoleRepository roleRepository;
 
     @Mock
     private DepartmentRepository departmentRepository;
@@ -50,634 +53,1053 @@ public class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private Pageable pageable;
+
+    @Mock
+    private CreateUserRequest createUserRequest;
+
+    @Mock
+    private UpdateUserRequest updateUserRequest;
+
+    @Mock
+    private UpdateProfileRequest updateProfileRequest;
+
+    @Mock
+    private ChangePasswordRequest changePasswordRequest;
+
     @InjectMocks
     private UserService userService;
 
-    // =========================================================
-    // GET ALL USERS
-    // =========================================================
     @Test
-    void shouldReturnAllUsers() {
+    void getAllUsersShouldReturnMappedUsers() {
 
-        RoleModel adminRol = new RoleModel(1L, "ADMIN");
-
-        DepartmentModel itDepartment = new DepartmentModel(1L, "IT", true);
-
-        UserModel user1 = new UserModel(
+        UserModel user = createUser(
                 1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
                 true,
-                adminRol,
-                itDepartment);
-
-        RoleModel technicianRol = new RoleModel(2L, "TECHNICIAN");
-
-        DepartmentModel supportDepartment = new DepartmentModel(2L, "Support", true);
-
-        UserModel user2 = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                technicianRol,
-                supportDepartment);
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<UserModel> userPage = new PageImpl<>(
-                List.of(user1, user2),
-                pageable,
-                2);
+                createRole(1L, RoleName.USER.name()),
+                createDepartment(1L, "IT"));
 
         when(userRepository.findAll(pageable))
-                .thenReturn(userPage);
+                .thenReturn(new PageImpl<>(List.of(user)));
 
-        Page<UserResponse> response = userService.getAllUsers(pageable);
+        Page<UserResponse> result = userService.getAllUsers(pageable);
 
-        assertEquals(
-                2,
-                response.getTotalElements());
+        assertThat(result.getContent())
+                .hasSize(1);
 
-        assertEquals(
-                2,
-                response.getContent().size());
+        UserResponse response = result.getContent().get(0);
 
-        assertEquals(
-                1L,
-                response.getContent()
-                        .get(0)
-                        .getIdUser());
+        assertThat(response.getIdUser())
+                .isEqualTo(1L);
 
-        assertEquals(
-                "admin",
-                response.getContent()
-                        .get(0)
-                        .getUsername());
+        assertThat(response.getUsername())
+                .isEqualTo("john");
 
-        assertEquals(
-                "admin@example.com",
-                response.getContent()
-                        .get(0)
-                        .getEmail());
+        assertThat(response.getEmail())
+                .isEqualTo("john@example.com");
 
-        assertEquals(
-                "ADMIN",
-                response.getContent()
-                        .get(0)
-                        .getRole()
-                        .getName());
+        assertThat(response.getFirstName())
+                .isEqualTo("John");
 
-        assertEquals(
-                "IT",
-                response.getContent()
-                        .get(0)
-                        .getDepartment()
-                        .getName());
+        assertThat(response.getLastName())
+                .isEqualTo("Doe");
 
-        assertEquals(
-                2L,
-                response.getContent()
-                        .get(1)
-                        .getIdUser());
+        assertThat(response.isEnabled())
+                .isTrue();
 
-        assertEquals(
-                "carlos",
-                response.getContent()
-                        .get(1)
-                        .getUsername());
+        assertThat(response.getRole().getName())
+                .isEqualTo(RoleName.USER.name());
 
-        assertEquals(
-                "carlos@example.com",
-                response.getContent()
-                        .get(1)
-                        .getEmail());
+        assertThat(response.getDepartment().getName())
+                .isEqualTo("IT");
 
-        assertEquals(
-                "TECHNICIAN",
-                response.getContent()
-                        .get(1)
-                        .getRole()
-                        .getName());
-
-        assertEquals(
-                "Support",
-                response.getContent()
-                        .get(1)
-                        .getDepartment()
-                        .getName());
-
-        verify(userRepository)
-                .findAll(pageable);
+        verify(userRepository).findAll(pageable);
     }
 
     @Test
-    void shouldReturnEmptyPageWhenNoUsersExist() {
+    void getUserByIdShouldReturnUser() {
 
-        Pageable pageable = PageRequest.of(0, 10);
+        Long userId = 1L;
 
-        when(userRepository.findAll(pageable))
-                .thenReturn(Page.empty(pageable));
-
-        Page<UserResponse> response = userService.getAllUsers(pageable);
-
-        assertTrue(response.isEmpty());
-
-        assertEquals(
-                0,
-                response.getTotalElements());
-
-        verify(userRepository)
-                .findAll(pageable);
-    }
-
-    // =========================================================
-    // GET USER BY ID
-    // =========================================================
-    @Test
-    void shouldReturnUserById() {
-
-        RoleModel role = new RoleModel(1L, "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(1L, "IT", true);
-
-        UserModel user = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
+        UserModel user = createUser(
+                userId,
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
                 true,
-                role,
-                department);
+                createRole(1L, RoleName.USER.name()),
+                createDepartment(1L, "IT"));
 
-        when(userRepository.findById(1L))
+        when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
 
-        UserResponse response = userService.getUserById(1L);
+        UserResponse result = userService.getUserById(userId);
 
-        assertEquals(1L, response.getIdUser());
-        assertEquals("admin", response.getUsername());
-        assertEquals("admin@example.com", response.getEmail());
-        assertEquals("Admin", response.getFirstName());
-        assertEquals("User", response.getLastName());
-        assertTrue(response.isEnabled());
-        assertEquals("ADMIN", response.getRole().getName());
-        assertEquals("IT", response.getDepartment().getName());
+        assertThat(result.getIdUser())
+                .isEqualTo(userId);
+
+        assertThat(result.getUsername())
+                .isEqualTo("john");
+
+        verify(userRepository).findById(userId);
     }
 
     @Test
-    void shouldThrowExceptionWhenUserByIdDoesNotExist() {
+    void getUserByIdShouldThrowExceptionWhenUserDoesNotExist() {
 
-        when(userRepository.findById(99L))
+        Long userId = 1L;
+
+        when(userRepository.findById(userId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.getUserById(99L));
+        assertThatThrownBy(
+                () -> userService.getUserById(userId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "User with id " + userId + " not found");
+
+        verify(userRepository).findById(userId);
     }
 
-    // =========================================================
-    // CREATE USER
-    // =========================================================
     @Test
-    void shouldCreateUserSuccessfully() {
+    void getCurrentUserShouldReturnUser() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        String username = "john";
 
-        when(request.getUsername()).thenReturn("ana");
-        when(request.getPassword()).thenReturn("password123");
-        when(request.getEmail()).thenReturn("ana@example.com");
-        when(request.getFirstName()).thenReturn("Ana");
-        when(request.getLastName()).thenReturn("Garcia");
-        when(request.isEnabled()).thenReturn(true);
-        when(request.getRoleId()).thenReturn(3L);
-        when(request.getDepartmentId()).thenReturn(2L);
-
-        RoleModel role = new RoleModel(3L, "USER");
-
-        DepartmentModel department = new DepartmentModel(2L, "Finance", true);
-
-        UserModel savedUser = new UserModel(
+        UserModel user = createUser(
                 1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
+                username,
+                "john@example.com",
+                "John",
+                "Doe",
                 true,
-                role,
-                department);
+                createRole(1L, RoleName.USER.name()),
+                createDepartment(1L, "IT"));
 
-        when(userRepository.existsByUsername("ana"))
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(user));
+
+        UserResponse result = userService.getCurrentUser(username);
+
+        assertThat(result.getUsername())
+                .isEqualTo(username);
+
+        verify(userRepository).findByUsername(username);
+    }
+
+    @Test
+    void getCurrentUserShouldThrowExceptionWhenUserDoesNotExist() {
+
+        String username = "john";
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> userService.getCurrentUser(username))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "User with username '" + username + "' not found");
+    }
+
+    @Test
+    void createUserShouldCreateUser() {
+
+        RoleModel role = createRole(1L, RoleName.USER.name());
+
+        DepartmentModel department = createDepartment(1L, "IT");
+
+        when(createUserRequest.getUsername())
+                .thenReturn("john");
+
+        when(createUserRequest.getEmail())
+                .thenReturn("john@example.com");
+
+        when(createUserRequest.getPassword())
+                .thenReturn("password");
+
+        when(createUserRequest.getFirstName())
+                .thenReturn("John");
+
+        when(createUserRequest.getLastName())
+                .thenReturn("Doe");
+
+        when(createUserRequest.isEnabled())
+                .thenReturn(true);
+
+        when(createUserRequest.getRoleId())
+                .thenReturn(1L);
+
+        when(createUserRequest.getDepartmentId())
+                .thenReturn(1L);
+
+        when(userRepository.existsByUsername("john"))
                 .thenReturn(false);
 
-        when(userRepository.existsByEmail("ana@example.com"))
+        when(userRepository.existsByEmail("john@example.com"))
                 .thenReturn(false);
 
-        when(rolRepository.findById(3L))
+        when(roleRepository.findById(1L))
                 .thenReturn(Optional.of(role));
 
-        when(departmentRepository.findById(2L))
+        when(departmentRepository.findById(1L))
                 .thenReturn(Optional.of(department));
 
-        when(passwordEncoder.encode("password123"))
-                .thenReturn("encodedPassword");
+        when(passwordEncoder.encode("password"))
+                .thenReturn("encoded-password");
 
         when(userRepository.save(any(UserModel.class)))
-                .thenReturn(savedUser);
+                .thenAnswer(invocation -> {
 
-        UserResponse response = userService.createUser(request);
+                    UserModel user = invocation.getArgument(0);
 
-        assertEquals(1L, response.getIdUser());
-        assertEquals("ana", response.getUsername());
-        assertEquals("ana@example.com", response.getEmail());
-        assertEquals("USER", response.getRole().getName());
-        assertEquals("Finance", response.getDepartment().getName());
+                    user.setIdUser(1L);
+
+                    return user;
+                });
+
+        UserResponse result = userService.createUser(createUserRequest);
+
+        ArgumentCaptor<UserModel> userCaptor = ArgumentCaptor.forClass(UserModel.class);
+
+        verify(userRepository)
+                .save(userCaptor.capture());
+
+        UserModel savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getUsername())
+                .isEqualTo("john");
+
+        assertThat(savedUser.getPassword())
+                .isEqualTo("encoded-password");
+
+        assertThat(savedUser.getEmail())
+                .isEqualTo("john@example.com");
+
+        assertThat(savedUser.getFirstName())
+                .isEqualTo("John");
+
+        assertThat(savedUser.getLastName())
+                .isEqualTo("Doe");
+
+        assertThat(savedUser.isEnabled())
+                .isTrue();
+
+        assertThat(savedUser.getRole())
+                .isSameAs(role);
+
+        assertThat(savedUser.getDepartment())
+                .isSameAs(department);
+
+        assertThat(result.getIdUser())
+                .isEqualTo(1L);
+
+        assertThat(result.getUsername())
+                .isEqualTo("john");
 
         verify(passwordEncoder)
-                .encode("password123");
-
-        verify(userRepository)
-                .save(any(UserModel.class));
+                .encode("password");
     }
 
     @Test
-    void shouldThrowExceptionWhenUsernameAlreadyExists() {
+    void createUserShouldThrowExceptionWhenUsernameAlreadyExists() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        when(createUserRequest.getUsername())
+                .thenReturn("john");
 
-        when(request.getUsername())
-                .thenReturn("ana");
-
-        when(userRepository.existsByUsername("ana"))
+        when(userRepository.existsByUsername("john"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> userService.createUser(request));
-
-        verify(userRepository)
-                .existsByUsername("ana");
+        assertThatThrownBy(
+                () -> userService.createUser(createUserRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Username 'john' already exists");
 
         verify(userRepository, never())
                 .save(any(UserModel.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenEmailAlreadyExists() {
+    void createUserShouldThrowExceptionWhenEmailAlreadyExists() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        when(createUserRequest.getUsername())
+                .thenReturn("john");
 
-        when(request.getUsername())
-                .thenReturn("ana");
+        when(createUserRequest.getEmail())
+                .thenReturn("john@example.com");
 
-        when(request.getEmail())
-                .thenReturn("ana@example.com");
-
-        when(userRepository.existsByUsername("ana"))
+        when(userRepository.existsByUsername("john"))
                 .thenReturn(false);
 
-        when(userRepository.existsByEmail("ana@example.com"))
+        when(userRepository.existsByEmail("john@example.com"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> userService.createUser(request));
-
-        verify(userRepository)
-                .existsByEmail("ana@example.com");
+        assertThatThrownBy(
+                () -> userService.createUser(createUserRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Email 'john@example.com' already exists");
 
         verify(userRepository, never())
                 .save(any(UserModel.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenRoleDoesNotExistOnCreate() {
+    void createUserShouldThrowExceptionWhenRoleDoesNotExist() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        when(createUserRequest.getUsername())
+                .thenReturn("john");
 
-        when(request.getUsername())
-                .thenReturn("ana");
+        when(createUserRequest.getEmail())
+                .thenReturn("john@example.com");
 
-        when(request.getEmail())
-                .thenReturn("ana@example.com");
+        when(createUserRequest.getRoleId())
+                .thenReturn(5L);
 
-        when(request.getRoleId())
-                .thenReturn(99L);
-
-        when(userRepository.existsByUsername("ana"))
+        when(userRepository.existsByUsername("john"))
                 .thenReturn(false);
 
-        when(userRepository.existsByEmail("ana@example.com"))
+        when(userRepository.existsByEmail("john@example.com"))
                 .thenReturn(false);
 
-        when(rolRepository.findById(99L))
+        when(roleRepository.findById(5L))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.createUser(request));
+        assertThatThrownBy(
+                () -> userService.createUser(createUserRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Role with id 5 not found");
 
         verify(userRepository, never())
                 .save(any(UserModel.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenDepartmentDoesNotExistOnCreate() {
+    void createUserShouldThrowExceptionWhenDepartmentDoesNotExist() {
 
-        CreateUserRequest request = mock(CreateUserRequest.class);
+        RoleModel role = createRole(1L, RoleName.USER.name());
 
-        when(request.getUsername())
-                .thenReturn("ana");
+        when(createUserRequest.getUsername())
+                .thenReturn("john");
 
-        when(request.getEmail())
-                .thenReturn("ana@example.com");
+        when(createUserRequest.getEmail())
+                .thenReturn("john@example.com");
 
-        when(request.getRoleId())
-                .thenReturn(3L);
+        when(createUserRequest.getRoleId())
+                .thenReturn(1L);
 
-        when(request.getDepartmentId())
-                .thenReturn(99L);
+        when(createUserRequest.getDepartmentId())
+                .thenReturn(5L);
 
-        RoleModel role = new RoleModel(3L, "USER");
-
-        when(userRepository.existsByUsername("ana"))
+        when(userRepository.existsByUsername("john"))
                 .thenReturn(false);
 
-        when(userRepository.existsByEmail("ana@example.com"))
+        when(userRepository.existsByEmail("john@example.com"))
                 .thenReturn(false);
 
-        when(rolRepository.findById(3L))
+        when(roleRepository.findById(1L))
                 .thenReturn(Optional.of(role));
 
-        when(departmentRepository.findById(99L))
+        when(departmentRepository.findById(5L))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.createUser(request));
+        assertThatThrownBy(
+                () -> userService.createUser(createUserRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Department with id 5 not found");
 
         verify(userRepository, never())
                 .save(any(UserModel.class));
     }
 
-    // =========================================================
-    // UPDATE USER
-    // =========================================================
     @Test
-    void shouldUpdateUserSuccessfully() {
+    void updateUserShouldUpdateUser() {
 
-        UpdateUserRequest request = mock(UpdateUserRequest.class);
+        Long userId = 1L;
 
-        when(request.getUsername()).thenReturn("ana");
-        when(request.getEmail()).thenReturn("ana@example.com");
-        when(request.getFirstName()).thenReturn("Ana");
-        when(request.getLastName()).thenReturn("Garcia");
-        when(request.isEnabled()).thenReturn(true);
-        when(request.getRoleId()).thenReturn(3L);
-        when(request.getDepartmentId()).thenReturn(2L);
-
-        RoleModel oldRol = new RoleModel(1L, "ADMIN");
-
-        DepartmentModel oldDepartment = new DepartmentModel(1L, "IT", true);
-
-        UserModel existingUser = new UserModel(
-                1L,
-                "oldUsername",
-                "old@example.com",
-                "encodedPassword",
-                "Old",
-                "User",
+        UserModel existingUser = createUser(
+                userId,
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
                 true,
-                oldRol,
-                oldDepartment);
+                createRole(1L, RoleName.USER.name()),
+                createDepartment(1L, "IT"));
 
-        RoleModel newRol = new RoleModel(3L, "USER");
+        RoleModel newRole = createRole(2L, RoleName.TECHNICIAN.name());
 
-        DepartmentModel newDepartment = new DepartmentModel(2L, "Finance", true);
+        DepartmentModel newDepartment = createDepartment(2L, "Support");
 
-        when(userRepository.findById(1L))
+        when(userRepository.findById(userId))
                 .thenReturn(Optional.of(existingUser));
 
-        when(userRepository.existsByUsername("ana"))
+        when(updateUserRequest.getUsername())
+                .thenReturn("john2");
+
+        when(updateUserRequest.getEmail())
+                .thenReturn("john2@example.com");
+
+        when(updateUserRequest.getFirstName())
+                .thenReturn("Johnny");
+
+        when(updateUserRequest.getLastName())
+                .thenReturn("Doe");
+
+        when(updateUserRequest.isEnabled())
+                .thenReturn(true);
+
+        when(updateUserRequest.getRoleId())
+                .thenReturn(2L);
+
+        when(updateUserRequest.getDepartmentId())
+                .thenReturn(2L);
+
+        when(userRepository.existsByUsername("john2"))
                 .thenReturn(false);
 
-        when(userRepository.existsByEmail("ana@example.com"))
+        when(userRepository.existsByEmail("john2@example.com"))
                 .thenReturn(false);
 
-        when(rolRepository.findById(3L))
-                .thenReturn(Optional.of(newRol));
+        when(roleRepository.findById(2L))
+                .thenReturn(Optional.of(newRole));
 
         when(departmentRepository.findById(2L))
                 .thenReturn(Optional.of(newDepartment));
 
-        when(userRepository.save(any(UserModel.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(existingUser))
+                .thenReturn(existingUser);
 
-        UserResponse response = userService.updateUser(request, 1L);
+        UserResponse result = userService.updateUser(
+                updateUserRequest,
+                userId);
 
-        assertEquals("ana", response.getUsername());
-        assertEquals("ana@example.com", response.getEmail());
-        assertEquals("Ana", response.getFirstName());
-        assertEquals("Garcia", response.getLastName());
-        assertEquals("USER", response.getRole().getName());
-        assertEquals("Finance", response.getDepartment().getName());
+        assertThat(existingUser.getUsername())
+                .isEqualTo("john2");
+
+        assertThat(existingUser.getEmail())
+                .isEqualTo("john2@example.com");
+
+        assertThat(existingUser.getFirstName())
+                .isEqualTo("Johnny");
+
+        assertThat(existingUser.getRole())
+                .isSameAs(newRole);
+
+        assertThat(existingUser.getDepartment())
+                .isSameAs(newDepartment);
+
+        assertThat(result.getUsername())
+                .isEqualTo("john2");
 
         verify(userRepository)
                 .save(existingUser);
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingUser() {
+    void updateUserShouldNotCheckDuplicatesWhenUsernameAndEmailDoNotChange() {
 
-        UpdateUserRequest request = mock(UpdateUserRequest.class);
+        Long userId = 1L;
 
-        when(userRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        RoleModel role = createRole(1L, RoleName.USER.name());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.updateUser(request, 99L));
+        DepartmentModel department = createDepartment(1L, "IT");
 
-        verify(userRepository, never())
-                .save(any(UserModel.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingWithExistingUsername() {
-
-        UpdateUserRequest request = mock(UpdateUserRequest.class);
-
-        when(request.getUsername())
-                .thenReturn("ana");
-
-        RoleModel role = new RoleModel(3L, "USER");
-
-        DepartmentModel department = new DepartmentModel(2L, "Finance", true);
-
-        UserModel existingUser = new UserModel(
-                1L,
-                "oldUsername",
-                "old@example.com",
-                "encodedPassword",
-                "Old",
-                "User",
+        UserModel existingUser = createUser(
+                userId,
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
                 true,
                 role,
                 department);
 
-        when(userRepository.findById(1L))
+        when(userRepository.findById(userId))
                 .thenReturn(Optional.of(existingUser));
 
-        when(userRepository.existsByUsername("ana"))
+        when(updateUserRequest.getUsername())
+                .thenReturn("john");
+
+        when(updateUserRequest.getEmail())
+                .thenReturn("john@example.com");
+
+        when(updateUserRequest.getFirstName())
+                .thenReturn("John");
+
+        when(updateUserRequest.getLastName())
+                .thenReturn("Doe");
+
+        when(updateUserRequest.isEnabled())
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> userService.updateUser(request, 1L));
+        when(updateUserRequest.getRoleId())
+                .thenReturn(1L);
 
-        verify(userRepository, never())
-                .save(any(UserModel.class));
-    }
+        when(updateUserRequest.getDepartmentId())
+                .thenReturn(1L);
 
-    @Test
-    void shouldThrowExceptionWhenUpdatingWithExistingEmail() {
-
-        UpdateUserRequest request = mock(UpdateUserRequest.class);
-
-        when(request.getUsername())
-                .thenReturn("ana");
-
-        when(request.getEmail())
-                .thenReturn("ana@example.com");
-
-        RoleModel role = new RoleModel(3L, "USER");
-
-        DepartmentModel department = new DepartmentModel(2L, "Finance", true);
-
-        UserModel existingUser = new UserModel(
-                1L,
-                "ana",
-                "old@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                role,
-                department);
-
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(existingUser));
-
-        when(userRepository.existsByEmail("ana@example.com"))
-                .thenReturn(true);
-
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> userService.updateUser(request, 1L));
-
-        verify(userRepository, never())
-                .save(any(UserModel.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenRoleDoesNotExistOnUpdate() {
-
-        UpdateUserRequest request = mock(UpdateUserRequest.class);
-
-        when(request.getUsername())
-                .thenReturn("ana");
-
-        when(request.getEmail())
-                .thenReturn("ana@example.com");
-
-        when(request.getRoleId())
-                .thenReturn(99L);
-
-        RoleModel role = new RoleModel(3L, "USER");
-
-        DepartmentModel department = new DepartmentModel(2L, "Finance", true);
-
-        UserModel existingUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                role,
-                department);
-
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(existingUser));
-
-        when(rolRepository.findById(99L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.updateUser(request, 1L));
-
-        verify(userRepository, never())
-                .save(any(UserModel.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenDepartmentDoesNotExistOnUpdate() {
-
-        UpdateUserRequest request = mock(UpdateUserRequest.class);
-
-        when(request.getUsername())
-                .thenReturn("ana");
-
-        when(request.getEmail())
-                .thenReturn("ana@example.com");
-
-        when(request.getRoleId())
-                .thenReturn(3L);
-
-        when(request.getDepartmentId())
-                .thenReturn(99L);
-
-        RoleModel role = new RoleModel(3L, "USER");
-
-        DepartmentModel department = new DepartmentModel(2L, "Finance", true);
-
-        UserModel existingUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                role,
-                department);
-
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(existingUser));
-
-        when(rolRepository.findById(3L))
+        when(roleRepository.findById(1L))
                 .thenReturn(Optional.of(role));
 
-        when(departmentRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        when(departmentRepository.findById(1L))
+                .thenReturn(Optional.of(department));
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.updateUser(request, 1L));
+        when(userRepository.save(existingUser))
+                .thenReturn(existingUser);
+
+        userService.updateUser(
+                updateUserRequest,
+                userId);
 
         verify(userRepository, never())
-                .save(any(UserModel.class));
+                .existsByUsername("john");
+
+        verify(userRepository, never())
+                .existsByEmail("john@example.com");
     }
 
+    @Test
+    void updateUserShouldThrowExceptionWhenUsernameAlreadyExists() {
+
+        Long userId = 1L;
+
+        UserModel existingUser = createUser(
+                userId,
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                null,
+                null);
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(existingUser));
+
+        when(updateUserRequest.getUsername())
+                .thenReturn("mary");
+
+        when(userRepository.existsByUsername("mary"))
+                .thenReturn(true);
+
+        assertThatThrownBy(
+                () -> userService.updateUser(
+                        updateUserRequest,
+                        userId))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Username 'mary' already exists");
+
+        verify(userRepository, never())
+                .save(existingUser);
+    }
+
+    @Test
+    void updateUserShouldThrowExceptionWhenEmailAlreadyExists() {
+
+        Long userId = 1L;
+
+        UserModel existingUser = createUser(
+                userId,
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                null,
+                null);
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(existingUser));
+
+        when(updateUserRequest.getUsername())
+                .thenReturn("john");
+
+        when(updateUserRequest.getEmail())
+                .thenReturn("mary@example.com");
+
+        when(userRepository.existsByEmail("mary@example.com"))
+                .thenReturn(true);
+
+        assertThatThrownBy(
+                () -> userService.updateUser(
+                        updateUserRequest,
+                        userId))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Email 'mary@example.com' already exists");
+
+        verify(userRepository, never())
+                .save(existingUser);
+    }
+
+    @Test
+    void updateUserShouldThrowExceptionWhenUserDoesNotExist() {
+
+        Long userId = 1L;
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> userService.updateUser(
+                        updateUserRequest,
+                        userId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "User with id " + userId + " not found");
+    }
+
+    @Test
+    void updateUserShouldThrowExceptionWhenRoleDoesNotExist() {
+
+        Long userId = 1L;
+
+        UserModel existingUser = createUser(
+                userId,
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                null,
+                null);
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(existingUser));
+
+        when(updateUserRequest.getUsername())
+                .thenReturn("john");
+
+        when(updateUserRequest.getEmail())
+                .thenReturn("john@example.com");
+
+        when(updateUserRequest.getRoleId())
+                .thenReturn(5L);
+
+        when(roleRepository.findById(5L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> userService.updateUser(
+                        updateUserRequest,
+                        userId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Role with id 5 not found");
+    }
+
+    @Test
+    void updateUserShouldThrowExceptionWhenDepartmentDoesNotExist() {
+
+        Long userId = 1L;
+
+        RoleModel role = createRole(1L, RoleName.USER.name());
+
+        UserModel existingUser = createUser(
+                userId,
+                "john",
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                role,
+                null);
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.of(existingUser));
+
+        when(updateUserRequest.getUsername())
+                .thenReturn("john");
+
+        when(updateUserRequest.getEmail())
+                .thenReturn("john@example.com");
+
+        when(updateUserRequest.getRoleId())
+                .thenReturn(1L);
+
+        when(updateUserRequest.getDepartmentId())
+                .thenReturn(5L);
+
+        when(roleRepository.findById(1L))
+                .thenReturn(Optional.of(role));
+
+        when(departmentRepository.findById(5L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> userService.updateUser(
+                        updateUserRequest,
+                        userId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Department with id 5 not found");
+    }
+
+    @Test
+    void updateCurrentUserShouldUpdateProfile() {
+
+        String username = "john";
+
+        UserModel existingUser = createUser(
+                1L,
+                username,
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                createRole(1L, RoleName.USER.name()),
+                createDepartment(1L, "IT"));
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(existingUser));
+
+        when(updateProfileRequest.getEmail())
+                .thenReturn("new@example.com");
+
+        when(updateProfileRequest.getFirstName())
+                .thenReturn("Johnny");
+
+        when(updateProfileRequest.getLastName())
+                .thenReturn("Doe");
+
+        when(userRepository.existsByEmail("new@example.com"))
+                .thenReturn(false);
+
+        when(userRepository.save(existingUser))
+                .thenReturn(existingUser);
+
+        UserResponse result = userService.updateCurrentUser(
+                username,
+                updateProfileRequest);
+
+        assertThat(existingUser.getEmail())
+                .isEqualTo("new@example.com");
+
+        assertThat(existingUser.getFirstName())
+                .isEqualTo("Johnny");
+
+        assertThat(result.getEmail())
+                .isEqualTo("new@example.com");
+
+        verify(userRepository)
+                .save(existingUser);
+    }
+
+    @Test
+    void updateCurrentUserShouldNotCheckDuplicateWhenEmailDoesNotChange() {
+
+        String username = "john";
+
+        UserModel existingUser = createUser(
+                1L,
+                username,
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                null,
+                null);
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(existingUser));
+
+        when(updateProfileRequest.getEmail())
+                .thenReturn("john@example.com");
+
+        when(updateProfileRequest.getFirstName())
+                .thenReturn("John");
+
+        when(updateProfileRequest.getLastName())
+                .thenReturn("Doe");
+
+        when(userRepository.save(existingUser))
+                .thenReturn(existingUser);
+
+        userService.updateCurrentUser(
+                username,
+                updateProfileRequest);
+
+        verify(userRepository, never())
+                .existsByEmail("john@example.com");
+    }
+
+    @Test
+    void updateCurrentUserShouldThrowExceptionWhenEmailAlreadyExists() {
+
+        String username = "john";
+
+        UserModel existingUser = createUser(
+                1L,
+                username,
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                null,
+                null);
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(existingUser));
+
+        when(updateProfileRequest.getEmail())
+                .thenReturn("mary@example.com");
+
+        when(userRepository.existsByEmail("mary@example.com"))
+                .thenReturn(true);
+
+        assertThatThrownBy(
+                () -> userService.updateCurrentUser(
+                        username,
+                        updateProfileRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Email 'mary@example.com' already exists");
+
+        verify(userRepository, never())
+                .save(existingUser);
+    }
+
+    @Test
+    void updateCurrentUserShouldThrowExceptionWhenUserDoesNotExist() {
+
+        String username = "john";
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> userService.updateCurrentUser(
+                        username,
+                        updateProfileRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "User with username '" + username + "' not found");
+    }
+
+    @Test
+    void changePasswordShouldChangePassword() {
+
+        String username = "john";
+
+        UserModel user = createUser(
+                1L,
+                username,
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                null,
+                null);
+
+        user.setPassword("old-encoded-password");
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(user));
+
+        when(changePasswordRequest.getCurrentPassword())
+                .thenReturn("old-password");
+
+        when(changePasswordRequest.getNewPassword())
+                .thenReturn("new-password");
+
+        when(passwordEncoder.matches(
+                "old-password",
+                "old-encoded-password"))
+                .thenReturn(true);
+
+        when(passwordEncoder.encode("new-password"))
+                .thenReturn("new-encoded-password");
+
+        userService.changePassword(
+                username,
+                changePasswordRequest);
+
+        assertThat(user.getPassword())
+                .isEqualTo("new-encoded-password");
+
+        verify(passwordEncoder).matches(
+                "old-password",
+                "old-encoded-password");
+
+        verify(passwordEncoder)
+                .encode("new-password");
+
+        verify(userRepository)
+                .save(user);
+    }
+
+    @Test
+    void changePasswordShouldThrowExceptionWhenCurrentPasswordIsIncorrect() {
+
+        String username = "john";
+
+        UserModel user = createUser(
+                1L,
+                username,
+                "john@example.com",
+                "John",
+                "Doe",
+                true,
+                null,
+                null);
+
+        user.setPassword("encoded-password");
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(user));
+
+        when(changePasswordRequest.getCurrentPassword())
+                .thenReturn("wrong-password");
+
+        when(passwordEncoder.matches(
+                "wrong-password",
+                "encoded-password"))
+                .thenReturn(false);
+
+        assertThatThrownBy(
+                () -> userService.changePassword(
+                        username,
+                        changePasswordRequest))
+                .isInstanceOf(InvalidPasswordException.class)
+                .hasMessage(
+                        "Current password is incorrect");
+
+        verify(passwordEncoder, never())
+                .encode(any());
+
+        verify(userRepository, never())
+                .save(user);
+    }
+
+    @Test
+    void changePasswordShouldThrowExceptionWhenUserDoesNotExist() {
+
+        String username = "john";
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> userService.changePassword(
+                        username,
+                        changePasswordRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "User with username '" + username + "' not found");
+
+        verify(passwordEncoder, never())
+                .matches(any(), any());
+    }
+
+    @Test
+    void getAllTechniciansShouldReturnEnabledTechnicians() {
+
+        UserModel firstTechnician = createUser(
+                1L,
+                "tech1",
+                "tech1@example.com",
+                "Tech",
+                "One",
+                true,
+                createRole(2L, RoleName.TECHNICIAN.name()),
+                null);
+
+        UserModel secondTechnician = createUser(
+                2L,
+                "tech2",
+                "tech2@example.com",
+                "Tech",
+                "Two",
+                true,
+                createRole(2L, RoleName.TECHNICIAN.name()),
+                null);
+
+        when(userRepository.findByRoleNameAndEnabledTrue(
+                RoleName.TECHNICIAN.name()))
+                .thenReturn(
+                        List.of(
+                                firstTechnician,
+                                secondTechnician));
+
+        List<UserSummaryResponse> result = userService.getAllTechnicians();
+
+        assertThat(result)
+                .hasSize(2);
+
+        assertThat(result.get(0).getIdUser())
+                .isEqualTo(1L);
+
+        assertThat(result.get(0).getUsername())
+                .isEqualTo("tech1");
+
+        assertThat(result.get(1).getIdUser())
+                .isEqualTo(2L);
+
+        assertThat(result.get(1).getUsername())
+                .isEqualTo("tech2");
+
+        verify(userRepository)
+                .findByRoleNameAndEnabledTrue(
+                        RoleName.TECHNICIAN.name());
+    }
+
+    private UserModel createUser(
+            Long id,
+            String username,
+            String email,
+            String firstName,
+            String lastName,
+            boolean enabled,
+            RoleModel role,
+            DepartmentModel department) {
+
+        UserModel user = new UserModel();
+
+        user.setIdUser(id);
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEnabled(enabled);
+        user.setRole(role);
+        user.setDepartment(department);
+
+        return user;
+    }
+
+    private RoleModel createRole(
+            Long id,
+            String name) {
+
+        RoleModel role = new RoleModel();
+
+        role.setIdRole(id);
+        role.setName(name);
+
+        return role;
+    }
+
+    private DepartmentModel createDepartment(
+            Long id,
+            String name) {
+
+        DepartmentModel department = new DepartmentModel();
+
+        department.setIdDepartment(id);
+        department.setName(name);
+        department.setActive(true);
+
+        return department;
+    }
 }

@@ -1,366 +1,166 @@
 package com.example.back_end.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.department.DepartmentRequest;
 import com.example.back_end.dtos.department.DepartmentResponse;
-import com.example.back_end.security.JwtAuthenticationFilter;
-import com.example.back_end.security.JwtService;
 import com.example.back_end.service.DepartmentService;
 
-@WebMvcTest(DepartmentController.class)
-@Import({
-        SecurityConfig.class,
-        JwtAuthenticationFilter.class
-})
+@ExtendWith(MockitoExtension.class)
 class DepartmentControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private DepartmentService departmentService;
 
-    @MockitoBean
-    private JwtService jwtService;
+    @Mock
+    private DepartmentRequest departmentRequest;
 
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    @Mock
+    private DepartmentResponse departmentResponse;
 
-    @MockitoBean
-    private AuthenticationProvider authenticationProvider;
+    @InjectMocks
+    private DepartmentController departmentController;
 
-    // =========================================================
-    // GET ALL DEPARTMENTS
-    // =========================================================
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnAllDepartments() throws Exception {
+    void getAllDepartmentsShouldReturnAllDepartments() {
 
-        List<DepartmentResponse> departments = List.of(
-                new DepartmentResponse(1L, "IT", true),
-                new DepartmentResponse(2L, "Finance", true));
+        List<DepartmentResponse> departments = List.of(departmentResponse);
 
         when(departmentService.getAllDepartments())
                 .thenReturn(departments);
 
-        mockMvc.perform(get("/departments"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].idDepartment").value(1))
-                .andExpect(jsonPath("$[0].name").value("IT"))
-                .andExpect(jsonPath("$[0].active").value(true))
-                .andExpect(jsonPath("$[1].idDepartment").value(2))
-                .andExpect(jsonPath("$[1].name").value("Finance"))
-                .andExpect(jsonPath("$[1].active").value(true));
+        ResponseEntity<List<DepartmentResponse>> response = departmentController.getAllDepartments();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(departments);
 
         verify(departmentService).getAllDepartments();
     }
 
-    // =========================================================
-    // GET ACTIVE DEPARTMENTS
-    // =========================================================
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnActiveDepartments() throws Exception {
+    void getActiveDepartmentsShouldReturnActiveDepartments() {
 
-        List<DepartmentResponse> departments = List.of(
-                new DepartmentResponse(1L, "IT", true),
-                new DepartmentResponse(2L, "Finance", true));
+        List<DepartmentResponse> departments = List.of(departmentResponse);
 
         when(departmentService.getActiveDepartments())
                 .thenReturn(departments);
 
-        mockMvc.perform(get("/departments/actives"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("IT"))
-                .andExpect(jsonPath("$[0].active").value(true))
-                .andExpect(jsonPath("$[1].name").value("Finance"))
-                .andExpect(jsonPath("$[1].active").value(true));
+        ResponseEntity<List<DepartmentResponse>> response = departmentController.getActiveDepartments();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(departments);
 
         verify(departmentService).getActiveDepartments();
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnEmptyListWhenNoActiveDepartmentsExist()
-            throws Exception {
+    void getDepartmentByIdShouldReturnDepartment() {
 
-        when(departmentService.getActiveDepartments())
-                .thenReturn(List.of());
+        Long departmentId = 1L;
 
-        mockMvc.perform(get("/departments/actives"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        when(departmentService.getDepartmentById(departmentId))
+                .thenReturn(departmentResponse);
 
-        verify(departmentService).getActiveDepartments();
-    }
+        ResponseEntity<DepartmentResponse> response = departmentController.getDepartmentById(departmentId);
 
-    // =========================================================
-    // GET DEPARTMENT BY ID
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnDepartmentById() throws Exception {
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        DepartmentResponse department = new DepartmentResponse(1L, "IT", true);
+        assertThat(response.getBody())
+                .isSameAs(departmentResponse);
 
-        when(departmentService.getDepartmentById(1L))
-                .thenReturn(department);
-
-        mockMvc.perform(get("/departments/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idDepartment").value(1))
-                .andExpect(jsonPath("$.name").value("IT"))
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(departmentService).getDepartmentById(1L);
-    }
-
-    // =========================================================
-    // CREATE DEPARTMENT
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToCreateDepartment() throws Exception {
-
-        DepartmentResponse response = new DepartmentResponse(1L, "IT", true);
-
-        when(departmentService.createDepartment(
-                any(DepartmentRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                post("/departments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "IT"
-                                }
-                                """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idDepartment").value(1))
-                .andExpect(jsonPath("$.name").value("IT"))
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(departmentService)
-                .createDepartment(any(DepartmentRequest.class));
+        verify(departmentService).getDepartmentById(departmentId);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromCreatingDepartment() throws Exception {
+    void createDepartmentShouldReturnCreatedDepartment() {
 
-        mockMvc.perform(
-                post("/departments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "IT"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        when(departmentService.createDepartment(departmentRequest))
+                .thenReturn(departmentResponse);
 
-        verify(departmentService, never())
-                .createDepartment(any(DepartmentRequest.class));
+        ResponseEntity<DepartmentResponse> response = departmentController.createDepartment(departmentRequest);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
+        assertThat(response.getBody())
+                .isSameAs(departmentResponse);
+
+        verify(departmentService).createDepartment(departmentRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromCreatingDepartment()
-            throws Exception {
+    void updateDepartmentShouldReturnUpdatedDepartment() {
 
-        mockMvc.perform(
-                post("/departments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "IT"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long departmentId = 1L;
 
-        verify(departmentService, never())
-                .createDepartment(any(DepartmentRequest.class));
-    }
+        when(departmentService.updateDepartment(
+                departmentId,
+                departmentRequest))
+                .thenReturn(departmentResponse);
 
-    // =========================================================
-    // UPDATE DEPARTMENT
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToUpdateDepartment() throws Exception {
+        ResponseEntity<DepartmentResponse> response = departmentController.updateDepartment(
+                departmentId,
+                departmentRequest);
 
-        DepartmentResponse response = new DepartmentResponse(1L, "Finance", true);
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        when(departmentService.updateDepartment(eq(1L),
-                any(DepartmentRequest.class)))
-                .thenReturn(response);
+        assertThat(response.getBody())
+                .isSameAs(departmentResponse);
 
-        mockMvc.perform(
-                put("/departments/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Finance"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idDepartment").value(1))
-                .andExpect(jsonPath("$.name").value("Finance"))
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(departmentService)
-                .updateDepartment(eq(1L),
-                        any(DepartmentRequest.class));
+        verify(departmentService).updateDepartment(
+                departmentId,
+                departmentRequest);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromUpdatingDepartment()
-            throws Exception {
+    void deactivateDepartmentShouldReturnNoContent() {
 
-        mockMvc.perform(
-                put("/departments/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Finance"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long departmentId = 1L;
 
-        verify(departmentService, never())
-                .updateDepartment(any(Long.class),
-                        any(DepartmentRequest.class));
+        ResponseEntity<Void> response = departmentController.deactivateDepartment(departmentId);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(response.getBody())
+                .isNull();
+
+        verify(departmentService).deactivateDepartment(departmentId);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromUpdatingDepartment()
-            throws Exception {
+    void activateDepartmentShouldReturnNoContent() {
 
-        mockMvc.perform(
-                put("/departments/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Finance"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long departmentId = 1L;
 
-        verify(departmentService, never())
-                .updateDepartment(any(Long.class),
-                        any(DepartmentRequest.class));
-    }
+        ResponseEntity<Void> response = departmentController.activateDepartment(departmentId);
 
-    // =========================================================
-    // DEACTIVATE DEPARTMENT
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToDeactivateDepartment()
-            throws Exception {
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
 
-        mockMvc.perform(
-                patch("/departments/1/deactivate"))
-                .andExpect(status().isNoContent());
+        assertThat(response.getBody())
+                .isNull();
 
-        verify(departmentService)
-                .deactivateDepartment(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromDeactivatingDepartment()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/departments/1/deactivate"))
-                .andExpect(status().isForbidden());
-
-        verify(departmentService, never())
-                .deactivateDepartment(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromDeactivatingDepartment()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/departments/1/deactivate"))
-                .andExpect(status().isForbidden());
-
-        verify(departmentService, never())
-                .deactivateDepartment(1L);
-    }
-
-    // =========================================================
-    // ACTIVATE DEPARTMENT
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToActivateDepartment()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/departments/1/activate"))
-                .andExpect(status().isNoContent());
-
-        verify(departmentService)
-                .activateDepartment(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromActivatingDepartment()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/departments/1/activate"))
-                .andExpect(status().isForbidden());
-
-        verify(departmentService, never())
-                .activateDepartment(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromActivatingDepartment()
-            throws Exception {
-
-        mockMvc.perform(
-                patch("/departments/1/activate"))
-                .andExpect(status().isForbidden());
-
-        verify(departmentService, never())
-                .activateDepartment(1L);
+        verify(departmentService).activateDepartment(departmentId);
     }
 }

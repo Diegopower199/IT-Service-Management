@@ -1,12 +1,9 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,31 +15,39 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.example.back_end.dtos.category.CategoryResponse;
+import com.example.back_end.dtos.priority.PriorityResponse;
+import com.example.back_end.dtos.status.StatusResponse;
 import com.example.back_end.dtos.ticket.AssignTicketRequest;
 import com.example.back_end.dtos.ticket.ChangePriorityRequest;
 import com.example.back_end.dtos.ticket.ChangeStatusRequest;
 import com.example.back_end.dtos.ticket.CreateTicketRequest;
 import com.example.back_end.dtos.ticket.TicketResponse;
+import com.example.back_end.dtos.ticket.TicketStatisticsResponse;
 import com.example.back_end.dtos.ticket.UpdateTicketRequest;
+import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.ProtectedPriority;
+import com.example.back_end.enums.ProtectedStatus;
+import com.example.back_end.enums.RoleName;
 import com.example.back_end.enums.TicketHistoryAction;
 import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.InvalidRoleException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.CategoryModel;
-import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.PriorityModel;
 import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.StatusModel;
@@ -75,666 +80,355 @@ class TicketServiceTest {
     @Mock
     private TicketHistoryService ticketHistoryService;
 
+    @Mock
+    private Pageable pageable;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private CreateTicketRequest createTicketRequest;
+
+    @Mock
+    private UpdateTicketRequest updateTicketRequest;
+
+    @Mock
+    private AssignTicketRequest assignTicketRequest;
+
+    @Mock
+    private ChangePriorityRequest changePriorityRequest;
+
+    @Mock
+    private ChangeStatusRequest changeStatusRequest;
+
     @InjectMocks
     private TicketService ticketService;
 
     @AfterEach
-    void clearSecurityContext() {
+    void tearDown() {
+
         SecurityContextHolder.clearContext();
     }
 
-    // =========================================================
-    // GET ALL TICKETS
-    // =========================================================
     @Test
-    void shouldReturnAllTickets() {
+    void getAllTicketsShouldReturnMappedTickets() {
 
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
+        UserModel createdBy = createUser(
                 1L,
-                "IT",
-                true);
+                "admin",
+                RoleName.ADMIN.name());
 
-        UserModel user = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        PriorityModel priority = new PriorityModel(
+        UserModel requestedFor = createUser(
                 2L,
-                "MEDIUM",
-                true);
+                "john",
+                RoleName.USER.name());
 
-        StatusModel status = new StatusModel(
+        UserModel assignedTo = createUser(
+                3L,
+                "technician",
+                RoleName.TECHNICIAN.name());
+
+        CategoryModel category = createCategory(
                 1L,
-                "OPEN",
-                true);
+                "Hardware");
 
-        LocalDateTime now = LocalDateTime.now();
+        PriorityModel priority = createPriority(
+                1L,
+                "HIGH");
 
-        TicketModel ticket1 = new TicketModel();
-        ticket1.setIdTicket(1L);
-        ticket1.setTitle("Laptop broken");
-        ticket1.setDescription("Laptop does not start");
-        ticket1.setCreatedAt(now);
-        ticket1.setLastUpdated(now);
-        ticket1.setCreatedBy(user);
-        ticket1.setRequestedFor(user);
-        ticket1.setCategory(category);
-        ticket1.setPriority(priority);
-        ticket1.setStatus(status);
+        StatusModel status = createStatus(
+                1L,
+                ProtectedStatus.OPEN.name());
 
-        TicketModel ticket2 = new TicketModel();
-        ticket2.setIdTicket(2L);
-        ticket2.setTitle("VPN problem");
-        ticket2.setDescription("Unable to connect");
-        ticket2.setCreatedAt(now);
-        ticket2.setLastUpdated(now);
-        ticket2.setCreatedBy(user);
-        ticket2.setRequestedFor(user);
-        ticket2.setCategory(category);
-        ticket2.setPriority(priority);
-        ticket2.setStatus(status);
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<TicketModel> ticketPage = new PageImpl<>(
-                List.of(ticket1, ticket2),
-                pageable,
-                2);
+        TicketModel ticket = createTicket(
+                1L,
+                createdBy,
+                requestedFor,
+                assignedTo,
+                category,
+                priority,
+                status);
 
         when(ticketRepository.findAll(
                 ArgumentMatchers.<Specification<TicketModel>>any(),
                 eq(pageable)))
-                .thenReturn(ticketPage);
+                .thenReturn(new PageImpl<>(List.of(ticket)));
 
-        Page<TicketResponse> response = ticketService.getAllTickets(
-                null,
-                null,
-                null,
-                null,
+        Page<TicketResponse> result = ticketService.getAllTickets(
+                "Printer",
+                "OPEN",
+                "HIGH",
+                "Hardware",
                 pageable);
 
-        assertEquals(
-                2,
-                response.getTotalElements());
+        assertThat(result.getContent())
+                .hasSize(1);
 
-        assertEquals(
-                2,
-                response.getContent().size());
+        TicketResponse expected = createExpectedTicketResponse(ticket);
 
-        assertEquals(
-                "Laptop broken",
-                response.getContent()
-                        .get(0)
-                        .getTitle());
+        assertThat(result.getContent().get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(expected);
 
-        assertEquals(
-                "VPN problem",
-                response.getContent()
-                        .get(1)
-                        .getTitle());
-
-        assertEquals(
-                "ana",
-                response.getContent()
-                        .get(0)
-                        .getCreatedBy()
-                        .getUsername());
-
-        assertEquals(
-                "Hardware",
-                response.getContent()
-                        .get(0)
-                        .getCategory()
-                        .getName());
-
-        assertEquals(
-                "MEDIUM",
-                response.getContent()
-                        .get(0)
-                        .getPriority()
-                        .getName());
-
-        assertEquals(
-                "OPEN",
-                response.getContent()
-                        .get(0)
-                        .getStatus()
-                        .getName());
-
-        verify(ticketRepository)
-                .findAll(
-                        ArgumentMatchers
-                                .<Specification<TicketModel>>any(),
-                        eq(pageable));
-    }
-
-    @Test
-    void shouldReturnEmptyPageWhenNoTicketsExist() {
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        when(ticketRepository.findAll(
+        verify(ticketRepository).findAll(
                 ArgumentMatchers.<Specification<TicketModel>>any(),
-                eq(pageable)))
-                .thenReturn(Page.empty(pageable));
-
-        Page<TicketResponse> response = ticketService.getAllTickets(
-                null,
-                null,
-                null,
-                null,
-                pageable);
-
-        assertTrue(response.isEmpty());
-
-        assertEquals(
-                0,
-                response.getTotalElements());
-
-        verify(ticketRepository)
-                .findAll(
-                        ArgumentMatchers
-                                .<Specification<TicketModel>>any(),
-                        eq(pageable));
+                eq(pageable));
     }
 
-    // =========================================================
-    // GET TICKET BY ID
-    // =========================================================
     @Test
-    void shouldReturnTicketByIdWhenUserIsRelatedToTicket() {
+    void getTicketByIdShouldReturnTicketForUserWhoCreatedTicket() {
 
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
+        Long ticketId = 1L;
 
-        DepartmentModel department = new DepartmentModel(
+        UserModel currentUser = createUser(
                 1L,
-                "IT",
-                true);
+                "john",
+                RoleName.USER.name());
 
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        PriorityModel priority = new PriorityModel(
+        UserModel requestedFor = createUser(
                 2L,
-                "MEDIUM",
-                true);
+                "mary",
+                RoleName.USER.name());
 
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
+        TicketModel ticket = createTicket(
+                ticketId,
+                currentUser,
+                requestedFor,
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
 
-        LocalDateTime now = LocalDateTime.now();
+        configureAuthenticatedUser(currentUser);
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setTitle("Laptop broken");
-        ticket.setDescription("Laptop does not start");
-        ticket.setCreatedAt(now);
-        ticket.setLastUpdated(now);
-        ticket.setCreatedBy(currentUser);
-        ticket.setRequestedFor(currentUser);
-        ticket.setCategory(category);
-        ticket.setPriority(priority);
-        ticket.setStatus(status);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
+        TicketResponse result = ticketService.getTicketById(ticketId);
 
-        TicketResponse response = ticketService.getTicketById(1L);
-
-        assertEquals(
-                1L,
-                response.getIdTicket());
-
-        assertEquals(
-                "Laptop broken",
-                response.getTitle());
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(createExpectedTicketResponse(ticket));
     }
 
     @Test
-    void shouldThrowExceptionWhenTicketByIdDoesNotExist() {
+    void getTicketByIdShouldReturnTicketForRequestedUser() {
 
-        when(ticketRepository.findById(99L))
+        Long ticketId = 1L;
+
+        UserModel createdBy = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
+
+        UserModel currentUser = createUser(
+                2L,
+                "mary",
+                RoleName.USER.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                createdBy,
+                currentUser,
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(currentUser);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        TicketResponse result = ticketService.getTicketById(ticketId);
+
+        assertThat(result)
+                .isNotNull();
+    }
+
+    @Test
+    void getTicketByIdShouldThrowAccessDeniedWhenUserIsNotRelatedToTicket() {
+
+        Long ticketId = 1L;
+
+        UserModel currentUser = createUser(
+                3L,
+                "other-user",
+                RoleName.USER.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                createUser(1L, "john", RoleName.USER.name()),
+                createUser(2L, "mary", RoleName.USER.name()),
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(currentUser);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(
+                () -> ticketService.getTicketById(ticketId))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "You do not have permission to access this ticket");
+    }
+
+    @Test
+    void getTicketByIdShouldThrowExceptionWhenTicketDoesNotExist() {
+
+        Long ticketId = 1L;
+
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.getTicketById(99L));
+        assertThatThrownBy(
+                () -> ticketService.getTicketById(ticketId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Ticket with id " + ticketId + " not found");
 
         verify(userRepository, never())
                 .findByUsername(any());
     }
 
     @Test
-    void shouldThrowAccessDeniedWhenUserIsNotRelatedToTicket() {
+    void getMyTicketsShouldReturnMappedTickets() {
 
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
+        UserModel currentUser = createUser(
                 1L,
-                "IT",
-                true);
+                "john",
+                RoleName.USER.name());
 
-        UserModel currentUser = new UserModel(
+        configureAuthenticatedUser(currentUser);
+
+        TicketModel ticket = createTicket(
                 1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        UserModel otherUser = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRol,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(otherUser);
-        ticket.setRequestedFor(otherUser);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        assertThrows(
-                AccessDeniedException.class,
-                () -> ticketService.getTicketById(1L));
-    }
-
-    @Test
-    void shouldAllowAdminToGetAnyTicket() {
-
-        RoleModel adminRol = new RoleModel(
-                1L,
-                "ADMIN");
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRol,
-                department);
-
-        UserModel owner = new UserModel(
-                2L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setTitle("Laptop broken");
-        ticket.setCreatedBy(owner);
-        ticket.setRequestedFor(owner);
-        ticket.setCategory(category);
-        ticket.setPriority(priority);
-        ticket.setStatus(status);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "admin",
-                                null));
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
-
-        TicketResponse response = ticketService.getTicketById(1L);
-
-        assertEquals(
-                1L,
-                response.getIdTicket());
-    }
-
-    // =========================================================
-    // GET MY TICKETS
-    // =========================================================
-    @Test
-    void shouldReturnMyTickets() {
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setTitle("Laptop broken");
-        ticket.setCreatedBy(currentUser);
-        ticket.setRequestedFor(currentUser);
-        ticket.setCategory(category);
-        ticket.setPriority(priority);
-        ticket.setStatus(status);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<TicketModel> ticketPage = new PageImpl<>(
-                List.of(ticket),
-                pageable,
-                1);
+                currentUser,
+                currentUser,
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
 
         when(ticketRepository.findAll(
                 ArgumentMatchers.<Specification<TicketModel>>any(),
                 eq(pageable)))
-                .thenReturn(ticketPage);
+                .thenReturn(new PageImpl<>(List.of(ticket)));
 
-        Page<TicketResponse> response = ticketService.getMyTickets(
+        Page<TicketResponse> result = ticketService.getMyTickets(
                 null,
                 null,
                 null,
                 null,
                 pageable);
 
-        assertEquals(
-                1,
-                response.getTotalElements());
+        assertThat(result.getContent())
+                .hasSize(1);
 
-        assertEquals(
-                1,
-                response.getContent().size());
-
-        assertEquals(
-                "Laptop broken",
-                response.getContent()
-                        .get(0)
-                        .getTitle());
-
-        verify(ticketRepository)
-                .findAll(
-                        ArgumentMatchers.<Specification<TicketModel>>any(),
-                        eq(pageable));
+        verify(ticketRepository).findAll(
+                ArgumentMatchers.<Specification<TicketModel>>any(),
+                eq(pageable));
     }
 
     @Test
-    void shouldReturnEmptyPageWhenUserHasNoTickets() {
+    void getAssignedTicketsShouldReturnMappedTickets() {
 
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
+        UserModel currentUser = createUser(
                 1L,
-                "IT",
-                true);
+                "technician",
+                RoleName.TECHNICIAN.name());
 
-        UserModel currentUser = new UserModel(
+        configureAuthenticatedUser(currentUser);
+
+        TicketModel ticket = createTicket(
                 1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        Pageable pageable = PageRequest.of(0, 10);
+                createUser(2L, "admin", RoleName.ADMIN.name()),
+                createUser(3L, "john", RoleName.USER.name()),
+                currentUser,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
 
         when(ticketRepository.findAll(
                 ArgumentMatchers.<Specification<TicketModel>>any(),
                 eq(pageable)))
-                .thenReturn(Page.empty(pageable));
+                .thenReturn(new PageImpl<>(List.of(ticket)));
 
-        Page<TicketResponse> response = ticketService.getMyTickets(
+        Page<TicketResponse> result = ticketService.getAssignedTickets(
                 null,
                 null,
                 null,
                 null,
                 pageable);
 
-        assertTrue(response.isEmpty());
+        assertThat(result.getContent())
+                .hasSize(1);
 
-        assertEquals(
-                0,
-                response.getTotalElements());
-
-        verify(ticketRepository)
-                .findAll(
-                        ArgumentMatchers.<Specification<TicketModel>>any(),
-                        eq(pageable));
+        verify(ticketRepository).findAll(
+                ArgumentMatchers.<Specification<TicketModel>>any(),
+                eq(pageable));
     }
 
-    // =========================================================
-    // CREATE TICKET
-    // =========================================================
     @Test
-    void shouldCreateTicketSuccessfully() {
+    void createTicketShouldCreateTicketAndHistory() {
 
-        CreateTicketRequest request = org.mockito.Mockito.mock(
-                CreateTicketRequest.class);
+        UserModel createdBy = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
 
-        when(request.getTitle())
-                .thenReturn("Laptop broken");
+        UserModel requestedFor = createUser(
+                2L,
+                "mary",
+                RoleName.USER.name());
 
-        when(request.getDescription())
-                .thenReturn("Laptop does not start");
+        CategoryModel category = createCategory(
+                1L,
+                "Hardware");
 
-        when(request.getRequestedForId())
+        PriorityModel priority = createPriority(
+                1L,
+                "HIGH");
+
+        StatusModel status = createStatus(
+                1L,
+                ProtectedStatus.OPEN.name());
+
+        configureAuthenticatedUser(createdBy);
+
+        when(createTicketRequest.getTitle())
+                .thenReturn("Printer problem");
+
+        when(createTicketRequest.getDescription())
+                .thenReturn("Printer does not work");
+
+        when(createTicketRequest.getRequestedForId())
                 .thenReturn(2L);
 
-        when(request.getCategoryId())
+        when(createTicketRequest.getCategoryId())
                 .thenReturn(1L);
 
-        when(request.getPriorityId())
-                .thenReturn(2L);
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel createdBy = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        UserModel requestedFor = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(createdBy));
+        when(createTicketRequest.getPriorityId())
+                .thenReturn(1L);
 
         when(userRepository.findById(2L))
                 .thenReturn(Optional.of(requestedFor));
 
-        when(categoryRepository
-                .findByIdCategoryAndActiveTrue(1L))
+        when(categoryRepository.findByIdCategoryAndActiveTrue(1L))
                 .thenReturn(Optional.of(category));
 
-        when(priorityRepository
-                .findByIdPriorityAndActiveTrue(2L))
+        when(priorityRepository.findByIdPriorityAndActiveTrue(1L))
                 .thenReturn(Optional.of(priority));
 
-        when(statusRepository
-                .findByNameAndActiveTrue("OPEN"))
+        when(statusRepository.findByNameAndActiveTrue(
+                ProtectedStatus.OPEN.name()))
                 .thenReturn(Optional.of(status));
 
-        when(ticketRepository.save(
-                any(TicketModel.class)))
+        when(ticketRepository.save(any(TicketModel.class)))
                 .thenAnswer(invocation -> {
 
                     TicketModel ticket = invocation.getArgument(0);
@@ -744,1506 +438,1103 @@ class TicketServiceTest {
                     return ticket;
                 });
 
-        TicketResponse response = ticketService.createTicket(request);
+        LocalDateTime beforeCreation = LocalDateTime.now();
 
-        assertEquals(
-                1L,
-                response.getIdTicket());
+        TicketResponse result = ticketService.createTicket(createTicketRequest);
 
-        assertEquals(
-                "Laptop broken",
-                response.getTitle());
+        LocalDateTime afterCreation = LocalDateTime.now();
 
-        assertEquals(
-                "ana",
-                response.getCreatedBy()
-                        .getUsername());
-
-        assertEquals(
-                "carlos",
-                response.getRequestedFor()
-                        .getUsername());
-
-        assertEquals(
-                "Hardware",
-                response.getCategory()
-                        .getName());
-
-        assertEquals(
-                "MEDIUM",
-                response.getPriority()
-                        .getName());
-
-        assertEquals(
-                "OPEN",
-                response.getStatus()
-                        .getName());
-
-        assertNull(response.getAssignedTo());
+        ArgumentCaptor<TicketModel> ticketCaptor = ArgumentCaptor.forClass(TicketModel.class);
 
         verify(ticketRepository)
-                .save(any(TicketModel.class));
+                .save(ticketCaptor.capture());
 
-        verify(ticketHistoryService)
-                .createHistory(
-                        any(TicketModel.class),
-                        eq(createdBy),
-                        eq(TicketHistoryAction.TICKET_CREATED),
-                        isNull(),
-                        isNull(),
-                        isNull());
+        TicketModel savedTicket = ticketCaptor.getValue();
+
+        assertThat(savedTicket.getTitle())
+                .isEqualTo("Printer problem");
+
+        assertThat(savedTicket.getDescription())
+                .isEqualTo("Printer does not work");
+
+        assertThat(savedTicket.getCreatedBy())
+                .isSameAs(createdBy);
+
+        assertThat(savedTicket.getRequestedFor())
+                .isSameAs(requestedFor);
+
+        assertThat(savedTicket.getCategory())
+                .isSameAs(category);
+
+        assertThat(savedTicket.getPriority())
+                .isSameAs(priority);
+
+        assertThat(savedTicket.getStatus())
+                .isSameAs(status);
+
+        assertThat(savedTicket.getCreatedAt())
+                .isBetween(
+                        beforeCreation,
+                        afterCreation);
+
+        assertThat(savedTicket.getLastUpdated())
+                .isBetween(
+                        beforeCreation,
+                        afterCreation);
+
+        verify(ticketHistoryService).createHistory(
+                savedTicket,
+                createdBy,
+                TicketHistoryAction.TICKET_CREATED,
+                null,
+                null,
+                null);
+
+        assertThat(result.getIdTicket())
+                .isEqualTo(1L);
     }
 
     @Test
-    void shouldThrowExceptionWhenRequestedUserDoesNotExistOnCreate() {
+    void createTicketShouldThrowExceptionWhenRequestedUserDoesNotExist() {
 
-        CreateTicketRequest request = org.mockito.Mockito.mock(
-                CreateTicketRequest.class);
-
-        when(request.getRequestedForId())
-                .thenReturn(99L);
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
+        UserModel createdBy = createUser(
                 1L,
-                "IT",
-                true);
+                "john",
+                RoleName.USER.name());
 
-        UserModel createdBy = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
+        configureAuthenticatedUser(createdBy);
 
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
+        when(createTicketRequest.getRequestedForId())
+                .thenReturn(2L);
 
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(createdBy));
-
-        when(userRepository.findById(99L))
+        when(userRepository.findById(2L))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.createTicket(request));
+        assertThatThrownBy(
+                () -> ticketService.createTicket(createTicketRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Requested user not found");
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
     }
 
     @Test
-    void shouldThrowExceptionWhenCategoryIsNotActiveOnCreate() {
+    void createTicketShouldThrowExceptionWhenCategoryIsNotActive() {
 
-        CreateTicketRequest request = org.mockito.Mockito.mock(
-                CreateTicketRequest.class);
+        UserModel createdBy = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
 
-        when(request.getRequestedForId())
+        UserModel requestedFor = createUser(
+                2L,
+                "mary",
+                RoleName.USER.name());
+
+        configureAuthenticatedUser(createdBy);
+
+        when(createTicketRequest.getRequestedForId())
                 .thenReturn(2L);
 
-        when(request.getCategoryId())
-                .thenReturn(99L);
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel createdBy = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        UserModel requestedFor = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRol,
-                department);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(createdBy));
+        when(createTicketRequest.getCategoryId())
+                .thenReturn(5L);
 
         when(userRepository.findById(2L))
                 .thenReturn(Optional.of(requestedFor));
 
-        when(categoryRepository
-                .findByIdCategoryAndActiveTrue(99L))
+        when(categoryRepository.findByIdCategoryAndActiveTrue(5L))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.createTicket(request));
+        assertThatThrownBy(
+                () -> ticketService.createTicket(createTicketRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Active category with id 5 not found");
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
     }
 
     @Test
-    void shouldThrowExceptionWhenPriorityIsNotActiveOnCreate() {
+    void createTicketShouldThrowExceptionWhenPriorityIsNotActive() {
 
-        CreateTicketRequest request = org.mockito.Mockito.mock(
-                CreateTicketRequest.class);
+        UserModel createdBy = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
 
-        when(request.getRequestedForId())
+        UserModel requestedFor = createUser(
+                2L,
+                "mary",
+                RoleName.USER.name());
+
+        CategoryModel category = createCategory(1L, "Hardware");
+
+        configureAuthenticatedUser(createdBy);
+
+        when(createTicketRequest.getRequestedForId())
                 .thenReturn(2L);
 
-        when(request.getCategoryId())
+        when(createTicketRequest.getCategoryId())
                 .thenReturn(1L);
 
-        when(request.getPriorityId())
-                .thenReturn(99L);
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel createdBy = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        UserModel requestedFor = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(createdBy));
+        when(createTicketRequest.getPriorityId())
+                .thenReturn(5L);
 
         when(userRepository.findById(2L))
                 .thenReturn(Optional.of(requestedFor));
 
-        when(categoryRepository
-                .findByIdCategoryAndActiveTrue(1L))
+        when(categoryRepository.findByIdCategoryAndActiveTrue(1L))
                 .thenReturn(Optional.of(category));
 
-        when(priorityRepository
-                .findByIdPriorityAndActiveTrue(99L))
+        when(priorityRepository.findByIdPriorityAndActiveTrue(5L))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.createTicket(request));
+        assertThatThrownBy(
+                () -> ticketService.createTicket(createTicketRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Active priority with id 5 not found");
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
     }
 
     @Test
-    void shouldThrowExceptionWhenOpenStatusIsNotActiveOnCreate() {
+    void createTicketShouldThrowExceptionWhenOpenStatusDoesNotExist() {
 
-        CreateTicketRequest request = org.mockito.Mockito.mock(
-                CreateTicketRequest.class);
+        UserModel createdBy = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
 
-        when(request.getRequestedForId())
+        UserModel requestedFor = createUser(
+                2L,
+                "mary",
+                RoleName.USER.name());
+
+        CategoryModel category = createCategory(1L, "Hardware");
+
+        PriorityModel priority = createPriority(1L, "HIGH");
+
+        configureAuthenticatedUser(createdBy);
+
+        when(createTicketRequest.getRequestedForId())
                 .thenReturn(2L);
 
-        when(request.getCategoryId())
+        when(createTicketRequest.getCategoryId())
                 .thenReturn(1L);
 
-        when(request.getPriorityId())
-                .thenReturn(2L);
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel createdBy = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        UserModel requestedFor = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(createdBy));
+        when(createTicketRequest.getPriorityId())
+                .thenReturn(1L);
 
         when(userRepository.findById(2L))
                 .thenReturn(Optional.of(requestedFor));
 
-        when(categoryRepository
-                .findByIdCategoryAndActiveTrue(1L))
+        when(categoryRepository.findByIdCategoryAndActiveTrue(1L))
                 .thenReturn(Optional.of(category));
 
-        when(priorityRepository
-                .findByIdPriorityAndActiveTrue(2L))
+        when(priorityRepository.findByIdPriorityAndActiveTrue(1L))
                 .thenReturn(Optional.of(priority));
 
-        when(statusRepository
-                .findByNameAndActiveTrue("OPEN"))
+        when(statusRepository.findByNameAndActiveTrue(
+                ProtectedStatus.OPEN.name()))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.createTicket(request));
+        assertThatThrownBy(
+                () -> ticketService.createTicket(createTicketRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Active OPEN status not found");
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
-    }
-
-    // =========================================================
-    // UPDATE TICKET
-    // =========================================================
-    @Test
-    void shouldAllowRelatedUserToUpdateTicket() {
-
-        UpdateTicketRequest request = org.mockito.Mockito.mock(
-                UpdateTicketRequest.class);
-
-        when(request.getTitle())
-                .thenReturn("Updated title");
-
-        when(request.getDescription())
-                .thenReturn("Updated description");
-
-        when(request.getCategoryId())
-                .thenReturn(2L);
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        CategoryModel oldCategory = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        CategoryModel newCategory = new CategoryModel(
-                2L,
-                "Software",
-                true);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setTitle("Old title");
-        ticket.setDescription("Old description");
-        ticket.setCreatedBy(currentUser);
-        ticket.setRequestedFor(currentUser);
-        ticket.setCategory(oldCategory);
-        ticket.setPriority(priority);
-        ticket.setStatus(status);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        when(categoryRepository
-                .findByIdCategoryAndActiveTrue(2L))
-                .thenReturn(Optional.of(newCategory));
-
-        when(ticketRepository.save(ticket))
-                .thenReturn(ticket);
-
-        TicketResponse response = ticketService.updateTicket(
-                1L,
-                request);
-
-        assertEquals(
-                "Updated title",
-                response.getTitle());
-
-        assertEquals(
-                "Updated description",
-                response.getDescription());
-
-        assertEquals(
-                "Software",
-                response.getCategory()
-                        .getName());
-
-        verify(categoryRepository)
-                .findByIdCategoryAndActiveTrue(2L);
-
-        verify(ticketRepository)
-                .save(ticket);
-
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        currentUser,
-                        TicketHistoryAction.TITLE_CHANGED,
-                        "title",
-                        "Old title",
-                        "Updated title");
-
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        currentUser,
-                        TicketHistoryAction.DESCRIPTION_CHANGED,
-                        "description",
-                        "Old description",
-                        "Updated description");
-
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        currentUser,
-                        TicketHistoryAction.CATEGORY_CHANGED,
-                        "category",
-                        "Hardware",
-                        "Software");
     }
 
     @Test
-    void shouldThrowAccessDeniedWhenUserUpdatesUnrelatedTicket() {
+    void updateTicketShouldUpdateFieldsAndCreateHistory() {
 
-        UpdateTicketRequest request = org.mockito.Mockito.mock(
-                UpdateTicketRequest.class);
+        Long ticketId = 1L;
 
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        UserModel otherUser = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRol,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(otherUser);
-        ticket.setRequestedFor(otherUser);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "ana",
-                                null));
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        assertThrows(
-                AccessDeniedException.class,
-                () -> ticketService.updateTicket(
-                        1L,
-                        request));
-
-        verify(ticketRepository, never())
-                .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
-    }
-
-    @Test
-    void shouldAllowAssignedTechnicianToUpdateTicket() {
-
-        UpdateTicketRequest request = org.mockito.Mockito.mock(
-                UpdateTicketRequest.class);
-
-        when(request.getTitle())
-                .thenReturn("Fixed issue");
-
-        when(request.getDescription())
-                .thenReturn("Issue has been fixed");
-
-        when(request.getCategoryId())
-                .thenReturn(2L);
-
-        RoleModel technicianRol = new RoleModel(
-                2L,
-                "TECHNICIAN");
-
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel technician = new UserModel(
-                1L,
-                "tech",
-                "tech@example.com",
-                "encodedPassword",
-                "Technical",
-                "User",
-                true,
-                technicianRol,
-                department);
-
-        UserModel user = new UserModel(
-                2L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        CategoryModel oldCategory = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        CategoryModel newCategory = new CategoryModel(
-                2L,
-                "Software",
-                true);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setTitle("Old title");
-        ticket.setDescription("Old description");
-        ticket.setCreatedBy(user);
-        ticket.setRequestedFor(user);
-        ticket.setAssignedTo(technician);
-        ticket.setCategory(oldCategory);
-        ticket.setPriority(priority);
-        ticket.setStatus(status);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "tech",
-                                null));
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("tech"))
-                .thenReturn(Optional.of(technician));
-
-        when(categoryRepository
-                .findByIdCategoryAndActiveTrue(2L))
-                .thenReturn(Optional.of(newCategory));
-
-        when(ticketRepository.save(ticket))
-                .thenReturn(ticket);
-
-        TicketResponse response = ticketService.updateTicket(
-                1L,
-                request);
-
-        assertEquals(
-                "Fixed issue",
-                response.getTitle());
-
-        assertEquals(
-                "Issue has been fixed",
-                response.getDescription());
-
-        assertEquals(
-                "Software",
-                response.getCategory()
-                        .getName());
-
-        verify(ticketRepository)
-                .save(ticket);
-
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        technician,
-                        TicketHistoryAction.TITLE_CHANGED,
-                        "title",
-                        "Old title",
-                        "Fixed issue");
-
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        technician,
-                        TicketHistoryAction.DESCRIPTION_CHANGED,
-                        "description",
-                        "Old description",
-                        "Issue has been fixed");
-
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        technician,
-                        TicketHistoryAction.CATEGORY_CHANGED,
-                        "category",
-                        "Hardware",
-                        "Software");
-    }
-
-    @Test
-    void shouldThrowAccessDeniedWhenTechnicianIsNotAssigned() {
-
-        UpdateTicketRequest request = org.mockito.Mockito.mock(
-                UpdateTicketRequest.class);
-
-        RoleModel technicianRol = new RoleModel(
-                2L,
-                "TECHNICIAN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel technician = new UserModel(
-                1L,
-                "tech",
-                "tech@example.com",
-                "encodedPassword",
-                "Technical",
-                "User",
-                true,
-                technicianRol,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setAssignedTo(null);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "tech",
-                                null));
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("tech"))
-                .thenReturn(Optional.of(technician));
-
-        assertThrows(
-                AccessDeniedException.class,
-                () -> ticketService.updateTicket(
-                        1L,
-                        request));
-
-        verify(ticketRepository, never())
-                .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
-    }
-
-    // =========================================================
-    // ASSIGN TICKET
-    // =========================================================
-    @Test
-    void shouldAssignTicketToTechnicianSuccessfully() {
-
-        AssignTicketRequest request = org.mockito.Mockito.mock(
-                AssignTicketRequest.class);
-
-        when(request.getAssignedToId())
-                .thenReturn(2L);
-
-        RoleModel adminRol = new RoleModel(
-                1L,
-                "ADMIN");
-
-        RoleModel technicianRol = new RoleModel(
-                2L,
-                "TECHNICIAN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
+        UserModel admin = createUser(
                 1L,
                 "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRol,
-                department);
+                RoleName.ADMIN.name());
 
-        UserModel technician = new UserModel(
-                2L,
-                "tech",
-                "tech@example.com",
-                "encodedPassword",
-                "Technical",
-                "User",
-                true,
-                technicianRol,
-                department);
+        CategoryModel oldCategory = createCategory(1L, "Hardware");
 
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
+        CategoryModel newCategory = createCategory(2L, "Software");
 
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
+        TicketModel ticket = createTicket(
+                ticketId,
+                admin,
+                admin,
+                null,
+                oldCategory,
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
 
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
+        ticket.setTitle("Old title");
+        ticket.setDescription("Old description");
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setTitle("Laptop broken");
-        ticket.setCategory(category);
-        ticket.setPriority(priority);
-        ticket.setStatus(status);
+        configureAuthenticatedUser(admin);
 
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "admin",
-                                null));
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findById(2L))
-                .thenReturn(Optional.of(technician));
+        when(updateTicketRequest.getTitle())
+                .thenReturn("New title");
 
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
+        when(updateTicketRequest.getDescription())
+                .thenReturn("New description");
+
+        when(updateTicketRequest.getCategoryId())
+                .thenReturn(2L);
+
+        when(categoryRepository.findByIdCategoryAndActiveTrue(2L))
+                .thenReturn(Optional.of(newCategory));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
 
-        TicketResponse response = ticketService.assignTicket(
-                1L,
-                request);
+        TicketResponse result = ticketService.updateTicket(
+                ticketId,
+                updateTicketRequest);
 
-        assertEquals(
-                "tech",
-                response.getAssignedTo()
-                        .getUsername());
+        assertThat(ticket.getTitle())
+                .isEqualTo("New title");
 
-        verify(ticketRepository)
-                .save(ticket);
+        assertThat(ticket.getDescription())
+                .isEqualTo("New description");
 
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        admin,
-                        TicketHistoryAction.ASSIGNED,
-                        "assignedTo",
-                        null,
-                        "tech");
+        assertThat(ticket.getCategory())
+                .isSameAs(newCategory);
+
+        verify(ticketHistoryService).createHistory(
+                ticket,
+                admin,
+                TicketHistoryAction.TITLE_CHANGED,
+                "title",
+                "Old title",
+                "New title");
+
+        verify(ticketHistoryService).createHistory(
+                ticket,
+                admin,
+                TicketHistoryAction.DESCRIPTION_CHANGED,
+                "description",
+                "Old description",
+                "New description");
+
+        verify(ticketHistoryService).createHistory(
+                ticket,
+                admin,
+                TicketHistoryAction.CATEGORY_CHANGED,
+                "category",
+                "Hardware",
+                "Software");
+
+        assertThat(result.getTitle())
+                .isEqualTo("New title");
     }
 
     @Test
-    void shouldReassignTicketToAnotherTechnicianSuccessfully() {
+    void updateTicketShouldThrowAccessDeniedWhenUserIsNotRelatedToTicket() {
 
-        AssignTicketRequest request = org.mockito.Mockito.mock(
-                AssignTicketRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getAssignedToId())
+        UserModel currentUser = createUser(
+                3L,
+                "other-user",
+                RoleName.USER.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                createUser(1L, "john", RoleName.USER.name()),
+                createUser(2L, "mary", RoleName.USER.name()),
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(currentUser);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(
+                () -> ticketService.updateTicket(
+                        ticketId,
+                        updateTicketRequest))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "You do not have permission to access this ticket");
+
+        verify(ticketRepository, never())
+                .save(ticket);
+    }
+
+    @Test
+    void updateTicketShouldThrowAccessDeniedWhenTechnicianIsNotAssigned() {
+
+        Long ticketId = 1L;
+
+        UserModel currentTechnician = createUser(
+                3L,
+                "technician",
+                RoleName.TECHNICIAN.name());
+
+        UserModel otherTechnician = createUser(
+                4L,
+                "other-technician",
+                RoleName.TECHNICIAN.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                createUser(1L, "admin", RoleName.ADMIN.name()),
+                createUser(2L, "john", RoleName.USER.name()),
+                otherTechnician,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(currentTechnician);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(
+                () -> ticketService.updateTicket(
+                        ticketId,
+                        updateTicketRequest))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "You can only update tickets assigned to you");
+
+        verify(ticketRepository, never())
+                .save(ticket);
+    }
+
+    @Test
+    void assignTicketShouldAssignTechnicianAndCreateHistory() {
+
+        Long ticketId = 1L;
+
+        UserModel admin = createUser(
+                1L,
+                "admin",
+                RoleName.ADMIN.name());
+
+        UserModel technician = createUser(
+                3L,
+                "technician",
+                RoleName.TECHNICIAN.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                admin,
+                createUser(2L, "john", RoleName.USER.name()),
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(admin);
+
+        when(assignTicketRequest.getAssignedToId())
                 .thenReturn(3L);
 
-        RoleModel adminRol = new RoleModel(
-                1L,
-                "ADMIN");
-
-        RoleModel technicianRol = new RoleModel(
-                2L,
-                "TECHNICIAN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRol,
-                department);
-
-        UserModel oldTechnician = new UserModel(
-                2L,
-                "tech1",
-                "tech1@example.com",
-                "encodedPassword",
-                "Technical",
-                "One",
-                true,
-                technicianRol,
-                department);
-
-        UserModel newTechnician = new UserModel(
-                3L,
-                "tech2",
-                "tech2@example.com",
-                "encodedPassword",
-                "Technical",
-                "Two",
-                true,
-                technicianRol,
-                department);
-
-        CategoryModel category = new CategoryModel(
-                1L,
-                "Hardware",
-                true);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setTitle("Laptop broken");
-        ticket.setAssignedTo(oldTechnician);
-        ticket.setCategory(category);
-        ticket.setPriority(priority);
-        ticket.setStatus(status);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "admin",
-                                null));
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
         when(userRepository.findById(3L))
-                .thenReturn(Optional.of(newTechnician));
-
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
+                .thenReturn(Optional.of(technician));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
 
-        TicketResponse response = ticketService.assignTicket(
-                1L,
-                request);
+        TicketResponse result = ticketService.assignTicket(
+                ticketId,
+                assignTicketRequest);
 
-        assertEquals(
-                "tech2",
-                response.getAssignedTo()
-                        .getUsername());
+        assertThat(ticket.getAssignedTo())
+                .isSameAs(technician);
 
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        admin,
-                        TicketHistoryAction.REASSIGNED,
-                        "assignedTo",
-                        "tech1",
-                        "tech2");
+        verify(ticketHistoryService).createHistory(
+                ticket,
+                admin,
+                TicketHistoryAction.ASSIGNED,
+                "assignedTo",
+                null,
+                "technician");
+
+        assertThat(result)
+                .isNotNull();
     }
 
     @Test
-    void shouldThrowExceptionWhenAssignedUserDoesNotExist() {
+    void assignTicketShouldCreateReassignedHistoryWhenTicketAlreadyAssigned() {
 
-        AssignTicketRequest request = org.mockito.Mockito.mock(
-                AssignTicketRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getAssignedToId())
-                .thenReturn(99L);
+        UserModel admin = createUser(
+                1L,
+                "admin",
+                RoleName.ADMIN.name());
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
+        UserModel oldTechnician = createUser(
+                3L,
+                "old-technician",
+                RoleName.TECHNICIAN.name());
 
-        when(ticketRepository.findById(1L))
+        UserModel newTechnician = createUser(
+                4L,
+                "new-technician",
+                RoleName.TECHNICIAN.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                admin,
+                createUser(2L, "john", RoleName.USER.name()),
+                oldTechnician,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(admin);
+
+        when(assignTicketRequest.getAssignedToId())
+                .thenReturn(4L);
+
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        when(userRepository.findById(4L))
+                .thenReturn(Optional.of(newTechnician));
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.assignTicket(
-                        1L,
-                        request));
+        when(ticketRepository.save(ticket))
+                .thenReturn(ticket);
 
-        verify(ticketRepository, never())
-                .save(any(TicketModel.class));
+        ticketService.assignTicket(
+                ticketId,
+                assignTicketRequest);
 
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
+        verify(ticketHistoryService).createHistory(
+                ticket,
+                admin,
+                TicketHistoryAction.REASSIGNED,
+                "assignedTo",
+                "old-technician",
+                "new-technician");
     }
 
     @Test
-    void shouldThrowExceptionWhenAssignedUserIsNotTechnician() {
+    void assignTicketShouldThrowInvalidRoleWhenAssignedUserIsNotTechnician() {
 
-        AssignTicketRequest request = org.mockito.Mockito.mock(
-                AssignTicketRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getAssignedToId())
+        UserModel user = createUser(
+                2L,
+                "john",
+                RoleName.USER.name());
+
+        when(assignTicketRequest.getAssignedToId())
                 .thenReturn(2L);
 
-        RoleModel userRol = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel user = new UserModel(
-                2L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRol,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(new TicketModel()));
 
         when(userRepository.findById(2L))
                 .thenReturn(Optional.of(user));
 
-        assertThrows(
-                InvalidRoleException.class,
+        assertThatThrownBy(
                 () -> ticketService.assignTicket(
-                        1L,
-                        request));
+                        ticketId,
+                        assignTicketRequest))
+                .isInstanceOf(InvalidRoleException.class)
+                .hasMessage(
+                        "Assigned user must have the TECHNICIAN role");
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
     }
 
-    // =========================================================
-    // CHANGE PRIORITY
-    // =========================================================
     @Test
-    void shouldChangePrioritySuccessfully() {
+    void assignTicketShouldThrowInvalidOperationWhenAlreadyAssignedToTechnician() {
 
-        ChangePriorityRequest request = org.mockito.Mockito.mock(
-                ChangePriorityRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getPriorityId())
+        UserModel technician = createUser(
+                3L,
+                "technician",
+                RoleName.TECHNICIAN.name());
+
+        TicketModel ticket = new TicketModel();
+        ticket.setAssignedTo(technician);
+
+        when(assignTicketRequest.getAssignedToId())
                 .thenReturn(3L);
 
-        RoleModel adminRol = new RoleModel(
-                1L,
-                "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRol,
-                department);
-
-        PriorityModel oldPriority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        PriorityModel newPriority = new PriorityModel(
-                3L,
-                "HIGH",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setPriority(oldPriority);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "admin",
-                                null));
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(priorityRepository
-                .findByIdPriorityAndActiveTrue(3L))
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(technician));
+
+        assertThatThrownBy(
+                () -> ticketService.assignTicket(
+                        ticketId,
+                        assignTicketRequest))
+                .isInstanceOf(InvalidOperationException.class)
+                .hasMessage(
+                        "The ticket is already assigned to this technician");
+
+        verify(ticketRepository, never())
+                .save(ticket);
+    }
+
+    @Test
+    void changePriorityShouldChangePriorityAndCreateHistory() {
+
+        Long ticketId = 1L;
+
+        UserModel admin = createUser(
+                1L,
+                "admin",
+                RoleName.ADMIN.name());
+
+        PriorityModel oldPriority = createPriority(1L, "LOW");
+
+        PriorityModel newPriority = createPriority(2L, "HIGH");
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                admin,
+                admin,
+                null,
+                createCategory(1L, "Hardware"),
+                oldPriority,
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(admin);
+
+        when(changePriorityRequest.getPriorityId())
+                .thenReturn(2L);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(priorityRepository.findByIdPriorityAndActiveTrue(2L))
                 .thenReturn(Optional.of(newPriority));
 
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
-
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
 
-        TicketResponse response = ticketService.changePriority(
-                1L,
-                request);
+        TicketResponse result = ticketService.changePriority(
+                ticketId,
+                changePriorityRequest);
 
-        assertEquals(
-                "HIGH",
-                response.getPriority()
-                        .getName());
+        assertThat(ticket.getPriority())
+                .isSameAs(newPriority);
 
-        verify(ticketRepository)
-                .save(ticket);
+        verify(ticketHistoryService).createHistory(
+                ticket,
+                admin,
+                TicketHistoryAction.PRIORITY_CHANGED,
+                "priority",
+                "LOW",
+                "HIGH");
 
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        admin,
-                        TicketHistoryAction.PRIORITY_CHANGED,
-                        "priority",
-                        "MEDIUM",
-                        "HIGH");
+        assertThat(result)
+                .isNotNull();
     }
 
     @Test
-    void shouldThrowExceptionWhenPriorityIsNotActive() {
+    void changePriorityShouldThrowInvalidOperationWhenPriorityDoesNotChange() {
 
-        ChangePriorityRequest request = org.mockito.Mockito.mock(
-                ChangePriorityRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getPriorityId())
-                .thenReturn(99L);
+        PriorityModel priority = createPriority(1L, "HIGH");
 
         TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(priorityRepository
-                .findByIdPriorityAndActiveTrue(99L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.changePriority(
-                        1L,
-                        request));
-
-        verify(ticketRepository, never())
-                .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
-    }
-
-    @Test
-    void shouldThrowInvalidOperationWhenPriorityDoesNotChange() {
-
-        ChangePriorityRequest request = org.mockito.Mockito.mock(
-                ChangePriorityRequest.class);
-
-        when(request.getPriorityId())
-                .thenReturn(2L);
-
-        RoleModel adminRol = new RoleModel(
-                1L,
-                "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRol,
-                department);
-
-        PriorityModel priority = new PriorityModel(
-                2L,
-                "MEDIUM",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
         ticket.setPriority(priority);
 
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "admin",
-                                null));
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(priorityRepository
-                .findByIdPriorityAndActiveTrue(2L))
-                .thenReturn(Optional.of(priority));
-
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
-
-        assertThrows(
-                InvalidOperationException.class,
-                () -> ticketService.changePriority(
-                        1L,
-                        request));
-
-        verify(ticketRepository, never())
-                .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
-    }
-
-    // =========================================================
-    // CHANGE STATUS
-    // =========================================================
-    @Test
-    void shouldChangeStatusSuccessfully() {
-
-        ChangeStatusRequest request = org.mockito.Mockito.mock(
-                ChangeStatusRequest.class);
-
-        when(request.getStatusId())
-                .thenReturn(2L);
-
-        RoleModel adminRol = new RoleModel(
-                1L,
-                "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
+        UserModel admin = createUser(
                 1L,
                 "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRol,
-                department);
+                RoleName.ADMIN.name());
 
-        StatusModel oldStatus = new StatusModel(
-                1L,
-                "OPEN",
-                true);
+        configureAuthenticatedUser(admin);
 
-        StatusModel newStatus = new StatusModel(
-                2L,
-                "IN_PROGRESS",
-                true);
+        when(changePriorityRequest.getPriorityId())
+                .thenReturn(1L);
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setStatus(oldStatus);
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "admin",
-                                null));
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(statusRepository
-                .findByIdStatusAndActiveTrue(2L))
-                .thenReturn(Optional.of(newStatus));
+        when(priorityRepository.findByIdPriorityAndActiveTrue(1L))
+                .thenReturn(Optional.of(priority));
 
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
+        assertThatThrownBy(
+                () -> ticketService.changePriority(
+                        ticketId,
+                        changePriorityRequest))
+                .isInstanceOf(InvalidOperationException.class)
+                .hasMessage(
+                        "The ticket already has the selected priority");
+
+        verify(ticketRepository, never())
+                .save(ticket);
+    }
+
+    @Test
+    void changePriorityShouldThrowExceptionWhenPriorityIsNotActive() {
+
+        Long ticketId = 1L;
+
+        when(changePriorityRequest.getPriorityId())
+                .thenReturn(5L);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(new TicketModel()));
+
+        when(priorityRepository.findByIdPriorityAndActiveTrue(5L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> ticketService.changePriority(
+                        ticketId,
+                        changePriorityRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Active priority with id 5 not found");
+    }
+
+    @Test
+    void changeStatusShouldChangeStatusAndCreateHistory() {
+
+        Long ticketId = 1L;
+
+        UserModel admin = createUser(
+                1L,
+                "admin",
+                RoleName.ADMIN.name());
+
+        StatusModel oldStatus = createStatus(
+                1L,
+                ProtectedStatus.OPEN.name());
+
+        StatusModel newStatus = createStatus(
+                2L,
+                ProtectedStatus.IN_PROGRESS.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                admin,
+                admin,
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                oldStatus);
+
+        configureAuthenticatedUser(admin);
+
+        when(changeStatusRequest.getStatusId())
+                .thenReturn(2L);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(statusRepository.findByIdStatusAndActiveTrue(2L))
+                .thenReturn(Optional.of(newStatus));
 
         when(ticketRepository.save(ticket))
                 .thenReturn(ticket);
 
-        TicketResponse response = ticketService.changeStatus(
-                1L,
-                request);
+        TicketResponse result = ticketService.changeStatus(
+                ticketId,
+                changeStatusRequest);
 
-        assertEquals(
-                "IN_PROGRESS",
-                response.getStatus()
-                        .getName());
+        assertThat(ticket.getStatus())
+                .isSameAs(newStatus);
 
-        verify(ticketRepository)
-                .save(ticket);
+        verify(ticketHistoryService).createHistory(
+                ticket,
+                admin,
+                TicketHistoryAction.STATUS_CHANGED,
+                "status",
+                ProtectedStatus.OPEN.name(),
+                ProtectedStatus.IN_PROGRESS.name());
 
-        verify(ticketHistoryService)
-                .createHistory(
-                        ticket,
-                        admin,
-                        TicketHistoryAction.STATUS_CHANGED,
-                        "status",
-                        "OPEN",
-                        "IN_PROGRESS");
+        assertThat(result)
+                .isNotNull();
     }
 
     @Test
-    void shouldThrowExceptionWhenStatusIsNotActive() {
+    void changeStatusShouldThrowInvalidOperationWhenStatusDoesNotChange() {
 
-        ChangeStatusRequest request = org.mockito.Mockito.mock(
-                ChangeStatusRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getStatusId())
-                .thenReturn(99L);
+        StatusModel status = createStatus(
+                1L,
+                ProtectedStatus.OPEN.name());
 
         TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(statusRepository
-                .findByIdStatusAndActiveTrue(99L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketService.changeStatus(
-                        1L,
-                        request));
-
-        verify(ticketRepository, never())
-                .save(any(TicketModel.class));
-
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
-    }
-
-    @Test
-    void shouldThrowInvalidOperationWhenStatusDoesNotChange() {
-
-        ChangeStatusRequest request = org.mockito.Mockito.mock(
-                ChangeStatusRequest.class);
-
-        when(request.getStatusId())
-                .thenReturn(1L);
-
-        RoleModel adminRol = new RoleModel(
-                1L,
-                "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRol,
-                department);
-
-        StatusModel status = new StatusModel(
-                1L,
-                "OPEN",
-                true);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
         ticket.setStatus(status);
 
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                "admin",
-                                null));
+        UserModel admin = createUser(
+                1L,
+                "admin",
+                RoleName.ADMIN.name());
 
-        when(ticketRepository.findById(1L))
+        configureAuthenticatedUser(admin);
+
+        when(changeStatusRequest.getStatusId())
+                .thenReturn(1L);
+
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(statusRepository
-                .findByIdStatusAndActiveTrue(1L))
+        when(statusRepository.findByIdStatusAndActiveTrue(1L))
                 .thenReturn(Optional.of(status));
 
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
-
-        assertThrows(
-                InvalidOperationException.class,
+        assertThatThrownBy(
                 () -> ticketService.changeStatus(
-                        1L,
-                        request));
+                        ticketId,
+                        changeStatusRequest))
+                .isInstanceOf(InvalidOperationException.class)
+                .hasMessage(
+                        "The ticket already has the selected status");
 
         verify(ticketRepository, never())
-                .save(any(TicketModel.class));
+                .save(ticket);
+    }
 
-        verify(ticketHistoryService, never())
-                .createHistory(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any());
+    @Test
+    void changeStatusShouldThrowExceptionWhenStatusIsNotActive() {
+
+        Long ticketId = 1L;
+
+        when(changeStatusRequest.getStatusId())
+                .thenReturn(5L);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(new TicketModel()));
+
+        when(statusRepository.findByIdStatusAndActiveTrue(5L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> ticketService.changeStatus(
+                        ticketId,
+                        changeStatusRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Active status with id 5 not found");
+    }
+
+    @Test
+    void getTicketStatisticsShouldReturnUserStatistics() {
+
+        UserModel user = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
+
+        configureAuthenticatedUser(user);
+
+        when(ticketRepository.countRelatedToUser(user))
+                .thenReturn(10L);
+
+        when(ticketRepository.countRelatedToUserByStatus(
+                user,
+                ProtectedStatus.OPEN.name()))
+                .thenReturn(4L);
+
+        when(ticketRepository.countRelatedToUserByStatus(
+                user,
+                ProtectedStatus.IN_PROGRESS.name()))
+                .thenReturn(3L);
+
+        when(ticketRepository.countRelatedToUserByPriority(
+                user,
+                ProtectedPriority.CRITICAL.name()))
+                .thenReturn(2L);
+
+        TicketStatisticsResponse result = ticketService.getTicketStatistics();
+
+        TicketStatisticsResponse expected = new TicketStatisticsResponse(
+                10L,
+                4L,
+                3L,
+                2L);
+
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(expected);
+    }
+
+    @Test
+    void getTicketStatisticsShouldReturnTechnicianStatistics() {
+
+        UserModel technician = createUser(
+                1L,
+                "technician",
+                RoleName.TECHNICIAN.name());
+
+        configureAuthenticatedUser(technician);
+
+        when(ticketRepository.countByAssignedTo(technician))
+                .thenReturn(20L);
+
+        when(ticketRepository.countByAssignedToAndStatus_Name(
+                technician,
+                ProtectedStatus.OPEN.name()))
+                .thenReturn(6L);
+
+        when(ticketRepository.countByAssignedToAndStatus_Name(
+                technician,
+                ProtectedStatus.IN_PROGRESS.name()))
+                .thenReturn(5L);
+
+        when(ticketRepository.countByAssignedToAndPriority_Name(
+                technician,
+                ProtectedPriority.CRITICAL.name()))
+                .thenReturn(3L);
+
+        TicketStatisticsResponse result = ticketService.getTicketStatistics();
+
+        TicketStatisticsResponse expected = new TicketStatisticsResponse(
+                20L,
+                6L,
+                5L,
+                3L);
+
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(expected);
+    }
+
+    @Test
+    void getTicketStatisticsShouldReturnGlobalStatisticsForAdmin() {
+
+        UserModel admin = createUser(
+                1L,
+                "admin",
+                RoleName.ADMIN.name());
+
+        configureAuthenticatedUser(admin);
+
+        when(ticketRepository.count())
+                .thenReturn(100L);
+
+        when(ticketRepository.countByStatus_Name(
+                ProtectedStatus.OPEN.name()))
+                .thenReturn(40L);
+
+        when(ticketRepository.countByStatus_Name(
+                ProtectedStatus.IN_PROGRESS.name()))
+                .thenReturn(30L);
+
+        when(ticketRepository.countByPriority_Name(
+                ProtectedPriority.CRITICAL.name()))
+                .thenReturn(10L);
+
+        TicketStatisticsResponse result = ticketService.getTicketStatistics();
+
+        TicketStatisticsResponse expected = new TicketStatisticsResponse(
+                100L,
+                40L,
+                30L,
+                10L);
+
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(expected);
+    }
+
+    @Test
+    void getTicketStatisticsShouldThrowExceptionWhenAuthenticatedUserDoesNotExist() {
+
+        configureAuthentication("unknown");
+
+        when(userRepository.findByUsername("unknown"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> ticketService.getTicketStatistics())
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Authenticated user not found");
+    }
+
+    private void configureAuthentication(
+            String username) {
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+
+        when(authentication.getName())
+                .thenReturn(username);
+
+        context.setAuthentication(authentication);
+
+        SecurityContextHolder.setContext(context);
+    }
+
+    private void configureAuthenticatedUser(
+            UserModel user) {
+
+        configureAuthentication(user.getUsername());
+
+        when(userRepository.findByUsername(user.getUsername()))
+                .thenReturn(Optional.of(user));
+    }
+
+    private UserModel createUser(
+            Long id,
+            String username,
+            String roleName) {
+
+        RoleModel role = new RoleModel();
+        role.setName(roleName);
+
+        UserModel user = new UserModel();
+        user.setIdUser(id);
+        user.setUsername(username);
+        user.setRole(role);
+        user.setEnabled(true);
+
+        return user;
+    }
+
+    private CategoryModel createCategory(
+            Long id,
+            String name) {
+
+        CategoryModel category = new CategoryModel();
+
+        category.setIdCategory(id);
+        category.setName(name);
+        category.setActive(true);
+
+        return category;
+    }
+
+    private PriorityModel createPriority(
+            Long id,
+            String name) {
+
+        PriorityModel priority = new PriorityModel();
+
+        priority.setIdPriority(id);
+        priority.setName(name);
+        priority.setActive(true);
+
+        return priority;
+    }
+
+    private StatusModel createStatus(
+            Long id,
+            String name) {
+
+        StatusModel status = new StatusModel();
+
+        status.setIdStatus(id);
+        status.setName(name);
+        status.setActive(true);
+
+        return status;
+    }
+
+    private TicketModel createTicket(
+            Long id,
+            UserModel createdBy,
+            UserModel requestedFor,
+            UserModel assignedTo,
+            CategoryModel category,
+            PriorityModel priority,
+            StatusModel status) {
+
+        LocalDateTime createdAt = LocalDateTime.of(
+                2026,
+                11,
+                3,
+                10,
+                0);
+
+        TicketModel ticket = new TicketModel();
+
+        ticket.setIdTicket(id);
+        ticket.setTitle("Printer issue");
+        ticket.setDescription("Printer does not work");
+
+        ticket.setCreatedAt(createdAt);
+        ticket.setLastUpdated(createdAt);
+
+        ticket.setCreatedBy(createdBy);
+        ticket.setRequestedFor(requestedFor);
+        ticket.setAssignedTo(assignedTo);
+
+        ticket.setCategory(category);
+        ticket.setPriority(priority);
+        ticket.setStatus(status);
+
+        return ticket;
+    }
+
+    private TicketResponse createExpectedTicketResponse(
+            TicketModel ticket) {
+
+        UserSummaryResponse createdByResponse = ticket.getCreatedBy() == null
+                ? null
+                : new UserSummaryResponse(
+                        ticket.getCreatedBy().getIdUser(),
+                        ticket.getCreatedBy().getUsername());
+
+        UserSummaryResponse requestedForResponse = ticket.getRequestedFor() == null
+                ? null
+                : new UserSummaryResponse(
+                        ticket.getRequestedFor().getIdUser(),
+                        ticket.getRequestedFor().getUsername());
+
+        UserSummaryResponse assignedToResponse = ticket.getAssignedTo() == null
+                ? null
+                : new UserSummaryResponse(
+                        ticket.getAssignedTo().getIdUser(),
+                        ticket.getAssignedTo().getUsername());
+
+        CategoryResponse categoryResponse = ticket.getCategory() == null
+                ? null
+                : new CategoryResponse(
+                        ticket.getCategory().getIdCategory(),
+                        ticket.getCategory().getName(),
+                        ticket.getCategory().isActive());
+
+        PriorityResponse priorityResponse = ticket.getPriority() == null
+                ? null
+                : new PriorityResponse(
+                        ticket.getPriority().getIdPriority(),
+                        ticket.getPriority().getName(),
+                        ticket.getPriority().isActive());
+
+        StatusResponse statusResponse = ticket.getStatus() == null
+                ? null
+                : new StatusResponse(
+                        ticket.getStatus().getIdStatus(),
+                        ticket.getStatus().getName(),
+                        ticket.getStatus().isActive());
+
+        return new TicketResponse(
+                ticket.getIdTicket(),
+                ticket.getTitle(),
+                ticket.getDescription(),
+                ticket.getCreatedAt(),
+                ticket.getLastUpdated(),
+                createdByResponse,
+                requestedForResponse,
+                assignedToResponse,
+                categoryResponse,
+                priorityResponse,
+                statusResponse);
     }
 }
