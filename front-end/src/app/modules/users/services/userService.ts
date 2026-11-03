@@ -1,6 +1,5 @@
 import api from "@/config/axios";
-
-import type { PageResponse } from "@/types/pageTypes";
+import { PageResponse } from "@/types/paginationTypes";
 
 import type {
   ChangePasswordRequest,

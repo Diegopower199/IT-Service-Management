@@ -42,22 +42,10 @@ export const updateCategory = async (
   return response.data;
 };
 
-export const activateCategory = async (
-  idCategory: number,
-): Promise<CategoryResponse> => {
-  const response = await api.patch<CategoryResponse>(
-    `/categories/${idCategory}/activate`,
-  );
-
-  return response.data;
+export const activateCategory = async (idCategory: number): Promise<void> => {
+  await api.patch(`/categories/${idCategory}/activate`);
 };
 
-export const deactivateCategory = async (
-  idCategory: number,
-): Promise<CategoryResponse> => {
-  const response = await api.patch<CategoryResponse>(
-    `/categories/${idCategory}/deactivate`,
-  );
-
-  return response.data;
+export const deactivateCategory = async (idCategory: number): Promise<void> => {
+  await api.patch(`/categories/${idCategory}/deactivate`);
 };

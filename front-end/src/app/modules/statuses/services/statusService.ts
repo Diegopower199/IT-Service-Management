@@ -14,14 +14,6 @@ export const getAllActiveStatuses = async (): Promise<StatusResponse[]> => {
   return response.data;
 };
 
-export const getStatusById = async (
-  idStatus: number,
-): Promise<StatusResponse> => {
-  const response = await api.get<StatusResponse>(`/statuses/${idStatus}`);
-
-  return response.data;
-};
-
 export const createStatus = async (
   status: StatusRequest,
 ): Promise<StatusResponse> => {
@@ -42,22 +34,10 @@ export const updateStatus = async (
   return response.data;
 };
 
-export const activateStatus = async (
-  idStatus: number,
-): Promise<StatusResponse> => {
-  const response = await api.patch<StatusResponse>(
-    `/statuses/${idStatus}/activate`,
-  );
-
-  return response.data;
+export const activateStatus = async (idStatus: number): Promise<void> => {
+  await api.patch(`/statuses/${idStatus}/activate`);
 };
 
-export const deactivateStatus = async (
-  idStatus: number,
-): Promise<StatusResponse> => {
-  const response = await api.patch<StatusResponse>(
-    `/statuses/${idStatus}/deactivate`,
-  );
-
-  return response.data;
+export const deactivateStatus = async (idStatus: number): Promise<void> => {
+  await api.patch(`/statuses/${idStatus}/deactivate`);
 };

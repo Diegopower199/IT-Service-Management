@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
+import { type StatusResponse } from "@/types/statusTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
