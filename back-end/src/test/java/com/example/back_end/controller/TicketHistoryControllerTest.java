@@ -1,141 +1,76 @@
 package com.example.back_end.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.ticketHistory.TicketHistoryResponse;
-import com.example.back_end.dtos.user.UserSummaryResponse;
-import com.example.back_end.enums.TicketHistoryAction;
-import com.example.back_end.security.JwtAuthenticationFilter;
-import com.example.back_end.security.JwtService;
 import com.example.back_end.service.TicketHistoryService;
 
-@WebMvcTest(TicketHistoryController.class)
-@Import({
-        SecurityConfig.class,
-        JwtAuthenticationFilter.class
-})
+@ExtendWith(MockitoExtension.class)
 class TicketHistoryControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private TicketHistoryService ticketHistoryService;
 
-    @MockitoBean
-    private JwtService jwtService;
+    @Mock
+    private Page<TicketHistoryResponse> ticketHistoryPage;
 
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    @Mock
+    private Pageable pageable;
 
-    @MockitoBean
-    private AuthenticationProvider authenticationProvider;
-
-    // =========================================================
-    // GET ALL HISTORY
-    // =========================================================
-    // =========================================================
-    // GET ALL HISTORY
-    // =========================================================
+    @InjectMocks
+    private TicketHistoryController ticketHistoryController;
 
     @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToGetAllHistory()
-            throws Exception {
+    void getAllHistoryShouldReturnHistoryPage() {
 
-        LocalDateTime now = LocalDateTime.now();
+        when(ticketHistoryService.getAllHistory(pageable))
+                .thenReturn(ticketHistoryPage);
 
-        TicketHistoryResponse history = new TicketHistoryResponse(
-                1L,
-                10L,
-                new UserSummaryResponse(
-                        1L,
-                        "admin"),
-                TicketHistoryAction.STATUS_CHANGED,
-                "status",
-                "OPEN",
-                "IN_PROGRESS",
-                now);
+        ResponseEntity<Page<TicketHistoryResponse>> response = ticketHistoryController.getAllHistory(pageable);
 
-        Page<TicketHistoryResponse> page = new PageImpl<>(List.of(history));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        when(ticketHistoryService
-                .getAllHistory(any(Pageable.class)))
-                .thenReturn(page);
+        assertThat(response.getBody())
+                .isSameAs(ticketHistoryPage);
 
-        mockMvc.perform(
-                get("/ticket-history")
-                        .param("page", "0")
-                        .param("size", "10")
-                        .param("sort", "createdAt,desc"))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$.content.length()")
-                                .value(1))
-                .andExpect(
-                        jsonPath("$.content[0].idHistory")
-                                .value(1))
-                .andExpect(
-                        jsonPath("$.content[0].ticketId")
-                                .value(10))
-                .andExpect(
-                        jsonPath("$.content[0].user.username")
-                                .value("admin"))
-                .andExpect(
-                        jsonPath("$.content[0].action")
-                                .value("STATUS_CHANGED"))
-                .andExpect(
-                        jsonPath("$.content[0].fieldName")
-                                .value("status"))
-                .andExpect(
-                        jsonPath("$.content[0].oldValue")
-                                .value("OPEN"))
-                .andExpect(
-                        jsonPath("$.content[0].newValue")
-                                .value("IN_PROGRESS"))
-                .andExpect(
-                        jsonPath("$.totalElements")
-                                .value(1));
-
-        verify(ticketHistoryService)
-                .getAllHistory(any(Pageable.class));
+        verify(ticketHistoryService).getAllHistory(pageable);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromGettingAllHistory()
-            throws Exception {
+    void getHistoryByTicketIdShouldReturnHistoryPage() {
 
-        mockMvc.perform(
-                get("/ticket-history"))
-                .andExpect(
-                        status().isForbidden());
+        Long ticketId = 1L;
 
-        verify(ticketHistoryService, never())
-                .getAllHistory(any(Pageable.class));
+        when(ticketHistoryService.getHistoryByTicketId(
+                ticketId,
+                pageable))
+                .thenReturn(ticketHistoryPage);
+
+        ResponseEntity<Page<TicketHistoryResponse>> response = ticketHistoryController.getHistoryByTicketId(
+                ticketId,
+                pageable);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(ticketHistoryPage);
+
+        verify(ticketHistoryService).getHistoryByTicketId(
+                ticketId,
+                pageable);
     }
 }

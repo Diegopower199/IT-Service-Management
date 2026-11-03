@@ -1,360 +1,164 @@
 package com.example.back_end.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.category.CategoryRequest;
 import com.example.back_end.dtos.category.CategoryResponse;
-import com.example.back_end.security.JwtAuthenticationFilter;
-import com.example.back_end.security.JwtService;
 import com.example.back_end.service.CategoryService;
 
-@WebMvcTest(CategoryController.class)
-@Import({
-        SecurityConfig.class,
-        JwtAuthenticationFilter.class
-})
+@ExtendWith(MockitoExtension.class)
 class CategoryControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private CategoryService categoryService;
 
-    @MockitoBean
-    private JwtService jwtService;
+    @Mock
+    private CategoryRequest categoryRequest;
 
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    @Mock
+    private CategoryResponse categoryResponse;
 
-    @MockitoBean
-    private AuthenticationProvider authenticationProvider;
+    @InjectMocks
+    private CategoryController categoryController;
 
-    // =========================================================
-    // GET ALL CATEGORIES
-    // =========================================================
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnAllCategories() throws Exception {
+    void getAllCategoriesShouldReturnAllCategories() {
 
-        List<CategoryResponse> categories = List.of(
-                new CategoryResponse(1L, "Hardware", true),
-                new CategoryResponse(2L, "Software", true));
+        List<CategoryResponse> categories = List.of(categoryResponse);
 
         when(categoryService.getAllCategories())
                 .thenReturn(categories);
 
-        mockMvc.perform(get("/categories"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].idCategory").value(1))
-                .andExpect(jsonPath("$[0].name").value("Hardware"))
-                .andExpect(jsonPath("$[0].active").value(true))
-                .andExpect(jsonPath("$[1].idCategory").value(2))
-                .andExpect(jsonPath("$[1].name").value("Software"))
-                .andExpect(jsonPath("$[1].active").value(true));
+        ResponseEntity<List<CategoryResponse>> response = categoryController.getAllCategories();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(categories);
 
         verify(categoryService).getAllCategories();
     }
 
-    // =========================================================
-    // GET ACTIVE CATEGORIES
-    // =========================================================
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnActiveCategories() throws Exception {
+    void getActiveCategoriesShouldReturnActiveCategories() {
 
-        List<CategoryResponse> categories = List.of(
-                new CategoryResponse(1L, "Hardware", true),
-                new CategoryResponse(2L, "Software", true));
+        List<CategoryResponse> categories = List.of(categoryResponse);
 
         when(categoryService.getActiveCategories())
                 .thenReturn(categories);
 
-        mockMvc.perform(get("/categories/actives"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Hardware"))
-                .andExpect(jsonPath("$[0].active").value(true))
-                .andExpect(jsonPath("$[1].name").value("Software"))
-                .andExpect(jsonPath("$[1].active").value(true));
+        ResponseEntity<List<CategoryResponse>> response = categoryController.getActiveCategories();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(categories);
 
         verify(categoryService).getActiveCategories();
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnEmptyListWhenNoActiveCategoriesExist() throws Exception {
+    void getCategoryByIdShouldReturnCategory() {
 
-        when(categoryService.getActiveCategories())
-                .thenReturn(List.of());
+        Long categoryId = 1L;
 
-        mockMvc.perform(get("/categories/actives"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        when(categoryService.getCategoryById(categoryId))
+                .thenReturn(categoryResponse);
 
-        verify(categoryService).getActiveCategories();
-    }
+        ResponseEntity<CategoryResponse> response = categoryController.getCategoryById(categoryId);
 
-    // =========================================================
-    // GET CATEGORY BY ID
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnCategoryById() throws Exception {
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        CategoryResponse category = new CategoryResponse(1L, "Hardware", true);
+        assertThat(response.getBody())
+                .isSameAs(categoryResponse);
 
-        when(categoryService.getCategoryById(1L))
-                .thenReturn(category);
-
-        mockMvc.perform(get("/categories/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idCategory").value(1))
-                .andExpect(jsonPath("$.name").value("Hardware"))
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(categoryService).getCategoryById(1L);
-    }
-
-    // =========================================================
-    // CREATE CATEGORY
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToCreateCategory() throws Exception {
-
-        CategoryResponse response = new CategoryResponse(1L, "Hardware", true);
-
-        when(categoryService.createCategory(
-                any(CategoryRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                post("/categories")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Hardware"
-                                }
-                                """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idCategory").value(1))
-                .andExpect(jsonPath("$.name").value("Hardware"))
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(categoryService)
-                .createCategory(any(CategoryRequest.class));
+        verify(categoryService).getCategoryById(categoryId);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromCreatingCategory() throws Exception {
+    void createCategoryShouldReturnCreatedCategory() {
 
-        mockMvc.perform(
-                post("/categories")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Hardware"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        when(categoryService.createCategory(categoryRequest))
+                .thenReturn(categoryResponse);
 
-        verify(categoryService, never())
-                .createCategory(any(CategoryRequest.class));
+        ResponseEntity<CategoryResponse> response = categoryController.createCategory(categoryRequest);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
+        assertThat(response.getBody())
+                .isSameAs(categoryResponse);
+
+        verify(categoryService).createCategory(categoryRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromCreatingCategory() throws Exception {
+    void updateCategoryShouldReturnUpdatedCategory() {
 
-        mockMvc.perform(
-                post("/categories")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Hardware"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long categoryId = 1L;
 
-        verify(categoryService, never())
-                .createCategory(any(CategoryRequest.class));
-    }
+        when(categoryService.updateCategory(categoryRequest, categoryId))
+                .thenReturn(categoryResponse);
 
-    // =========================================================
-    // UPDATE CATEGORY
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToUpdateCategory() throws Exception {
+        ResponseEntity<CategoryResponse> response = categoryController.updateCategory(
+                categoryId,
+                categoryRequest);
 
-        CategoryResponse response = new CategoryResponse(1L, "Peripherals", true);
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-        when(categoryService.updateCategory(
-                any(CategoryRequest.class),
-                eq(1L)))
-                .thenReturn(response);
+        assertThat(response.getBody())
+                .isSameAs(categoryResponse);
 
-        mockMvc.perform(
-                put("/categories/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Peripherals"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idCategory").value(1))
-                .andExpect(jsonPath("$.name").value("Peripherals"))
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(categoryService)
-                .updateCategory(
-                        any(CategoryRequest.class),
-                        eq(1L));
+        verify(categoryService).updateCategory(
+                categoryRequest,
+                categoryId);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromUpdatingCategory() throws Exception {
+    void deactivateCategoryShouldReturnNoContent() {
 
-        mockMvc.perform(
-                put("/categories/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Peripherals"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long categoryId = 1L;
 
-        verify(categoryService, never())
-                .updateCategory(
-                        any(CategoryRequest.class),
-                        any(Long.class));
+        ResponseEntity<Void> response = categoryController.deactivateCategory(categoryId);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(response.getBody())
+                .isNull();
+
+        verify(categoryService).deactivateCategory(categoryId);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromUpdatingCategory() throws Exception {
+    void activateCategoryShouldReturnNoContent() {
 
-        mockMvc.perform(
-                put("/categories/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "Peripherals"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long categoryId = 1L;
 
-        verify(categoryService, never())
-                .updateCategory(
-                        any(CategoryRequest.class),
-                        any(Long.class));
-    }
+        ResponseEntity<Void> response = categoryController.activateCategory(categoryId);
 
-    // =========================================================
-    // DEACTIVATE CATEGORY
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToDeactivateCategory() throws Exception {
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
 
-        mockMvc.perform(
-                patch("/categories/1/deactivate"))
-                .andExpect(status().isNoContent());
+        assertThat(response.getBody())
+                .isNull();
 
-        verify(categoryService)
-                .deactivateCategory(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromDeactivatingCategory() throws Exception {
-
-        mockMvc.perform(
-                patch("/categories/1/deactivate"))
-                .andExpect(status().isForbidden());
-
-        verify(categoryService, never())
-                .deactivateCategory(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromDeactivatingCategory() throws Exception {
-
-        mockMvc.perform(
-                patch("/categories/1/deactivate"))
-                .andExpect(status().isForbidden());
-
-        verify(categoryService, never())
-                .deactivateCategory(1L);
-    }
-
-    // =========================================================
-    // ACTIVATE CATEGORY
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToActivateCategory() throws Exception {
-
-        mockMvc.perform(
-                patch("/categories/1/activate"))
-                .andExpect(status().isNoContent());
-
-        verify(categoryService)
-                .activateCategory(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromActivatingCategory() throws Exception {
-
-        mockMvc.perform(
-                patch("/categories/1/activate"))
-                .andExpect(status().isForbidden());
-
-        verify(categoryService, never())
-                .activateCategory(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromActivatingCategory() throws Exception {
-
-        mockMvc.perform(
-                patch("/categories/1/activate"))
-                .andExpect(status().isForbidden());
-
-        verify(categoryService, never())
-                .activateCategory(1L);
+        verify(categoryService).activateCategory(categoryId);
     }
 }

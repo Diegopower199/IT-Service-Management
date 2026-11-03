@@ -1,9 +1,7 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,21 +14,22 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.example.back_end.dtos.ticketComment.TicketCommentRequest;
 import com.example.back_end.dtos.ticketComment.TicketCommentResponse;
+import com.example.back_end.dtos.user.UserSummaryResponse;
 import com.example.back_end.exception.ResourceNotFoundException;
-import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.RoleModel;
 import com.example.back_end.model.TicketCommentModel;
 import com.example.back_end.model.TicketModel;
@@ -51,182 +50,138 @@ class TicketCommentServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private Pageable pageable;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private TicketCommentRequest ticketCommentRequest;
+
+    @Mock
+    private TicketModel ticket;
+
+    @Mock
+    private UserModel currentUser;
+
+    @Mock
+    private UserModel createdBy;
+
+    @Mock
+    private UserModel requestedFor;
+
+    @Mock
+    private RoleModel role;
+
     @InjectMocks
     private TicketCommentService ticketCommentService;
 
     @AfterEach
-    void clearSecurityContext() {
+    void tearDown() {
+
         SecurityContextHolder.clearContext();
     }
 
-    // =========================================================
-    // GET COMMENTS BY TICKET ID
-    // =========================================================
-    // =========================================================
-    // GET COMMENTS BY TICKET ID
-    // =========================================================
-
     @Test
-    void shouldReturnPublicCommentsWhenUserIsRelatedToTicket() {
+    void getCommentsByTicketIdShouldReturnPublicCommentsForUserWhoCreatedTicket() {
 
-        RoleModel userRole = new RoleModel(
-                3L,
+        Long ticketId = 1L;
+
+        configureAuthenticatedUser(
+                "john",
                 "USER");
 
-        DepartmentModel department = new DepartmentModel(
+        when(currentUser.getIdUser())
+                .thenReturn(1L);
+
+        when(currentUser.getUsername())
+                .thenReturn("john");
+
+        configureTicketAccess(
                 1L,
-                "IT",
-                true);
+                2L);
 
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
+        when(ticket.getIdTicket())
+                .thenReturn(ticketId);
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(currentUser);
-        ticket.setRequestedFor(currentUser);
-
-        LocalDateTime now = LocalDateTime.now();
-
-        TicketCommentModel comment = new TicketCommentModel();
-        comment.setIdComment(1L);
-        comment.setTicket(ticket);
-        comment.setUser(currentUser);
-        comment.setComment("Public comment");
-        comment.setInternal(false);
-        comment.setCreatedAt(now);
-
-        authenticate("ana");
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<TicketCommentModel> commentPage = new PageImpl<>(
-                List.of(comment),
-                pageable,
-                1);
-
-        when(ticketCommentRepository
-                .findByTicketAndInternalFalse(
-                        ticket,
-                        pageable))
-                .thenReturn(commentPage);
-
-        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
-                1L,
-                pageable);
-
-        assertEquals(
-                1,
-                response.getTotalElements());
-
-        assertEquals(
-                1L,
-                response.getContent()
-                        .get(0)
-                        .getIdComment());
-
-        assertEquals(
-                1L,
-                response.getContent()
-                        .get(0)
-                        .getTicketId());
-
-        assertEquals(
-                "ana",
-                response.getContent()
-                        .get(0)
-                        .getUser()
-                        .getUsername());
-
-        assertEquals(
+        TicketCommentModel comment = createComment(
+                10L,
                 "Public comment",
-                response.getContent()
-                        .get(0)
-                        .getComment());
+                false);
 
-        assertFalse(
-                response.getContent()
-                        .get(0)
-                        .isInternal());
+        Page<TicketCommentModel> comments = new PageImpl<>(List.of(comment));
 
-        verify(ticketCommentRepository)
-                .findByTicketAndInternalFalse(
-                        ticket,
-                        pageable);
-
-        verify(ticketCommentRepository, never())
-                .findByTicket(
-                        any(),
-                        any(Pageable.class));
-    }
-
-    @Test
-    void shouldReturnEmptyPageWhenRelatedUserTicketHasNoPublicComments() {
-
-        RoleModel userRole = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(currentUser);
-        ticket.setRequestedFor(currentUser);
-
-        authenticate("ana");
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
+        when(ticketCommentRepository.findByTicketAndInternalFalse(
+                ticket,
+                pageable))
+                .thenReturn(comments);
 
-        Pageable pageable = PageRequest.of(0, 10);
-
-        when(ticketCommentRepository
-                .findByTicketAndInternalFalse(
-                        ticket,
-                        pageable))
-                .thenReturn(Page.empty(pageable));
-
-        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
-                1L,
+        Page<TicketCommentResponse> result = ticketCommentService.getCommentsByTicketId(
+                ticketId,
                 pageable);
 
-        assertTrue(response.isEmpty());
+        assertThat(result.getContent())
+                .hasSize(1);
 
-        assertEquals(
-                0,
-                response.getTotalElements());
+        TicketCommentResponse expected = new TicketCommentResponse(
+                10L,
+                ticketId,
+                new UserSummaryResponse(
+                        1L,
+                        "john"),
+                "Public comment",
+                false,
+                comment.getCreatedAt());
+
+        assertThat(result.getContent().get(0))
+                .usingRecursiveComparison()
+                .isEqualTo(expected);
+
+        verify(ticketCommentRepository)
+                .findByTicketAndInternalFalse(
+                        ticket,
+                        pageable);
+
+        verify(ticketCommentRepository, never())
+                .findByTicket(
+                        ticket,
+                        pageable);
+    }
+
+    @Test
+    void getCommentsByTicketIdShouldReturnPublicCommentsForRequestedUser() {
+
+        Long ticketId = 1L;
+
+        configureAuthenticatedUser(
+                "john",
+                "USER");
+
+        when(currentUser.getIdUser())
+                .thenReturn(2L);
+
+        configureTicketAccess(
+                1L,
+                2L);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(ticketCommentRepository.findByTicketAndInternalFalse(
+                ticket,
+                pageable))
+                .thenReturn(Page.empty());
+
+        Page<TicketCommentResponse> result = ticketCommentService.getCommentsByTicketId(
+                ticketId,
+                pageable);
+
+        assertThat(result)
+                .isEmpty();
 
         verify(ticketCommentRepository)
                 .findByTicketAndInternalFalse(
@@ -235,171 +190,66 @@ class TicketCommentServiceTest {
     }
 
     @Test
-    void shouldThrowAccessDeniedWhenUserIsNotRelatedToTicket() {
+    void getCommentsByTicketIdShouldThrowAccessDeniedWhenUserCannotAccessTicket() {
 
-        RoleModel userRole = new RoleModel(
-                3L,
+        Long ticketId = 1L;
+
+        configureAuthenticatedUser(
+                "john",
                 "USER");
 
-        DepartmentModel department = new DepartmentModel(
+        when(currentUser.getIdUser())
+                .thenReturn(3L);
+
+        configureTicketAccess(
                 1L,
-                "IT",
-                true);
+                2L);
 
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
-
-        UserModel otherUser = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(otherUser);
-        ticket.setRequestedFor(otherUser);
-
-        authenticate("ana");
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        assertThrows(
-                AccessDeniedException.class,
-                () -> ticketCommentService
-                        .getCommentsByTicketId(
-                                1L,
-                                pageable));
+        assertThatThrownBy(
+                () -> ticketCommentService.getCommentsByTicketId(
+                        ticketId,
+                        pageable))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "You are not allowed to view comments on this ticket");
 
         verify(ticketCommentRepository, never())
                 .findByTicketAndInternalFalse(
                         any(),
-                        any(Pageable.class));
+                        any());
 
         verify(ticketCommentRepository, never())
                 .findByTicket(
                         any(),
-                        any(Pageable.class));
+                        any());
     }
 
     @Test
-    void shouldReturnAllCommentsWhenUserIsTechnician() {
+    void getCommentsByTicketIdShouldReturnAllCommentsForTechnician() {
 
-        RoleModel technicianRole = new RoleModel(
-                2L,
+        Long ticketId = 1L;
+
+        configureAuthenticatedUser(
+                "technician",
                 "TECHNICIAN");
 
-        RoleModel userRole = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel technician = new UserModel(
-                1L,
-                "tech",
-                "tech@example.com",
-                "encodedPassword",
-                "Technical",
-                "User",
-                true,
-                technicianRole,
-                department);
-
-        UserModel owner = new UserModel(
-                2L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(owner);
-        ticket.setRequestedFor(owner);
-
-        TicketCommentModel publicComment = new TicketCommentModel();
-        publicComment.setIdComment(1L);
-        publicComment.setTicket(ticket);
-        publicComment.setUser(technician);
-        publicComment.setComment("Public comment");
-        publicComment.setInternal(false);
-        publicComment.setCreatedAt(LocalDateTime.now());
-
-        TicketCommentModel internalComment = new TicketCommentModel();
-        internalComment.setIdComment(2L);
-        internalComment.setTicket(ticket);
-        internalComment.setUser(technician);
-        internalComment.setComment("Internal comment");
-        internalComment.setInternal(true);
-        internalComment.setCreatedAt(LocalDateTime.now());
-
-        authenticate("tech");
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findByUsername("tech"))
-                .thenReturn(Optional.of(technician));
+        when(ticketCommentRepository.findByTicket(
+                ticket,
+                pageable))
+                .thenReturn(Page.empty());
 
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<TicketCommentModel> commentPage = new PageImpl<>(
-                List.of(
-                        publicComment,
-                        internalComment),
-                pageable,
-                2);
-
-        when(ticketCommentRepository
-                .findByTicket(
-                        ticket,
-                        pageable))
-                .thenReturn(commentPage);
-
-        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
-                1L,
+        Page<TicketCommentResponse> result = ticketCommentService.getCommentsByTicketId(
+                ticketId,
                 pageable);
 
-        assertEquals(
-                2,
-                response.getTotalElements());
-
-        assertFalse(
-                response.getContent()
-                        .get(0)
-                        .isInternal());
-
-        assertTrue(
-                response.getContent()
-                        .get(1)
-                        .isInternal());
+        assertThat(result)
+                .isEmpty();
 
         verify(ticketCommentRepository)
                 .findByTicket(
@@ -409,521 +259,353 @@ class TicketCommentServiceTest {
         verify(ticketCommentRepository, never())
                 .findByTicketAndInternalFalse(
                         any(),
-                        any(Pageable.class));
+                        any());
     }
 
     @Test
-    void shouldReturnAllCommentsWhenUserIsAdmin() {
+    void getCommentsByTicketIdShouldThrowExceptionWhenTicketDoesNotExist() {
 
-        RoleModel adminRole = new RoleModel(
-                1L,
-                "ADMIN");
+        Long ticketId = 1L;
 
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-
-        TicketCommentModel comment = new TicketCommentModel();
-        comment.setIdComment(1L);
-        comment.setTicket(ticket);
-        comment.setUser(admin);
-        comment.setComment("Internal comment");
-        comment.setInternal(true);
-        comment.setCreatedAt(LocalDateTime.now());
-
-        authenticate("admin");
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        Page<TicketCommentModel> commentPage = new PageImpl<>(
-                List.of(comment),
-                pageable,
-                1);
-
-        when(ticketCommentRepository
-                .findByTicket(
-                        ticket,
-                        pageable))
-                .thenReturn(commentPage);
-
-        Page<TicketCommentResponse> response = ticketCommentService.getCommentsByTicketId(
-                1L,
-                pageable);
-
-        assertEquals(
-                1,
-                response.getTotalElements());
-
-        assertTrue(
-                response.getContent()
-                        .get(0)
-                        .isInternal());
-
-        verify(ticketCommentRepository)
-                .findByTicket(
-                        ticket,
-                        pageable);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenTicketDoesNotExistOnGetComments() {
-
-        when(ticketRepository.findById(99L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.empty());
 
-        Pageable pageable = PageRequest.of(0, 10);
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketCommentService
-                        .getCommentsByTicketId(
-                                99L,
-                                pageable));
+        assertThatThrownBy(
+                () -> ticketCommentService.getCommentsByTicketId(
+                        ticketId,
+                        pageable))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Ticket with id " + ticketId + " not found");
 
         verify(userRepository, never())
                 .findByUsername(any());
-
-        verify(ticketCommentRepository, never())
-                .findByTicket(
-                        any(),
-                        any(Pageable.class));
-
-        verify(ticketCommentRepository, never())
-                .findByTicketAndInternalFalse(
-                        any(),
-                        any(Pageable.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenAuthenticatedUserDoesNotExistOnGetComments() {
+    void getCommentsByTicketIdShouldThrowExceptionWhenAuthenticatedUserDoesNotExist() {
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
+        Long ticketId = 1L;
 
-        authenticate("unknown");
+        configureAuthentication("unknown");
 
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
         when(userRepository.findByUsername("unknown"))
                 .thenReturn(Optional.empty());
 
-        Pageable pageable = PageRequest.of(0, 10);
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketCommentService
-                        .getCommentsByTicketId(
-                                1L,
-                                pageable));
-
-        verify(ticketCommentRepository, never())
-                .findByTicket(
-                        any(),
-                        any(Pageable.class));
-
-        verify(ticketCommentRepository, never())
-                .findByTicketAndInternalFalse(
-                        any(),
-                        any(Pageable.class));
+        assertThatThrownBy(
+                () -> ticketCommentService.getCommentsByTicketId(
+                        ticketId,
+                        pageable))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "User with username unknown not found");
     }
 
-    // =========================================================
-    // CREATE COMMENT
-    // =========================================================
     @Test
-    void shouldAllowRelatedUserToCreatePublicComment() {
+    void createCommentForTicketShouldCreatePublicCommentForUser() {
 
-        TicketCommentRequest request = org.mockito.Mockito.mock(
-                TicketCommentRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getComment())
-                .thenReturn("My comment");
+        configureAuthenticatedUser(
+                "john",
+                "USER");
 
-        when(request.isInternal())
+        when(currentUser.getIdUser())
+                .thenReturn(1L);
+
+        when(currentUser.getUsername())
+                .thenReturn("john");
+
+        configureTicketAccess(
+                1L,
+                2L);
+
+        when(ticket.getIdTicket())
+                .thenReturn(ticketId);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        when(ticketCommentRequest.getComment())
+                .thenReturn("New comment");
+
+        when(ticketCommentRequest.isInternal())
                 .thenReturn(false);
 
-        RoleModel userRole = new RoleModel(
-                3L,
-                "USER");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(currentUser);
-        ticket.setRequestedFor(currentUser);
-
-        authenticate("ana");
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        when(ticketCommentRepository
-                .save(any(TicketCommentModel.class)))
+        when(ticketCommentRepository.save(
+                any(TicketCommentModel.class)))
                 .thenAnswer(invocation -> {
 
                     TicketCommentModel comment = invocation.getArgument(0);
 
-                    comment.setIdComment(1L);
+                    comment.setIdComment(10L);
 
                     return comment;
                 });
 
-        TicketCommentResponse response = ticketCommentService.createCommentForTicket(
-                1L,
-                request);
+        LocalDateTime beforeCreation = LocalDateTime.now();
 
-        assertEquals(
-                1L,
-                response.getIdComment());
+        TicketCommentResponse result = ticketCommentService.createCommentForTicket(
+                ticketId,
+                ticketCommentRequest);
 
-        assertEquals(
-                1L,
-                response.getTicketId());
+        LocalDateTime afterCreation = LocalDateTime.now();
 
-        assertEquals(
-                "ana",
-                response.getUser().getUsername());
-
-        assertEquals(
-                "My comment",
-                response.getComment());
-
-        assertFalse(
-                response.isInternal());
+        ArgumentCaptor<TicketCommentModel> commentCaptor = ArgumentCaptor.forClass(
+                TicketCommentModel.class);
 
         verify(ticketCommentRepository)
-                .save(any(TicketCommentModel.class));
+                .save(commentCaptor.capture());
+
+        TicketCommentModel savedComment = commentCaptor.getValue();
+
+        assertThat(savedComment.getTicket())
+                .isSameAs(ticket);
+
+        assertThat(savedComment.getUser())
+                .isSameAs(currentUser);
+
+        assertThat(savedComment.getComment())
+                .isEqualTo("New comment");
+
+        assertThat(savedComment.isInternal())
+                .isFalse();
+
+        assertThat(savedComment.getCreatedAt())
+                .isBetween(
+                        beforeCreation,
+                        afterCreation);
+
+        TicketCommentResponse expected = new TicketCommentResponse(
+                10L,
+                ticketId,
+                new UserSummaryResponse(
+                        1L,
+                        "john"),
+                "New comment",
+                false,
+                savedComment.getCreatedAt());
+
+        assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(expected);
     }
 
     @Test
-    void shouldThrowAccessDeniedWhenUserCreatesCommentOnUnrelatedTicket() {
+    void createCommentForTicketShouldThrowAccessDeniedWhenUserCannotAccessTicket() {
 
-        TicketCommentRequest request = org.mockito.Mockito.mock(
-                TicketCommentRequest.class);
+        Long ticketId = 1L;
 
-        RoleModel userRole = new RoleModel(
-                3L,
+        configureAuthenticatedUser(
+                "john",
                 "USER");
 
-        DepartmentModel department = new DepartmentModel(
+        when(currentUser.getIdUser())
+                .thenReturn(3L);
+
+        configureTicketAccess(
                 1L,
-                "IT",
-                true);
+                2L);
 
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
-
-        UserModel otherUser = new UserModel(
-                2L,
-                "carlos",
-                "carlos@example.com",
-                "encodedPassword",
-                "Carlos",
-                "Lopez",
-                true,
-                userRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(otherUser);
-        ticket.setRequestedFor(otherUser);
-
-        authenticate("ana");
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
-
-        assertThrows(
-                AccessDeniedException.class,
-                () -> ticketCommentService
-                        .createCommentForTicket(
-                                1L,
-                                request));
+        assertThatThrownBy(
+                () -> ticketCommentService.createCommentForTicket(
+                        ticketId,
+                        ticketCommentRequest))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "You are not allowed to comment on this ticket");
 
         verify(ticketCommentRepository, never())
                 .save(any(TicketCommentModel.class));
     }
 
     @Test
-    void shouldThrowAccessDeniedWhenUserCreatesInternalComment() {
+    void createCommentForTicketShouldThrowAccessDeniedWhenUserCreatesInternalComment() {
 
-        TicketCommentRequest request = org.mockito.Mockito.mock(
-                TicketCommentRequest.class);
+        Long ticketId = 1L;
 
-        when(request.isInternal())
-                .thenReturn(true);
-
-        RoleModel userRole = new RoleModel(
-                3L,
+        configureAuthenticatedUser(
+                "john",
                 "USER");
 
-        DepartmentModel department = new DepartmentModel(
+        when(currentUser.getIdUser())
+                .thenReturn(1L);
+
+        configureTicketAccess(
                 1L,
-                "IT",
-                true);
+                2L);
 
-        UserModel currentUser = new UserModel(
-                1L,
-                "ana",
-                "ana@example.com",
-                "encodedPassword",
-                "Ana",
-                "Garcia",
-                true,
-                userRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-        ticket.setCreatedBy(currentUser);
-        ticket.setRequestedFor(currentUser);
-
-        authenticate("ana");
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findByUsername("ana"))
-                .thenReturn(Optional.of(currentUser));
+        when(ticketCommentRequest.isInternal())
+                .thenReturn(true);
 
-        assertThrows(
-                AccessDeniedException.class,
-                () -> ticketCommentService
-                        .createCommentForTicket(
-                                1L,
-                                request));
+        assertThatThrownBy(
+                () -> ticketCommentService.createCommentForTicket(
+                        ticketId,
+                        ticketCommentRequest))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "Users are not allowed to create internal comments");
 
         verify(ticketCommentRepository, never())
                 .save(any(TicketCommentModel.class));
     }
 
     @Test
-    void shouldAllowTechnicianToCreateInternalComment() {
+    void createCommentForTicketShouldAllowTechnicianToCreateInternalComment() {
 
-        TicketCommentRequest request = org.mockito.Mockito.mock(
-                TicketCommentRequest.class);
+        Long ticketId = 1L;
 
-        when(request.getComment())
-                .thenReturn("Internal technical note");
-
-        when(request.isInternal())
-                .thenReturn(true);
-
-        RoleModel technicianRole = new RoleModel(
-                2L,
+        configureAuthenticatedUser(
+                "technician",
                 "TECHNICIAN");
 
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
+        when(currentUser.getIdUser())
+                .thenReturn(3L);
 
-        UserModel technician = new UserModel(
-                1L,
-                "tech",
-                "tech@example.com",
-                "encodedPassword",
-                "Technical",
-                "User",
-                true,
-                technicianRole,
-                department);
+        when(currentUser.getUsername())
+                .thenReturn("technician");
 
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
+        when(ticket.getIdTicket())
+                .thenReturn(ticketId);
 
-        authenticate("tech");
-
-        when(ticketRepository.findById(1L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.of(ticket));
 
-        when(userRepository.findByUsername("tech"))
-                .thenReturn(Optional.of(technician));
+        when(ticketCommentRequest.getComment())
+                .thenReturn("Internal comment");
 
-        when(ticketCommentRepository
-                .save(any(TicketCommentModel.class)))
-                .thenAnswer(invocation -> {
-
-                    TicketCommentModel comment = invocation.getArgument(0);
-
-                    comment.setIdComment(1L);
-
-                    return comment;
-                });
-
-        TicketCommentResponse response = ticketCommentService.createCommentForTicket(
-                1L,
-                request);
-
-        assertEquals(
-                "Internal technical note",
-                response.getComment());
-
-        assertTrue(
-                response.isInternal());
-
-        assertEquals(
-                "tech",
-                response.getUser().getUsername());
-
-        verify(ticketCommentRepository)
-                .save(any(TicketCommentModel.class));
-    }
-
-    @Test
-    void shouldAllowAdminToCreateInternalComment() {
-
-        TicketCommentRequest request = org.mockito.Mockito.mock(
-                TicketCommentRequest.class);
-
-        when(request.getComment())
-                .thenReturn("Admin internal note");
-
-        when(request.isInternal())
+        when(ticketCommentRequest.isInternal())
                 .thenReturn(true);
 
-        RoleModel adminRole = new RoleModel(
-                1L,
-                "ADMIN");
-
-        DepartmentModel department = new DepartmentModel(
-                1L,
-                "IT",
-                true);
-
-        UserModel admin = new UserModel(
-                1L,
-                "admin",
-                "admin@example.com",
-                "encodedPassword",
-                "Admin",
-                "User",
-                true,
-                adminRole,
-                department);
-
-        TicketModel ticket = new TicketModel();
-        ticket.setIdTicket(1L);
-
-        authenticate("admin");
-
-        when(ticketRepository.findById(1L))
-                .thenReturn(Optional.of(ticket));
-
-        when(userRepository.findByUsername("admin"))
-                .thenReturn(Optional.of(admin));
-
-        when(ticketCommentRepository
-                .save(any(TicketCommentModel.class)))
+        when(ticketCommentRepository.save(
+                any(TicketCommentModel.class)))
                 .thenAnswer(invocation -> {
 
                     TicketCommentModel comment = invocation.getArgument(0);
 
-                    comment.setIdComment(1L);
+                    comment.setIdComment(10L);
 
                     return comment;
                 });
 
-        TicketCommentResponse response = ticketCommentService.createCommentForTicket(
-                1L,
-                request);
+        TicketCommentResponse result = ticketCommentService.createCommentForTicket(
+                ticketId,
+                ticketCommentRequest);
 
-        assertEquals(
-                "Admin internal note",
-                response.getComment());
+        assertThat(result)
+                .isNotNull();
 
-        assertTrue(
-                response.isInternal());
+        ArgumentCaptor<TicketCommentModel> commentCaptor = ArgumentCaptor.forClass(
+                TicketCommentModel.class);
 
         verify(ticketCommentRepository)
-                .save(any(TicketCommentModel.class));
+                .save(commentCaptor.capture());
+
+        TicketCommentModel savedComment = commentCaptor.getValue();
+
+        assertThat(savedComment.isInternal())
+                .isTrue();
+
+        assertThat(savedComment.getComment())
+                .isEqualTo("Internal comment");
+
+        assertThat(savedComment.getUser())
+                .isSameAs(currentUser);
+
+        assertThat(savedComment.getTicket())
+                .isSameAs(ticket);
     }
 
     @Test
-    void shouldThrowExceptionWhenTicketDoesNotExistOnCreateComment() {
+    void createCommentForTicketShouldThrowExceptionWhenTicketDoesNotExist() {
 
-        TicketCommentRequest request = org.mockito.Mockito.mock(
-                TicketCommentRequest.class);
+        Long ticketId = 1L;
 
-        when(ticketRepository.findById(99L))
+        when(ticketRepository.findById(ticketId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> ticketCommentService
-                        .createCommentForTicket(
-                                99L,
-                                request));
-
-        verify(userRepository, never())
-                .findByUsername(any());
+        assertThatThrownBy(
+                () -> ticketCommentService.createCommentForTicket(
+                        ticketId,
+                        ticketCommentRequest))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Ticket with id " + ticketId + " not found");
 
         verify(ticketCommentRepository, never())
                 .save(any(TicketCommentModel.class));
     }
 
-    // =========================================================
-    // SECURITY CONTEXT
-    // =========================================================
+    private void configureAuthentication(
+            String username) {
 
-    private void authenticate(String username) {
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
 
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null));
+        when(authentication.getName())
+                .thenReturn(username);
+
+        context.setAuthentication(authentication);
+
+        SecurityContextHolder.setContext(context);
+    }
+
+    private void configureAuthenticatedUser(
+            String username,
+            String roleName) {
+
+        configureAuthentication(username);
+
+        when(userRepository.findByUsername(username))
+                .thenReturn(Optional.of(currentUser));
+
+        when(currentUser.getRole())
+                .thenReturn(role);
+
+        when(role.getName())
+                .thenReturn(roleName);
+    }
+
+    private void configureTicketAccess(
+            Long createdById,
+            Long requestedForId) {
+
+        when(ticket.getCreatedBy())
+                .thenReturn(createdBy);
+
+        when(ticket.getRequestedFor())
+                .thenReturn(requestedFor);
+
+        when(createdBy.getIdUser())
+                .thenReturn(createdById);
+
+        when(requestedFor.getIdUser())
+                .thenReturn(requestedForId);
+    }
+
+    private TicketCommentModel createComment(
+            Long id,
+            String comment,
+            boolean internal) {
+
+        TicketCommentModel ticketComment = new TicketCommentModel();
+
+        ticketComment.setIdComment(id);
+        ticketComment.setTicket(ticket);
+        ticketComment.setUser(currentUser);
+        ticketComment.setComment(comment);
+        ticketComment.setInternal(internal);
+        ticketComment.setCreatedAt(
+                LocalDateTime.now());
+
+        return ticketComment;
     }
 }

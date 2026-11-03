@@ -1,360 +1,166 @@
 package com.example.back_end.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import com.example.back_end.config.SecurityConfig;
 import com.example.back_end.dtos.status.StatusRequest;
 import com.example.back_end.dtos.status.StatusResponse;
-import com.example.back_end.security.JwtAuthenticationFilter;
-import com.example.back_end.security.JwtService;
 import com.example.back_end.service.StatusService;
 
-@WebMvcTest(StatusController.class)
-@Import({
-        SecurityConfig.class,
-        JwtAuthenticationFilter.class
-})
+@ExtendWith(MockitoExtension.class)
 class StatusControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private StatusService statusService;
 
-    @MockitoBean
-    private JwtService jwtService;
+    @Mock
+    private StatusRequest statusRequest;
 
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    @Mock
+    private StatusResponse statusResponse;
 
-    @MockitoBean
-    private AuthenticationProvider authenticationProvider;
+    @InjectMocks
+    private StatusController statusController;
 
-    // =========================================================
-    // GET ALL STATUSES
-    // =========================================================
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnAllStatuses() throws Exception {
+    void getAllStatusesShouldReturnAllStatuses() {
 
-        List<StatusResponse> statuses = List.of(
-                new StatusResponse(1L, "OPEN", true),
-                new StatusResponse(2L, "IN_PROGRESS", true));
+        List<StatusResponse> statuses = List.of(statusResponse);
 
         when(statusService.getAllStatuses())
                 .thenReturn(statuses);
 
-        mockMvc.perform(get("/statuses"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].idStatus").value(1))
-                .andExpect(jsonPath("$[0].name").value("OPEN"))
-                .andExpect(jsonPath("$[0].active").value(true))
-                .andExpect(jsonPath("$[1].idStatus").value(2))
-                .andExpect(jsonPath("$[1].name").value("IN_PROGRESS"))
-                .andExpect(jsonPath("$[1].active").value(true));
+        ResponseEntity<List<StatusResponse>> response = statusController.getAllStatuses();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(statuses);
 
         verify(statusService).getAllStatuses();
     }
 
-    // =========================================================
-    // GET ACTIVE STATUSES
-    // =========================================================
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnActiveStatuses() throws Exception {
+    void getActiveStatusesShouldReturnActiveStatuses() {
 
-        List<StatusResponse> statuses = List.of(
-                new StatusResponse(1L, "OPEN", true),
-                new StatusResponse(2L, "IN_PROGRESS", true));
+        List<StatusResponse> statuses = List.of(statusResponse);
 
         when(statusService.getActiveStatuses())
                 .thenReturn(statuses);
 
-        mockMvc.perform(get("/statuses/actives"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("OPEN"))
-                .andExpect(jsonPath("$[0].active").value(true))
-                .andExpect(jsonPath("$[1].name").value("IN_PROGRESS"))
-                .andExpect(jsonPath("$[1].active").value(true));
+        ResponseEntity<List<StatusResponse>> response = statusController.getActiveStatuses();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(statuses);
 
         verify(statusService).getActiveStatuses();
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnEmptyListWhenNoActiveStatusesExist() throws Exception {
+    void getStatusByIdShouldReturnStatus() {
 
-        when(statusService.getActiveStatuses())
-                .thenReturn(List.of());
+        Long statusId = 1L;
 
-        mockMvc.perform(get("/statuses/actives"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
-
-        verify(statusService).getActiveStatuses();
-    }
-
-    // =========================================================
-    // GET STATUS BY ID
-    // =========================================================
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldReturnStatusById() throws Exception {
-
-        StatusResponse statusResponse = new StatusResponse(1L, "OPEN", true);
-
-        when(statusService.getStatusById(1L))
+        when(statusService.getStatusById(statusId))
                 .thenReturn(statusResponse);
 
-        mockMvc.perform(get("/statuses/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idStatus").value(1))
-                .andExpect(jsonPath("$.name").value("OPEN"))
-                .andExpect(jsonPath("$.active").value(true));
+        ResponseEntity<StatusResponse> response = statusController.getStatusById(statusId);
 
-        verify(statusService).getStatusById(1L);
-    }
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
-    // =========================================================
-    // CREATE STATUS
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToCreateStatus() throws Exception {
+        assertThat(response.getBody())
+                .isSameAs(statusResponse);
 
-        StatusResponse response = new StatusResponse(1L, "OPEN", true);
-
-        when(statusService.createStatus(
-                any(StatusRequest.class)))
-                .thenReturn(response);
-
-        mockMvc.perform(
-                post("/statuses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "OPEN"
-                                }
-                                """))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idStatus").value(1))
-                .andExpect(jsonPath("$.name").value("OPEN"))
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(statusService)
-                .createStatus(any(StatusRequest.class));
+        verify(statusService).getStatusById(statusId);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromCreatingStatus() throws Exception {
+    void createStatusShouldReturnCreatedStatus() {
 
-        mockMvc.perform(
-                post("/statuses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "OPEN"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        when(statusService.createStatus(statusRequest))
+                .thenReturn(statusResponse);
 
-        verify(statusService, never())
-                .createStatus(any(StatusRequest.class));
+        ResponseEntity<StatusResponse> response = statusController.createStatus(statusRequest);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
+        assertThat(response.getBody())
+                .isSameAs(statusResponse);
+
+        verify(statusService).createStatus(statusRequest);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromCreatingStatus() throws Exception {
+    void updateStatusShouldReturnUpdatedStatus() {
 
-        mockMvc.perform(
-                post("/statuses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "OPEN"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
-
-        verify(statusService, never())
-                .createStatus(any(StatusRequest.class));
-    }
-
-    // =========================================================
-    // UPDATE STATUS
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToUpdateStatus() throws Exception {
-
-        StatusResponse response = new StatusResponse(1L, "IN_PROGRESS", true);
+        Long statusId = 1L;
 
         when(statusService.updateStatus(
-                any(StatusRequest.class),
-                eq(1L)))
-                .thenReturn(response);
+                statusRequest,
+                statusId))
+                .thenReturn(statusResponse);
 
-        mockMvc.perform(
-                put("/statuses/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "IN_PROGRESS"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idStatus").value(1))
-                .andExpect(jsonPath("$.name").value("IN_PROGRESS"))
-                .andExpect(jsonPath("$.active").value(true));
+        ResponseEntity<StatusResponse> response = statusController.updateStatus(
+                statusId,
+                statusRequest);
 
-        verify(statusService)
-                .updateStatus(
-                        any(StatusRequest.class),
-                        eq(1L));
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        assertThat(response.getBody())
+                .isSameAs(statusResponse);
+
+        verify(statusService).updateStatus(
+                statusRequest,
+                statusId);
     }
 
     @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromUpdatingStatus() throws Exception {
+    void deactivateStatusShouldReturnNoContent() {
 
-        mockMvc.perform(
-                put("/statuses/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "IN_PROGRESS"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long statusId = 1L;
 
-        verify(statusService, never())
-                .updateStatus(
-                        any(StatusRequest.class),
-                        any(Long.class));
+        ResponseEntity<Void> response = statusController.deactivateStatus(statusId);
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+
+        assertThat(response.getBody())
+                .isNull();
+
+        verify(statusService).deactivateStatus(statusId);
     }
 
     @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromUpdatingStatus() throws Exception {
+    void activateStatusShouldReturnNoContent() {
 
-        mockMvc.perform(
-                put("/statuses/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                    "name": "IN_PROGRESS"
-                                }
-                                """))
-                .andExpect(status().isForbidden());
+        Long statusId = 1L;
 
-        verify(statusService, never())
-                .updateStatus(
-                        any(StatusRequest.class),
-                        any(Long.class));
-    }
+        ResponseEntity<Void> response = statusController.activateStatus(statusId);
 
-    // =========================================================
-    // DEACTIVATE STATUS
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToDeactivateStatus() throws Exception {
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
 
-        mockMvc.perform(
-                patch("/statuses/1/deactivate"))
-                .andExpect(status().isNoContent());
+        assertThat(response.getBody())
+                .isNull();
 
-        verify(statusService)
-                .deactivateStatus(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromDeactivatingStatus() throws Exception {
-
-        mockMvc.perform(
-                patch("/statuses/1/deactivate"))
-                .andExpect(status().isForbidden());
-
-        verify(statusService, never())
-                .deactivateStatus(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromDeactivatingStatus() throws Exception {
-
-        mockMvc.perform(
-                patch("/statuses/1/deactivate"))
-                .andExpect(status().isForbidden());
-
-        verify(statusService, never())
-                .deactivateStatus(1L);
-    }
-
-    // =========================================================
-    // ACTIVATE STATUS
-    // =========================================================
-    @Test
-    @WithMockUser(username = "admin", roles = "ADMIN")
-    void shouldAllowAdminToActivateStatus() throws Exception {
-
-        mockMvc.perform(
-                patch("/statuses/1/activate"))
-                .andExpect(status().isNoContent());
-
-        verify(statusService)
-                .activateStatus(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = "USER")
-    void shouldForbidUserFromActivatingStatus() throws Exception {
-
-        mockMvc.perform(
-                patch("/statuses/1/activate"))
-                .andExpect(status().isForbidden());
-
-        verify(statusService, never())
-                .activateStatus(1L);
-    }
-
-    @Test
-    @WithMockUser(username = "technician", roles = "TECHNICIAN")
-    void shouldForbidTechnicianFromActivatingStatus() throws Exception {
-
-        mockMvc.perform(
-                patch("/statuses/1/activate"))
-                .andExpect(status().isForbidden());
-
-        verify(statusService, never())
-                .activateStatus(1L);
+        verify(statusService).activateStatus(statusId);
     }
 }

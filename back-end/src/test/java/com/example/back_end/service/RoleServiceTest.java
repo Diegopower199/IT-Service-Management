@@ -1,8 +1,8 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -20,7 +20,7 @@ import com.example.back_end.model.RoleModel;
 import com.example.back_end.repository.RoleRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class RoleServiceTest {
+class RoleServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
@@ -28,65 +28,92 @@ public class RoleServiceTest {
     @InjectMocks
     private RoleService roleService;
 
-    // =========================================================
-    // GET ALL ROLES
-    // =========================================================
     @Test
-    void shouldReturnAllRoles() {
+    void getAllRolesShouldReturnAllRoles() {
 
-        RoleModel role1 = new RoleModel(1L, "ADMIN");
-        RoleModel role2 = new RoleModel(2L, "TECHNICIAN");
+        RoleModel adminRole = createRole(
+                1L,
+                "ADMIN");
 
-        List<RoleModel> roles = List.of(role1, role2);
+        RoleModel userRole = createRole(
+                2L,
+                "USER");
 
         when(roleRepository.findAllOrderedById())
-                .thenReturn(roles);
+                .thenReturn(List.of(adminRole, userRole));
 
-        List<RoleResponse> response = roleService.getAllRoles();
+        List<RoleResponse> result = roleService.getAllRoles();
 
-        assertEquals(2, response.size());
-        assertEquals("ADMIN", response.get(0).getName());
-        assertEquals("TECHNICIAN", response.get(1).getName());
+        assertThat(result)
+                .hasSize(2);
+
+        assertThat(result.get(0).getIdRole())
+                .isEqualTo(1L);
+
+        assertThat(result.get(0).getName())
+                .isEqualTo("ADMIN");
+
+        assertThat(result.get(1).getIdRole())
+                .isEqualTo(2L);
+
+        assertThat(result.get(1).getName())
+                .isEqualTo("USER");
+
+        verify(roleRepository)
+                .findAllOrderedById();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoRolesExist() {
+    void getRoleByIdShouldReturnRole() {
 
-        when(roleRepository.findAllOrderedById())
-                .thenReturn(List.of());
+        Long roleId = 1L;
 
-        List<RoleResponse> response = roleService.getAllRoles();
+        RoleModel role = createRole(
+                roleId,
+                "ADMIN");
 
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET ROLE BY ID
-    // =========================================================
-    @Test
-    void shouldReturnRoleById() {
-
-        RoleModel role = new RoleModel(1L, "ADMIN");
-
-        when(roleRepository.findById(1L))
+        when(roleRepository.findById(roleId))
                 .thenReturn(Optional.of(role));
 
-        RoleResponse response = roleService.getRoleById(1L);
+        RoleResponse result = roleService.getRoleById(roleId);
 
-        assertEquals(1L, response.getIdRole());
-        assertEquals("ADMIN", response.getName());
+        assertThat(result.getIdRole())
+                .isEqualTo(roleId);
 
+        assertThat(result.getName())
+                .isEqualTo("ADMIN");
+
+        verify(roleRepository)
+                .findById(roleId);
     }
 
     @Test
-    void shouldThrowExceptionWhenRoleByIdDoesNotExist() {
+    void getRoleByIdShouldThrowExceptionWhenRoleDoesNotExist() {
 
-        when(roleRepository.findById(99L))
+        Long roleId = 1L;
+
+        when(roleRepository.findById(roleId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> roleService.getRoleById(99L));
+        assertThatThrownBy(
+                () -> roleService.getRoleById(roleId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Role with id " + roleId + " not found");
+
+        verify(roleRepository)
+                .findById(roleId);
     }
 
+    private RoleModel createRole(
+            Long id,
+            String name) {
+
+        RoleModel role = new RoleModel();
+
+        role.setIdRole(id);
+        role.setName(name);
+
+        return role;
+    }
 }

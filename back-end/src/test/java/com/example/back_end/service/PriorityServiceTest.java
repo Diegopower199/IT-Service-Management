@@ -1,350 +1,544 @@
 package com.example.back_end.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.back_end.dtos.priority.PriorityRequest;
 import com.example.back_end.dtos.priority.PriorityResponse;
+import com.example.back_end.enums.ProtectedPriority;
+import com.example.back_end.exception.ProtectedResourceException;
 import com.example.back_end.exception.ResourceAlreadyExistsException;
 import com.example.back_end.exception.ResourceNotFoundException;
 import com.example.back_end.model.PriorityModel;
 import com.example.back_end.repository.PriorityRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class PriorityServiceTest {
+class PriorityServiceTest {
 
     @Mock
     private PriorityRepository priorityRepository;
 
+    @Mock
+    private PriorityRequest priorityRequest;
+
     @InjectMocks
     private PriorityService priorityService;
 
-    // =========================================================
-    // GET ALL PRIORITIES
-    // =========================================================
     @Test
-    void shouldReturnAllPriorities() {
+    void getAllPrioritiesShouldReturnAllPriorities() {
 
-        PriorityModel priority1 = new PriorityModel(1L, "LOW", true);
-
-        PriorityModel priority2 = new PriorityModel(2L, "MEDIUM", true);
-
-        List<PriorityModel> priorities = List.of(priority1, priority2);
+        PriorityModel priority = createPriority(
+                1L,
+                "CUSTOM",
+                true);
 
         when(priorityRepository.findAllOrderedById())
-                .thenReturn(priorities);
+                .thenReturn(List.of(priority));
 
-        List<PriorityResponse> response = priorityService.getAllPriorities();
+        List<PriorityResponse> result = priorityService.getAllPriorities();
 
-        assertEquals(2, response.size());
-        assertEquals("LOW", response.get(0).getName());
-        assertEquals("MEDIUM", response.get(1).getName());
+        assertThat(result)
+                .hasSize(1);
+
+        assertThat(result.get(0).getIdPriority())
+                .isEqualTo(1L);
+
+        assertThat(result.get(0).getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(priorityRepository).findAllOrderedById();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoPrioritiesExist() {
+    void getActivePrioritiesShouldReturnActivePriorities() {
 
-        when(priorityRepository.findAllOrderedById())
-                .thenReturn(List.of());
-
-        List<PriorityResponse> response = priorityService.getAllPriorities();
-
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET ACTIVE PRIORITIES
-    // =========================================================
-    @Test
-    void shouldReturnActivePriorities() {
-
-        PriorityModel priority1 = new PriorityModel(1L, "LOW", true);
-
-        PriorityModel priority2 = new PriorityModel(2L, "MEDIUM", true);
-
-        List<PriorityModel> priorities = List.of(priority1, priority2);
+        PriorityModel priority = createPriority(
+                1L,
+                "CUSTOM",
+                true);
 
         when(priorityRepository.findByActiveTrueOrderByIdPriorityAsc())
-                .thenReturn(priorities);
+                .thenReturn(List.of(priority));
 
-        List<PriorityResponse> response = priorityService.getActivePriorities();
+        List<PriorityResponse> result = priorityService.getActivePriorities();
 
-        assertEquals(2, response.size());
+        assertThat(result)
+                .hasSize(1);
 
-        assertEquals("LOW", response.get(0).getName());
-        assertEquals("MEDIUM", response.get(1).getName());
+        assertThat(result.get(0).getIdPriority())
+                .isEqualTo(1L);
 
-        assertTrue(response.get(0).isActive());
-        assertTrue(response.get(1).isActive());
+        assertThat(result.get(0).getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.get(0).isActive())
+                .isTrue();
+
+        verify(priorityRepository)
+                .findByActiveTrueOrderByIdPriorityAsc();
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoActivePrioritiesExist() {
+    void getPriorityByIdShouldReturnPriority() {
 
-        when(priorityRepository.findByActiveTrueOrderByIdPriorityAsc())
-                .thenReturn(List.of());
+        Long priorityId = 1L;
 
-        List<PriorityResponse> response = priorityService.getActivePriorities();
+        PriorityModel priority = createPriority(
+                priorityId,
+                "CUSTOM",
+                true);
 
-        assertTrue(response.isEmpty());
-    }
-
-    // =========================================================
-    // GET PRIORITY BY ID
-    // =========================================================
-    @Test
-    void shouldReturnPriorityById() {
-
-        PriorityModel priority = new PriorityModel(1L, "LOW", true);
-
-        when(priorityRepository.findById(1L))
+        when(priorityRepository.findById(priorityId))
                 .thenReturn(Optional.of(priority));
 
-        PriorityResponse response = priorityService.getPriorityById(1L);
+        PriorityResponse result = priorityService.getPriorityById(priorityId);
 
-        assertEquals(1L, response.getIdPriority());
-        assertEquals("LOW", response.getName());
-        assertTrue(response.isActive());
+        assertThat(result.getIdPriority())
+                .isEqualTo(priorityId);
+
+        assertThat(result.getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        verify(priorityRepository).findById(priorityId);
     }
 
     @Test
-    void shouldThrowExceptionWhenPriorityByIdDoesNotExist() {
+    void getPriorityByIdShouldThrowExceptionWhenPriorityDoesNotExist() {
 
-        when(priorityRepository.findById(99L))
+        Long priorityId = 1L;
+
+        when(priorityRepository.findById(priorityId))
                 .thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> priorityService.getPriorityById(99L));
+        assertThatThrownBy(
+                () -> priorityService.getPriorityById(priorityId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Priority with id " + priorityId + " not found");
+
+        verify(priorityRepository).findById(priorityId);
     }
 
-    // =========================================================
-    // CREATE PRIORITY
-    // =========================================================
     @Test
-    void shouldCreatePrioritySuccessfully() {
+    void createPriorityShouldCreateAndReturnPriority() {
 
-        PriorityRequest request = new PriorityRequest("LOW");
+        when(priorityRequest.getName())
+                .thenReturn("CUSTOM");
 
-        PriorityModel savedPriority = new PriorityModel(1L, "LOW", true);
-
-        when(priorityRepository.existsByName("LOW"))
+        when(priorityRepository.existsByName("CUSTOM"))
                 .thenReturn(false);
 
         when(priorityRepository.save(any(PriorityModel.class)))
-                .thenReturn(savedPriority);
+                .thenAnswer(invocation -> {
 
-        PriorityResponse response = priorityService.createPriority(request);
+                    PriorityModel priority = invocation.getArgument(0);
 
-        assertEquals(1L, response.getIdPriority());
-        assertEquals("LOW", response.getName());
-        assertTrue(response.isActive());
+                    priority.setIdPriority(1L);
+
+                    return priority;
+                });
+
+        PriorityResponse result = priorityService.createPriority(priorityRequest);
+
+        assertThat(result.getIdPriority())
+                .isEqualTo(1L);
+
+        assertThat(result.getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(result.isActive())
+                .isTrue();
+
+        ArgumentCaptor<PriorityModel> priorityCaptor = ArgumentCaptor.forClass(PriorityModel.class);
 
         verify(priorityRepository)
-                .existsByName("LOW");
+                .save(priorityCaptor.capture());
+
+        PriorityModel savedPriority = priorityCaptor.getValue();
+
+        assertThat(savedPriority.getName())
+                .isEqualTo("CUSTOM");
+
+        assertThat(savedPriority.isActive())
+                .isTrue();
 
         verify(priorityRepository)
-                .save(any(PriorityModel.class));
+                .existsByName("CUSTOM");
     }
 
     @Test
-    void shouldThrowExceptionWhenPriorityAlreadyExists() {
+    void createPriorityShouldThrowExceptionWhenPriorityAlreadyExists() {
 
-        PriorityRequest request = new PriorityRequest("LOW");
+        when(priorityRequest.getName())
+                .thenReturn("CUSTOM");
 
-        when(priorityRepository.existsByName("LOW"))
+        when(priorityRepository.existsByName("CUSTOM"))
                 .thenReturn(true);
 
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> priorityService.createPriority(request));
+        assertThatThrownBy(
+                () -> priorityService.createPriority(priorityRequest))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Priority 'CUSTOM' already exists");
 
         verify(priorityRepository)
-                .existsByName("LOW");
-
-        verify(priorityRepository, never())
-                .save(any(PriorityModel.class));
-    }
-
-    // =========================================================
-    // UPDATE PRIORITY
-    // =========================================================
-    @Test
-    void shouldUpdatePrioritySuccessfully() {
-
-        PriorityRequest request = new PriorityRequest("MEDIUM");
-
-        PriorityModel existingPriority = new PriorityModel(1L, "LOW", true);
-
-        PriorityModel updatedPriority = new PriorityModel(1L, "MEDIUM", true);
-
-        when(priorityRepository.findById(1L))
-                .thenReturn(Optional.of(existingPriority));
-
-        when(priorityRepository.existsByName("MEDIUM"))
-                .thenReturn(false);
-
-        when(priorityRepository.save(any(PriorityModel.class)))
-                .thenReturn(updatedPriority);
-
-        PriorityResponse response = priorityService.updatePriority(request, 1L);
-
-        assertEquals(1L, response.getIdPriority());
-        assertEquals("MEDIUM", response.getName());
-        assertTrue(response.isActive());
-
-        verify(priorityRepository)
-                .findById(1L);
-
-        verify(priorityRepository)
-                .existsByName("MEDIUM");
-
-        verify(priorityRepository)
-                .save(any(PriorityModel.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingPriority() {
-
-        PriorityRequest request = new PriorityRequest("MEDIUM");
-
-        when(priorityRepository.findById(99L))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> priorityService.updatePriority(request, 99L));
-
-        verify(priorityRepository)
-                .findById(99L);
+                .existsByName("CUSTOM");
 
         verify(priorityRepository, never())
                 .save(any(PriorityModel.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingPriorityWithExistingName() {
+    void updatePriorityShouldUpdatePriority() {
 
-        PriorityRequest request = new PriorityRequest("MEDIUM");
+        Long priorityId = 1L;
 
-        PriorityModel existingPriority = new PriorityModel(1L, "LOW", true);
+        PriorityModel priority = createPriority(
+                priorityId,
+                "CUSTOM",
+                true);
 
-        when(priorityRepository.findById(1L))
-                .thenReturn(Optional.of(existingPriority));
+        when(priorityRequest.getName())
+                .thenReturn("NEW_PRIORITY");
 
-        when(priorityRepository.existsByName("MEDIUM"))
-                .thenReturn(true);
-
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> priorityService.updatePriority(request, 1L));
-
-        verify(priorityRepository)
-                .findById(1L);
-
-        verify(priorityRepository)
-                .existsByName("MEDIUM");
-
-        verify(priorityRepository, never())
-                .save(any(PriorityModel.class));
-    }
-
-    // =========================================================
-    // DEACTIVATE PRIORITY
-    // =========================================================
-    @Test
-    void shouldDeactivatePrioritySuccessfully() {
-
-        PriorityModel priority = new PriorityModel(1L, "LOW", true);
-
-        when(priorityRepository.findById(1L))
+        when(priorityRepository.findById(priorityId))
                 .thenReturn(Optional.of(priority));
 
-        when(priorityRepository.save(any(PriorityModel.class)))
+        when(priorityRepository.existsByName("NEW_PRIORITY"))
+                .thenReturn(false);
+
+        when(priorityRepository.save(priority))
                 .thenReturn(priority);
 
-        priorityService.deactivatePriority(1L);
+        PriorityResponse result = priorityService.updatePriority(
+                priorityRequest,
+                priorityId);
 
-        assertFalse(priority.isActive());
+        assertThat(result.getIdPriority())
+                .isEqualTo(priorityId);
+
+        assertThat(result.getName())
+                .isEqualTo("NEW_PRIORITY");
+
+        assertThat(result.isActive())
+                .isTrue();
 
         verify(priorityRepository)
-                .findById(1L);
+                .findById(priorityId);
+
+        verify(priorityRepository)
+                .existsByName("NEW_PRIORITY");
 
         verify(priorityRepository)
                 .save(priority);
     }
 
     @Test
-    void shouldThrowExceptionWhenDeactivatingNonExistingPriority() {
+    void updatePriorityShouldNotCheckDuplicateWhenNameDoesNotChange() {
 
-        when(priorityRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        Long priorityId = 1L;
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> priorityService.deactivatePriority(99L));
+        PriorityModel priority = createPriority(
+                priorityId,
+                "CUSTOM",
+                true);
 
-        verify(priorityRepository)
-                .findById(99L);
+        when(priorityRequest.getName())
+                .thenReturn("CUSTOM");
 
-        verify(priorityRepository, never())
-                .save(any(PriorityModel.class));
-    }
-
-    // =========================================================
-    // ACTIVATE PRIORITY
-    // =========================================================
-    @Test
-    void shouldActivatePrioritySuccessfully() {
-
-        PriorityModel priority = new PriorityModel(1L, "LOW", false);
-
-        when(priorityRepository.findById(1L))
+        when(priorityRepository.findById(priorityId))
                 .thenReturn(Optional.of(priority));
 
-        when(priorityRepository.save(any(PriorityModel.class)))
+        when(priorityRepository.save(priority))
                 .thenReturn(priority);
 
-        priorityService.activatePriority(1L);
+        PriorityResponse result = priorityService.updatePriority(
+                priorityRequest,
+                priorityId);
 
-        assertTrue(priority.isActive());
+        assertThat(result.getName())
+                .isEqualTo("CUSTOM");
 
-        verify(priorityRepository)
-                .findById(1L);
+        verify(priorityRepository, never())
+                .existsByName("CUSTOM");
 
         verify(priorityRepository)
                 .save(priority);
     }
 
     @Test
-    void shouldThrowExceptionWhenActivatingNonExistingPriority() {
+    void updatePriorityShouldNotCheckDuplicateWhenOnlyCaseChanges() {
 
-        when(priorityRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        Long priorityId = 1L;
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> priorityService.activatePriority(99L));
+        PriorityModel priority = createPriority(
+                priorityId,
+                "CUSTOM",
+                true);
+
+        when(priorityRequest.getName())
+                .thenReturn("custom");
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.of(priority));
+
+        when(priorityRepository.save(priority))
+                .thenReturn(priority);
+
+        PriorityResponse result = priorityService.updatePriority(
+                priorityRequest,
+                priorityId);
+
+        assertThat(result.getName())
+                .isEqualTo("custom");
+
+        verify(priorityRepository, never())
+                .existsByName("custom");
 
         verify(priorityRepository)
-                .findById(99L);
+                .save(priority);
+    }
+
+    @Test
+    void updatePriorityShouldThrowExceptionWhenNewNameAlreadyExists() {
+
+        Long priorityId = 1L;
+
+        PriorityModel priority = createPriority(
+                priorityId,
+                "CUSTOM",
+                true);
+
+        when(priorityRequest.getName())
+                .thenReturn("EXISTING_PRIORITY");
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.of(priority));
+
+        when(priorityRepository.existsByName("EXISTING_PRIORITY"))
+                .thenReturn(true);
+
+        assertThatThrownBy(
+                () -> priorityService.updatePriority(
+                        priorityRequest,
+                        priorityId))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage(
+                        "Priority 'EXISTING_PRIORITY' already exists");
+
+        verify(priorityRepository, never())
+                .save(priority);
+    }
+
+    @Test
+    void updatePriorityShouldThrowExceptionWhenPriorityDoesNotExist() {
+
+        Long priorityId = 1L;
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> priorityService.updatePriority(
+                        priorityRequest,
+                        priorityId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Priority with id " + priorityId + " not found");
 
         verify(priorityRepository, never())
                 .save(any(PriorityModel.class));
+    }
+
+    @Test
+    void updatePriorityShouldThrowExceptionWhenPriorityIsProtected() {
+
+        Long priorityId = 1L;
+
+        String protectedPriorityName = getProtectedPriorityName();
+
+        PriorityModel priority = createPriority(
+                priorityId,
+                protectedPriorityName,
+                true);
+
+        when(priorityRequest.getName())
+                .thenReturn(protectedPriorityName);
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.of(priority));
+
+        assertThatThrownBy(
+                () -> priorityService.updatePriority(
+                        priorityRequest,
+                        priorityId))
+                .isInstanceOf(ProtectedResourceException.class)
+                .hasMessage(
+                        "Priority '"
+                                + protectedPriorityName
+                                + "' cannot be modified");
+
+        verify(priorityRepository, never())
+                .save(priority);
+    }
+
+    @Test
+    void deactivatePriorityShouldDeactivatePriority() {
+
+        Long priorityId = 1L;
+
+        PriorityModel priority = createPriority(
+                priorityId,
+                "CUSTOM",
+                true);
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.of(priority));
+
+        priorityService.deactivatePriority(priorityId);
+
+        assertThat(priority.isActive())
+                .isFalse();
+
+        verify(priorityRepository)
+                .findById(priorityId);
+
+        verify(priorityRepository)
+                .save(priority);
+    }
+
+    @Test
+    void deactivatePriorityShouldThrowExceptionWhenPriorityIsProtected() {
+
+        Long priorityId = 1L;
+
+        String protectedPriorityName = getProtectedPriorityName();
+
+        PriorityModel priority = createPriority(
+                priorityId,
+                protectedPriorityName,
+                true);
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.of(priority));
+
+        assertThatThrownBy(
+                () -> priorityService.deactivatePriority(priorityId))
+                .isInstanceOf(ProtectedResourceException.class)
+                .hasMessage(
+                        "Priority '"
+                                + protectedPriorityName
+                                + "' cannot be deactivated");
+
+        assertThat(priority.isActive())
+                .isTrue();
+
+        verify(priorityRepository, never())
+                .save(priority);
+    }
+
+    @Test
+    void deactivatePriorityShouldThrowExceptionWhenPriorityDoesNotExist() {
+
+        Long priorityId = 1L;
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> priorityService.deactivatePriority(priorityId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Priority with id " + priorityId + " not found");
+
+        verify(priorityRepository, never())
+                .save(any(PriorityModel.class));
+    }
+
+    @Test
+    void activatePriorityShouldActivatePriority() {
+
+        Long priorityId = 1L;
+
+        PriorityModel priority = createPriority(
+                priorityId,
+                "CUSTOM",
+                false);
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.of(priority));
+
+        priorityService.activatePriority(priorityId);
+
+        assertThat(priority.isActive())
+                .isTrue();
+
+        verify(priorityRepository)
+                .findById(priorityId);
+
+        verify(priorityRepository)
+                .save(priority);
+    }
+
+    @Test
+    void activatePriorityShouldThrowExceptionWhenPriorityDoesNotExist() {
+
+        Long priorityId = 1L;
+
+        when(priorityRepository.findById(priorityId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> priorityService.activatePriority(priorityId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage(
+                        "Priority with id " + priorityId + " not found");
+
+        verify(priorityRepository, never())
+                .save(any(PriorityModel.class));
+    }
+
+    private PriorityModel createPriority(
+            Long id,
+            String name,
+            boolean active) {
+
+        PriorityModel priority = new PriorityModel();
+
+        priority.setIdPriority(id);
+        priority.setName(name);
+        priority.setActive(active);
+
+        return priority;
+    }
+
+    private String getProtectedPriorityName() {
+
+        return Arrays.stream(ProtectedPriority.values())
+                .map(Enum::name)
+                .filter(ProtectedPriority::isProtectedPriority)
+                .findFirst()
+                .orElseThrow();
     }
 }
