@@ -14,14 +14,6 @@ export const getAllActivePriorities = async (): Promise<PriorityResponse[]> => {
   return response.data;
 };
 
-export const getPriorityById = async (
-  idPriority: number,
-): Promise<PriorityResponse> => {
-  const response = await api.get<PriorityResponse>(`/priorities/${idPriority}`);
-
-  return response.data;
-};
-
 export const createPriority = async (
   priority: PriorityRequest,
 ): Promise<PriorityResponse> => {
@@ -42,22 +34,10 @@ export const updatePriority = async (
   return response.data;
 };
 
-export const activatePriority = async (
-  idPriority: number,
-): Promise<PriorityResponse> => {
-  const response = await api.patch<PriorityResponse>(
-    `/priorities/${idPriority}/activate`,
-  );
-
-  return response.data;
+export const activatePriority = async (idPriority: number): Promise<void> => {
+  await api.patch(`/priorities/${idPriority}/activate`);
 };
 
-export const deactivatePriority = async (
-  idPriority: number,
-): Promise<PriorityResponse> => {
-  const response = await api.patch<PriorityResponse>(
-    `/priorities/${idPriority}/deactivate`,
-  );
-
-  return response.data;
+export const deactivatePriority = async (idPriority: number): Promise<void> => {
+  await api.patch(`/priorities/${idPriority}/deactivate`);
 };

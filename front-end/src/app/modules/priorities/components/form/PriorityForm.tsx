@@ -12,10 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import {
-  isProtectedPriority,
-  type PriorityResponse,
-} from "@/types/priorityTypes";
+import { type PriorityResponse } from "@/types/priorityTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
