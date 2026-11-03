@@ -24,6 +24,9 @@ import {
 } from "@mui/material";
 
 import type { UserSummaryResponse } from "@/types/userTypes";
+import { USER_ROLES } from "@/types/roleTypes";
+
+import { useAuth } from "@/hooks/useAuth";
 
 import { getAllTechnicians } from "@/app/modules/users/services/userService";
 
@@ -47,6 +50,8 @@ export default function AssignTicketTechnicianDialog({
   onClose,
   onTicketUpdated,
 }: AssignTicketTechnicianDialogProps) {
+  const { user } = useAuth();
+
   const t = useTranslations("Tickets.AssignTechnicianDialog");
 
   const [technicians, setTechnicians] = useState<UserSummaryResponse[]>([]);
@@ -82,6 +87,18 @@ export default function AssignTicketTechnicianDialog({
 
   useEffect(() => {
     const loadTechnicians = async () => {
+      if (!user) {
+        return;
+      }
+
+      if (user.role === USER_ROLES.USER) {
+        return;
+      }
+
+      if (!open) {
+        return;
+      }
+
       const techniciansLoaded = await fetchTechnicians();
 
       if (!techniciansLoaded) {
@@ -90,7 +107,7 @@ export default function AssignTicketTechnicianDialog({
     };
 
     loadTechnicians();
-  }, [fetchTechnicians]);
+  }, [fetchTechnicians, user, open]);
 
   const handleTechnicianChange = (event: SelectChangeEvent) => {
     setSelectedTechnicianId(event.target.value);
@@ -253,7 +270,13 @@ export default function AssignTicketTechnicianDialog({
               <Select
                 value={
                   selectedTechnicianId ||
-                  (currentTechnician ? String(currentTechnician.idUser) : "")
+                  (currentTechnician &&
+                  technicians.some(
+                    (technician) =>
+                      technician.idUser === currentTechnician.idUser,
+                  )
+                    ? String(currentTechnician.idUser)
+                    : "")
                 }
                 label={t("technician")}
                 onChange={handleTechnicianChange}
@@ -263,7 +286,10 @@ export default function AssignTicketTechnicianDialog({
                 }}
               >
                 {technicians.map((technician) => (
-                  <MenuItem key={technician.idUser} value={technician.idUser}>
+                  <MenuItem
+                    key={technician.idUser}
+                    value={String(technician.idUser)}
+                  >
                     {technician.username}
                   </MenuItem>
                 ))}

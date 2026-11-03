@@ -24,6 +24,9 @@ import {
 } from "@mui/material";
 
 import type { PriorityResponse } from "@/types/priorityTypes";
+import { USER_ROLES } from "@/types/roleTypes";
+
+import { useAuth } from "@/hooks/useAuth";
 
 import { getAllActivePriorities } from "@/app/modules/priorities/services/priorityService";
 
@@ -48,6 +51,8 @@ export default function ChangeTicketPriorityDialog({
   onClose,
   onTicketUpdated,
 }: ChangeTicketPriorityDialogProps) {
+  const { user } = useAuth();
+
   const t = useTranslations("Tickets.ChangePriorityDialog");
   const tPriorities = useTranslations("Common.Priorities");
 
@@ -84,6 +89,18 @@ export default function ChangeTicketPriorityDialog({
 
   useEffect(() => {
     const loadPriorities = async () => {
+      if (!user) {
+        return;
+      }
+
+      if (user.role === USER_ROLES.USER) {
+        return;
+      }
+
+      if (!open) {
+        return;
+      }
+
       const prioritiesLoaded = await fetchPriorities();
 
       if (!prioritiesLoaded) {
@@ -92,7 +109,7 @@ export default function ChangeTicketPriorityDialog({
     };
 
     loadPriorities();
-  }, [fetchPriorities]);
+  }, [fetchPriorities, user, open]);
 
   const getPriorityDisplayName = (priorityName: string) => {
     if (tPriorities.has(priorityName)) {
@@ -254,7 +271,15 @@ export default function ChangeTicketPriorityDialog({
               <InputLabel>{t("priority")}</InputLabel>
 
               <Select
-                value={selectedPriorityId || String(currentPriority.idPriority)}
+                value={
+                  selectedPriorityId ||
+                  (priorities.some(
+                    (priority) =>
+                      priority.idPriority === currentPriority.idPriority,
+                  )
+                    ? String(currentPriority.idPriority)
+                    : "")
+                }
                 label={t("priority")}
                 onChange={handlePriorityChange}
                 disabled={saving}
@@ -265,7 +290,7 @@ export default function ChangeTicketPriorityDialog({
                 {priorities.map((priority) => (
                   <MenuItem
                     key={priority.idPriority}
-                    value={priority.idPriority}
+                    value={String(priority.idPriority)}
                   >
                     <Stack
                       direction="row"

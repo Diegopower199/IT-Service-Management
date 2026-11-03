@@ -24,6 +24,9 @@ import {
 } from "@mui/material";
 
 import type { StatusResponse } from "@/types/statusTypes";
+import { USER_ROLES } from "@/types/roleTypes";
+
+import { useAuth } from "@/hooks/useAuth";
 
 import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusService";
 
@@ -48,6 +51,8 @@ export default function ChangeTicketStatusDialog({
   onClose,
   onTicketUpdated,
 }: ChangeTicketStatusDialogProps) {
+  const { user } = useAuth();
+
   const t = useTranslations("Tickets.ChangeStatusDialog");
   const tStatuses = useTranslations("Common.Statuses");
 
@@ -84,6 +89,18 @@ export default function ChangeTicketStatusDialog({
 
   useEffect(() => {
     const loadStatuses = async () => {
+      if (!user) {
+        return;
+      }
+
+      if (user.role === USER_ROLES.USER) {
+        return;
+      }
+
+      if (!open) {
+        return;
+      }
+
       const statusesLoaded = await fetchStatuses();
 
       if (!statusesLoaded) {
@@ -92,7 +109,7 @@ export default function ChangeTicketStatusDialog({
     };
 
     loadStatuses();
-  }, [fetchStatuses]);
+  }, [fetchStatuses, user, open]);
 
   const getStatusDisplayName = (statusName: string) => {
     if (tStatuses.has(statusName)) {
@@ -254,7 +271,14 @@ export default function ChangeTicketStatusDialog({
               <InputLabel>{t("status")}</InputLabel>
 
               <Select
-                value={selectedStatusId || String(currentStatus.idStatus)}
+                value={
+                  selectedStatusId ||
+                  (statuses.some(
+                    (status) => status.idStatus === currentStatus.idStatus,
+                  )
+                    ? String(currentStatus.idStatus)
+                    : "")
+                }
                 label={t("status")}
                 onChange={handleStatusChange}
                 disabled={saving}
@@ -263,7 +287,10 @@ export default function ChangeTicketStatusDialog({
                 }}
               >
                 {statuses.map((status) => (
-                  <MenuItem key={status.idStatus} value={status.idStatus}>
+                  <MenuItem
+                    key={status.idStatus}
+                    value={String(status.idStatus)}
+                  >
                     <Stack
                       direction="row"
                       spacing={1.5}
