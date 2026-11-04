@@ -30,7 +30,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { getAllPriorities } from "../../../priorities/services/priorityService";
 import { getAllCategories } from "../../../categories/services/categoryService";
 import { createTicket, updateTicket } from "../../services/ticketService";
-import { getAllTechnicians } from "@/app/modules/users/services/userService";
+import {
+  getAllUsers,
+  getUserOptions,
+} from "../../../users/services/userService";
 
 interface TicketFormProps {
   formMode: FormMode;
@@ -151,7 +154,7 @@ export default function TicketForm({
 
   const fetchUsersOptions = useCallback(async (): Promise<boolean> => {
     try {
-      const usersResponse = await getAllTechnicians();
+      const usersResponse = await getUserOptions();
 
       setUsersOptions(usersResponse);
 
