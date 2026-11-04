@@ -44,6 +44,12 @@ export const getAllTechnicians = async (): Promise<UserSummaryResponse[]> => {
   return response.data;
 };
 
+export const getUserOptions = async (): Promise<UserSummaryResponse[]> => {
+  const response = await api.get<UserSummaryResponse[]>("/users/options");
+
+  return response.data;
+};
+
 export const createUser = async (
   request: CreateUserRequest,
 ): Promise<UserResponse> => {
