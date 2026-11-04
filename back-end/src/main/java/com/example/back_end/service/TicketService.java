@@ -84,13 +84,30 @@ public class TicketService {
 
         if (role.equalsIgnoreCase(RoleName.USER.name())) {
 
-            boolean isCreatedByUser = ticket.getCreatedBy().getIdUser().equals(currentUser.getIdUser());
+            boolean isCreatedByUser = ticket.getCreatedBy()
+                    .getIdUser()
+                    .equals(currentUser.getIdUser());
 
-            boolean isRequestedForUser = ticket.getRequestedFor().getIdUser().equals(currentUser.getIdUser());
+            boolean isRequestedForUser = ticket.getRequestedFor()
+                    .getIdUser()
+                    .equals(currentUser.getIdUser());
 
             if (!isCreatedByUser && !isRequestedForUser) {
                 throw new AccessDeniedException(
                         "You do not have permission to access this ticket");
+            }
+        }
+
+        if (role.equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
+
+            UserModel assignedTo = ticket.getAssignedTo();
+
+            if (assignedTo != null
+                    && !assignedTo.getIdUser()
+                            .equals(currentUser.getIdUser())) {
+
+                throw new AccessDeniedException(
+                        "You cannot access tickets assigned to another technician");
             }
         }
 
@@ -137,6 +154,14 @@ public class TicketService {
     public TicketResponse createTicket(CreateTicketRequest request) {
 
         UserModel createdBy = getAuthenticatedUser();
+
+        // Regular users can only create tickets for themselves.
+        if (RoleName.USER.name().equalsIgnoreCase(createdBy.getRole().getName())
+                && !createdBy.getIdUser().equals(request.getRequestedForId())) {
+
+            throw new AccessDeniedException(
+                    "Users can only create tickets for themselves");
+        }
 
         UserModel requestedFor = userRepository.findById(request.getRequestedForId())
                 .orElseThrow(() -> new ResourceNotFoundException(

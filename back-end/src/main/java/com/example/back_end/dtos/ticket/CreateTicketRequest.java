@@ -15,6 +15,7 @@ public class CreateTicketRequest {
     @NotBlank(message = "The 'title' field is required")
     private String title;
 
+    @NotBlank(message = "The 'description' field is required")
     private String description;
 
     @NotNull(message = "The 'requestedForId' field is required")
