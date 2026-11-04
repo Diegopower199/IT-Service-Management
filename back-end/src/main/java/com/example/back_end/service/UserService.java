@@ -197,6 +197,14 @@ public class UserService {
                 .toList();
     }
 
+    public List<UserSummaryResponse> getUserOptions() {
+
+        return userRepository.findByEnabledTrueOrderByUsernameAsc()
+                .stream()
+                .map(this::convertToSummaryResponse)
+                .toList();
+    }
+
     private UserResponse convertToResponse(UserModel user) {
 
         RoleResponse rolResponse = null;

@@ -115,4 +115,11 @@ public class UserController {
 
         return ResponseEntity.ok(userService.getAllTechnicians());
     }
+
+    @GetMapping("/options")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
+    public ResponseEntity<List<UserSummaryResponse>> getUserOptions() {
+
+        return ResponseEntity.ok(userService.getUserOptions());
+    }
 }
