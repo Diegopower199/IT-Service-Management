@@ -296,6 +296,105 @@ class TicketServiceTest {
     }
 
     @Test
+    void getTicketByIdShouldAllowAssignedTechnician() {
+
+        Long ticketId = 1L;
+
+        UserModel technician = createUser(
+                3L,
+                "tech",
+                RoleName.TECHNICIAN.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                createUser(1L, "admin", RoleName.ADMIN.name()),
+                createUser(2L, "john", RoleName.USER.name()),
+                technician,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(technician);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        TicketResponse result = ticketService.getTicketById(ticketId);
+
+        assertThat(result.getIdTicket())
+                .isEqualTo(ticketId);
+    }
+
+    @Test
+    void getTicketByIdShouldAllowTechnicianToViewUnassignedTicket() {
+
+        Long ticketId = 1L;
+
+        UserModel technician = createUser(
+                3L,
+                "tech",
+                RoleName.TECHNICIAN.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                createUser(1L, "admin", RoleName.ADMIN.name()),
+                createUser(2L, "john", RoleName.USER.name()),
+                null,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(technician);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        TicketResponse result = ticketService.getTicketById(ticketId);
+
+        assertThat(result.getIdTicket())
+                .isEqualTo(ticketId);
+
+        assertThat(result.getAssignedTo())
+                .isNull();
+    }
+
+    @Test
+    void getTicketByIdShouldRejectTicketAssignedToAnotherTechnician() {
+
+        Long ticketId = 1L;
+
+        UserModel currentTechnician = createUser(
+                3L,
+                "tech",
+                RoleName.TECHNICIAN.name());
+
+        UserModel otherTechnician = createUser(
+                4L,
+                "other-tech",
+                RoleName.TECHNICIAN.name());
+
+        TicketModel ticket = createTicket(
+                ticketId,
+                createUser(1L, "admin", RoleName.ADMIN.name()),
+                createUser(2L, "john", RoleName.USER.name()),
+                otherTechnician,
+                createCategory(1L, "Hardware"),
+                createPriority(1L, "HIGH"),
+                createStatus(1L, ProtectedStatus.OPEN.name()));
+
+        configureAuthenticatedUser(currentTechnician);
+
+        when(ticketRepository.findById(ticketId))
+                .thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(
+                () -> ticketService.getTicketById(ticketId))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage(
+                        "You cannot access tickets assigned to another technician");
+    }
+
+    @Test
     void getMyTicketsShouldReturnMappedTickets() {
 
         UserModel currentUser = createUser(
@@ -379,7 +478,7 @@ class TicketServiceTest {
         UserModel createdBy = createUser(
                 1L,
                 "john",
-                RoleName.USER.name());
+                RoleName.ADMIN.name());
 
         UserModel requestedFor = createUser(
                 2L,
@@ -500,7 +599,7 @@ class TicketServiceTest {
         UserModel createdBy = createUser(
                 1L,
                 "john",
-                RoleName.USER.name());
+                RoleName.ADMIN.name());
 
         configureAuthenticatedUser(createdBy);
 
@@ -525,7 +624,7 @@ class TicketServiceTest {
         UserModel createdBy = createUser(
                 1L,
                 "john",
-                RoleName.USER.name());
+                RoleName.ADMIN.name());
 
         UserModel requestedFor = createUser(
                 2L,
@@ -562,7 +661,7 @@ class TicketServiceTest {
         UserModel createdBy = createUser(
                 1L,
                 "john",
-                RoleName.USER.name());
+                RoleName.ADMIN.name());
 
         UserModel requestedFor = createUser(
                 2L,
@@ -607,7 +706,7 @@ class TicketServiceTest {
         UserModel createdBy = createUser(
                 1L,
                 "john",
-                RoleName.USER.name());
+                RoleName.ADMIN.name());
 
         UserModel requestedFor = createUser(
                 2L,
@@ -646,6 +745,91 @@ class TicketServiceTest {
                 () -> ticketService.createTicket(createTicketRequest))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Active OPEN status not found");
+
+        verify(ticketRepository, never())
+                .save(any(TicketModel.class));
+    }
+
+    @Test
+    void createTicketShouldAllowUserCreatingTicketForThemselves() {
+
+        UserModel currentUser = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
+
+        CategoryModel category = createCategory(1L, "Hardware");
+        PriorityModel priority = createPriority(1L, "HIGH");
+        StatusModel status = createStatus(1L, ProtectedStatus.OPEN.name());
+
+        configureAuthenticatedUser(currentUser);
+
+        when(createTicketRequest.getTitle())
+                .thenReturn("Printer issue");
+
+        when(createTicketRequest.getDescription())
+                .thenReturn("Printer offline");
+
+        when(createTicketRequest.getRequestedForId())
+                .thenReturn(1L);
+
+        when(createTicketRequest.getCategoryId())
+                .thenReturn(1L);
+
+        when(createTicketRequest.getPriorityId())
+                .thenReturn(1L);
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(currentUser));
+
+        when(categoryRepository.findByIdCategoryAndActiveTrue(1L))
+                .thenReturn(Optional.of(category));
+
+        when(priorityRepository.findByIdPriorityAndActiveTrue(1L))
+                .thenReturn(Optional.of(priority));
+
+        when(statusRepository.findByNameAndActiveTrue(ProtectedStatus.OPEN.name()))
+                .thenReturn(Optional.of(status));
+
+        when(ticketRepository.save(any(TicketModel.class)))
+                .thenAnswer(invocation -> {
+                    TicketModel ticket = invocation.getArgument(0);
+                    ticket.setIdTicket(10L);
+                    return ticket;
+                });
+
+        TicketResponse result = ticketService.createTicket(createTicketRequest);
+
+        assertThat(result.getRequestedFor().getIdUser())
+                .isEqualTo(1L);
+
+        assertThat(result.getCreatedBy().getIdUser())
+                .isEqualTo(1L);
+
+        verify(ticketRepository)
+                .save(any(TicketModel.class));
+    }
+
+    @Test
+    void createTicketShouldRejectUserCreatingTicketForAnotherUser() {
+
+        UserModel currentUser = createUser(
+                1L,
+                "john",
+                RoleName.USER.name());
+
+        configureAuthenticatedUser(currentUser);
+
+        when(createTicketRequest.getRequestedForId())
+                .thenReturn(2L);
+
+        assertThatThrownBy(
+                () -> ticketService.createTicket(createTicketRequest))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Users can only create tickets for themselves");
+
+        verify(userRepository, never())
+                .findById(2L);
 
         verify(ticketRepository, never())
                 .save(any(TicketModel.class));
