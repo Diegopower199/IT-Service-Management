@@ -1,169 +1,158 @@
-## Authentication and Token Refresh
+# Help Desk — IT Service Management
 
-The application uses a stateless authentication architecture based on JWT access tokens and server-managed refresh tokens.
+A full-stack **IT Service Management (ITSM)** application for managing IT support requests, tracking ticket activity, and organizing service desk operations.
 
-### Authentication Flow
+Built with **Spring Boot**, **Next.js**, and **MySQL**, this project demonstrates end-to-end application development, JWT authentication, role-based access control, REST API design, and automated testing.
 
-After a successful login:
+## Features
 
-1. The backend generates a short-lived JWT access token.
-2. The access token is returned in the response body.
-3. A long-lived refresh token is generated using a cryptographically secure random value.
-4. Only the SHA-256 hash of the refresh token is stored in the database.
-5. The original refresh token is sent to the browser using an HttpOnly cookie.
+- **Authentication and sessions:** JWT access tokens, rotating refresh tokens, automatic session renewal, and logout.
+- **Role-based access:** Different permissions and interfaces for `ADMIN`, `TECHNICIAN`, and `USER`.
+- **Ticket management:** Create, update, assign, prioritize, and track support requests.
+- **Ticket search:** Server-side pagination, sorting, and filters.
+- **Comments and history:** Public/internal comments and a record of ticket changes.
+- **Dashboard:** Role-specific statistics, recent tickets, and shortcuts.
+- **Administration:** Manage users, departments, categories, priorities, and statuses; view configured roles.
+- **User profiles:** Edit profile information and change passwords.
+- **Internationalization:** English and Spanish interfaces.
+- **Automated tests:** Backend and frontend tests, plus linting and build checks.
 
-The frontend stores the access token in `localStorage`, while the refresh token remains inaccessible to JavaScript.
+## Tech Stack
 
-```text
-POST /auth/login
-        │
-        ├── Access Token ──→ Response body ──→ localStorage
-        │
-        └── Refresh Token ─→ HttpOnly cookie
-```
+| Layer             | Technologies                                    |
+| ----------------- | ----------------------------------------------- |
+| Frontend          | Next.js 16, React 19, TypeScript                |
+| UI                | Material UI, MUI X Data Grid                    |
+| API client / i18n | Axios, next-intl                                |
+| Backend           | Java 17, Spring Boot 4.1.1, Spring Security     |
+| Authentication    | JWT, BCrypt, HttpOnly refresh-token cookies     |
+| Database          | MySQL 8+, Spring Data JPA, Hibernate            |
+| Testing           | JUnit 5, Mockito, Vitest, React Testing Library |
+| Tooling           | Maven Wrapper, npm, ESLint, Git                 |
 
-### Access Token
+## User Roles
 
-Access tokens are JWTs used to authenticate protected API requests.
+| Role           | Main capabilities                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| **ADMIN**      | Manage all tickets, users and configuration catalogs; access system-wide statistics.                        |
+| **TECHNICIAN** | Work with assigned tickets, update their workflow, add internal comments, and access technician statistics. |
+| **USER**       | Create and follow support requests, add public comments, and update their own profile.                      |
 
-Axios automatically adds the token to protected requests using the Bearer authentication scheme:
+The backend enforces authorization. Frontend permissions control navigation and available actions. The predefined roles can be viewed but not created or edited through the application.
 
-```http
-Authorization: Bearer <access-token>
-```
-
-Access tokens are intentionally short-lived. Their lifetime is configurable through:
-
-```properties
-jwt.access-token-expiration-minutes=${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:15}
-```
-
-### Refresh Token
-
-Refresh tokens are used to obtain new access tokens without requiring the user to log in again.
-
-The browser stores the refresh token in an HttpOnly cookie, meaning it cannot be accessed directly from JavaScript.
-
-Refresh tokens are stored server-side using only their SHA-256 hashes.
-
-Each stored refresh token contains:
-
-- Associated user.
-- Creation timestamp.
-- Expiration timestamp.
-- Revocation status.
-
-The refresh token lifetime is configurable through:
-
-```properties
-jwt.refresh-token-expiration-days=${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:7}
-```
-
-### Automatic Token Refresh
-
-Axios includes a response interceptor that automatically handles expired access tokens.
-
-When a protected request returns HTTP `401`:
+## Architecture
 
 ```text
-Protected request
-        │
-        ▼
-401 Unauthorized
-        │
-        ▼
-POST /auth/refresh
-        │
-        ▼
-Refresh token validated
-        │
-        ├── New Access Token
-        └── New Refresh Token
-        │
-        ▼
-Original request retried
+             Next.js + React + TypeScript
+                         |
+                     Axios / HTTP
+                         |
+                  Spring Boot API
+                     /api/v1
+                         |
+          Controllers -> Services -> Repositories
+                         |
+               Spring Data JPA / Hibernate
+                         |
+                       MySQL
 ```
 
-If multiple API requests receive HTTP `401` simultaneously, they share the same refresh operation.
+The backend uses a layered architecture with DTOs, validation, centralized error handling, and specifications for dynamic ticket queries. Authentication combines short-lived JWT access tokens with rotating, server-managed refresh tokens.
 
-This prevents several `/auth/refresh` requests from being executed at the same time.
-
-### Refresh Token Rotation
-
-Refresh tokens are rotated every time they are successfully used.
-
-For example:
+## Repository Structure
 
 ```text
-Refresh Token A
-      │
-      ▼
-POST /auth/refresh
-      │
-      ├── Token A → revoked
-      │
-      └── Token B → created
+IT-Service-Management/
+├── back-end/              # Spring Boot REST API and backend tests
+│   └── README.md          # Backend setup, configuration, security and endpoints
+├── front-end/             # Next.js application and frontend tests
+│   └── README.md          # Frontend setup, environment and UI documentation
+├── database/              # MySQL scripts and sample records
+│   ├── 00_create_database.sql
+│   ├── 01_create_tables.sql
+│   ├── 02_seed_data.sql
+│   └── README.md          # Database initialization guide
+├── GIT_WORKFLOW.md
+├── LICENSE
+└── README.md              # Project overview (this file)
 ```
 
-The previous refresh token cannot be reused after rotation.
+## Getting Started
 
-This limits the impact of a leaked or replayed refresh token.
+### Requirements
 
-### Session Expiration
+- Java 17 or newer
+- MySQL 8.0 or newer
+- Node.js 22.22.2+ (or a version supported by the frontend dependencies) and npm
 
-If the refresh token is invalid, expired, revoked, or belongs to a disabled user, the session cannot be renewed.
+### 1. Set up the database
 
-The frontend then:
+Create the `helpdesk` database and load its schema and sample data using the provided SQL scripts.
 
-1. Clears the access token and user information from `localStorage`.
-2. Clears the authentication state stored in React.
-3. Redirects the user to `/login`.
+**Follow the [Database README](./database/README.md)** for the execution order, precautions, and verification queries.
 
-### Logout
+### 2. Configure and run the backend
 
-Logout invalidates both the frontend and server-side session state.
+Set the database connection, JWT signing secret, and frontend origin as described in the backend guide. Then, from `back-end/`, start Spring Boot:
 
-```text
-User logout
-    │
-    ▼
-POST /auth/logout
-    │
-    ├── Refresh token revoked
-    └── HttpOnly cookie removed
-    │
-    ▼
-Frontend authentication state cleared
-    │
-    ▼
-Redirect to /login
+```powershell
+# Windows (PowerShell)
+.\mvnw.cmd spring-boot:run
 ```
 
-The logout operation clears the local authentication state even if the backend request fails, ensuring the user is never left authenticated in the frontend after requesting logout.
+```bash
+# Linux / macOS
+./mvnw spring-boot:run
+```
 
-### Security Considerations
+By default, the API is available at `http://localhost:8080/api/v1`.
 
-The authentication implementation includes:
+**Follow the [Backend README](./back-end/README.md)** for environment variables, security configuration, endpoints, and backend tests.
 
-- JWT access tokens with configurable short expiration.
-- Refresh tokens generated using secure random values.
-- SHA-256 refresh token hashing before database storage.
-- HttpOnly refresh token cookies.
-- Refresh token rotation.
-- Server-side refresh token revocation.
-- Disabled-user validation for both access and refresh tokens.
-- Automatic session expiration handling.
-- Protection against infinite refresh loops.
-- Protection against concurrent refresh requests.
-- Centralized authentication failure handling.
+### 3. Configure and run the frontend
 
+From `front-end/`, configure the backend connection using `.env.sample`, then install dependencies and start the development server:
+
+```bash
+npm ci
+npm run dev
+```
+
+Open `http://localhost:3000` once the database and API are running.
+
+**Follow the [Frontend README](./front-end/README.md)** for environment setup, available pages, authentication behavior, and frontend tests.
+
+### Demo Accounts
+
+The sample database includes these accounts. **The password for all seeded demo users is `123456`** (stored as a BCrypt hash).
+
+| Username     | Password | Role       |
+| ------------ | -------- | ---------- |
+| `admin`      | `123456` | ADMIN      |
+| `technician` | `123456` | TECHNICIAN |
+| `user`       | `123456` | USER       |
+
+Other sample accounts (`tech.sofia`, `tech.mario`, `user.pablo`, and `user.lucia`) use the same password.
+
+> **Security:** These credentials are intended only for local development and demonstrations. Do not reuse them in production.
+
+## Project Documentation
+
+| Document                                     | Contents                                                                               |
+| -------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **[Backend README](./back-end/README.md)**   | API architecture, authentication, authorization, configuration, endpoints and testing. |
+| **[Frontend README](./front-end/README.md)** | Next.js structure, environment variables, pages, session handling and testing.         |
+| **[Database README](./database/README.md)**  | SQL script order, schema initialization, seeded records and verification.              |
+| **[Git Workflow](./GIT_WORKFLOW.md)**        | Branches, commits, pull requests and collaboration guidelines.                         |
+
+## Future Improvements
+
+- Ticket attachments (PDF files and images), with MongoDB planned as attachment storage.
+
+*This feature is planned and is not part of v1.0.*
 
 ## License
 
 Copyright © 2026 Diego González Sanz. All Rights Reserved.
 
-This project is publicly available for portfolio, evaluation, and educational review purposes only.
-
-Use, reproduction, modification, redistribution, commercial or non-commercial exploitation, or incorporation of this source code into other projects is not permitted without prior written permission from the copyright holder.
-
-See the [LICENSE](./LICENSE) file for the complete terms.
+This project is published for portfolio viewing and evaluation; it is **not open source**. Reuse, modification, and redistribution require prior written permission. See [LICENSE](./LICENSE) for the full terms.
