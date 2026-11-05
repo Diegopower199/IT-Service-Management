@@ -169,5 +169,21 @@
         "empty": "Todavía no se ha registrado ningún cambio.",
         "field": "Campo",
         "viewAll": "Ver todo el historial"
+    },
+    "Attachments": {
+        "title": "Archivos adjuntos",
+        "upload": "Subir archivo",
+        "uploading": "Subiendo...",
+        "empty": "Este ticket no tiene archivos adjuntos.",
+        "loadError": "Error al cargar los archivos adjuntos.",
+        "uploadError": "Error al subir el archivo.",
+        "uploadSuccess": "Archivo subido correctamente.",
+        "fileTooLarge": "El archivo no puede superar los 10 MB.",
+        "allowedFormats": "Formatos permitidos: PDF, PNG y JPG. Máximo 10 MB.",
+        "download": "Descargar archivo",
+        "downloadError": "Error al descargar el archivo.",
+        "preview": "Previsualizar archivo",
+        "previewError": "Error al previsualizar el archivo.",
+        "close": "Cerrar"
     }
 }

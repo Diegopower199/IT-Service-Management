@@ -30,10 +30,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getAllPriorities } from "../../../priorities/services/priorityService";
 import { getAllCategories } from "../../../categories/services/categoryService";
 import { createTicket, updateTicket } from "../../services/ticketService";
-import {
-  getAllUsers,
-  getUserOptions,
-} from "../../../users/services/userService";
+import { getUserOptions } from "../../../users/services/userService";
 
 interface TicketFormProps {
   formMode: FormMode;

@@ -169,5 +169,21 @@
         "empty": "No history has been recorded yet.",
         "field": "Field",
         "viewAll": "View all history"
+    },
+    "Attachments": {
+        "title": "Attachments",
+        "upload": "Upload file",
+        "uploading": "Uploading...",
+        "empty": "No attachments have been added to this ticket.",
+        "loadError": "Error loading ticket attachments.",
+        "uploadError": "Error uploading the file.",
+        "uploadSuccess": "File uploaded successfully.",
+        "fileTooLarge": "File size cannot exceed 10 MB.",
+        "allowedFormats": "Allowed formats: PDF, PNG and JPG. Maximum 10 MB.",
+        "download": "Download file",
+        "downloadError": "Error downloading the file.",
+        "preview": "Preview file",
+        "previewError": "Error previewing the file.",
+        "close": "Close"
     }
 }
