@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.example.back_end.exception.response.ErrorResponse;
 
@@ -177,6 +178,22 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONTENT_TOO_LARGE.value(),
+                "FILE_TOO_LARGE",
+                "Upload exceeds the allowed size (10 MB per file, 11 MB per request)",
+                null,
+                LocalDateTime.now());
+
+        return ResponseEntity
+                .status(HttpStatus.CONTENT_TOO_LARGE)
                 .body(errorResponse);
     }
 
