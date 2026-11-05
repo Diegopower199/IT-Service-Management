@@ -14,6 +14,7 @@ import TicketOverview from "./TicketOverview";
 import TicketActions from "./TicketActions";
 import TicketComments from "../comments/TicketComments";
 import TicketHistory from "../history/TicketHistory";
+import TicketAttachments from "../attachments/TicketAttachments";
 
 interface TicketDetailsProps {
   ticket: TicketResponse;
@@ -132,6 +133,8 @@ export default function TicketDetails({
           historyUpdated={historyUpdated}
         />
       </Box>
+
+      <TicketAttachments key={ticket.idTicket} ticketId={ticket.idTicket} />
 
       <Button variant="outlined" onClick={onClose}>
         {t("backToTickets")}
