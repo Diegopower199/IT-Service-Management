@@ -1,4 +1,3 @@
-
 package com.example.back_end.service;
 
 import java.io.IOException;
@@ -15,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.back_end.dtos.ticketAttachment.TicketAttachmentResponse;
 import com.example.back_end.dtos.user.UserSummaryResponse;
+import com.example.back_end.enums.GridFsBucketType;
 import com.example.back_end.enums.RoleName;
 import com.example.back_end.exception.InvalidOperationException;
 import com.example.back_end.exception.ResourceNotFoundException;
@@ -28,25 +28,38 @@ import com.example.back_end.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Manages ticket attachments and their associated business rules.
+ * Provides the business operations for attachments belonging directly to a
+ * ticket.
  *
- * Coordinates two different storage systems:
- * - MongoDB GridFS stores the actual file content.
- * - MySQL stores attachment metadata and relationships.
+ * <p>
+ * Attachment metadata (ticket, uploader, filename, MIME type, size and MongoDB
+ * identifier) is stored in MySQL. The binary file content is stored in the
+ * {@link GridFsBucketType#TICKET TICKET} GridFS bucket in MongoDB.
+ * </p>
  *
- * Provides operations to upload, list and retrieve attachments,
- * including file validation and ticket-level authorization.
+ * <p>
+ * All operations enforce ticket-level authorization. File uploads additionally
+ * validate the file size, filename and binary signature. Listing an attachment
+ * never loads its binary content from MongoDB.
+ * </p>
  *
- * File removal is not exposed to users. MongoDB deletion is used
- * internally to compensate for metadata persistence failures.
+ * <p>
+ * MySQL and MongoDB do not share a transaction. If storing attachment metadata
+ * fails after the file has been uploaded, this service attempts to delete the
+ * newly stored MongoDB file as a compensating action. This cleanup is
+ * best-effort
+ * and is not an atomic distributed rollback.
+ * </p>
  *
- * Note that MongoDB and MySQL do not share a single transaction.
+ * <p>
+ * No user-facing attachment deletion operation is provided.
+ * </p>
  */
 @Service
 @RequiredArgsConstructor
 public class TicketAttachmentService {
 
-    // Maximum allowed file size: 10 MiB.
+    /** Maximum accepted upload size, in bytes (10 MiB). */
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     private final TicketAttachmentRepository attachmentRepository;
@@ -55,15 +68,13 @@ public class TicketAttachmentService {
     private final MongoFileStorageService mongoFileStorageService;
 
     /**
-     * Retrieves all attachments associated with a specific ticket.
+     * Returns the metadata of all attachments belonging to the requested ticket.
      *
-     * Verifies that the ticket exists and that the authenticated user
-     * is authorized to access it.
-     *
-     * Only attachment metadata is retrieved from MySQL.
-     * The actual file content remains in MongoDB.
-     *
-     * Results are ordered by creation date, newest first.
+     * <p>
+     * The ticket must exist and the authenticated user must be allowed to access
+     * its attachments. The repository returns records in descending creation-date
+     * order. This method does not read any binary content from GridFS.
+     * </p>
      *
      * @param ticketId identifier of the ticket
      * @return list of attachment response DTOs
@@ -90,15 +101,21 @@ public class TicketAttachmentService {
     }
 
     /**
-     * Uploads a new attachment to an existing ticket.
+     * Validates and uploads a new file attached directly to a ticket.
      *
-     * Validates ticket access, file size, filename and content type.
+     * <p>
+     * The operation checks ticket authorization and validates the uploaded
+     * file before writing anything. The binary content is saved to the
+     * {@link GridFsBucketType#TICKET TICKET} GridFS bucket, and the returned
+     * MongoDB identifier is persisted with the attachment metadata in MySQL.
+     * </p>
      *
-     * The file is first stored in MongoDB GridFS. Its metadata,
-     * including the MongoDB file identifier, is then saved in MySQL.
-     *
-     * If metadata persistence fails, a compensating deletion
-     * is attempted to prevent orphaned files in MongoDB.
+     * <p>
+     * If saving the metadata throws a runtime exception, a compensating
+     * MongoDB deletion is attempted. Any cleanup failure is attached to the
+     * original exception as a suppressed exception. There is no atomic
+     * transaction spanning MySQL and MongoDB.
+     * </p>
      *
      * @param ticketId identifier of the destination ticket
      * @param file     file received through a multipart request
@@ -130,6 +147,7 @@ public class TicketAttachmentService {
 
         // 4. Store the file content in MongoDB and obtain its identifier.
         String mongoFileId = mongoFileStorageService.saveFile(
+                GridFsBucketType.TICKET,
                 file,
                 fileName,
                 contentType);
@@ -146,17 +164,19 @@ public class TicketAttachmentService {
             attachment.setMongoFileId(mongoFileId);
             attachment.setCreatedAt(LocalDateTime.now());
 
-            // Flush pending SQL changes and save the attachment metadata.
+            // Execute the INSERT before returning, so persistence errors can
+            // trigger the compensating MongoDB cleanup.
             TicketAttachmentModel savedAttachment = attachmentRepository.saveAndFlush(attachment);
 
             return convertToResponse(savedAttachment);
 
         } catch (RuntimeException ex) {
 
-            // If MySQL persistence fails after MongoDB storage, *attempt to remove the
-            // previously uploaded file.
+            // Compensate for a failed metadata write by removing the new file.
             try {
-                mongoFileStorageService.deleteFile(mongoFileId);
+                mongoFileStorageService.deleteFile(
+                        GridFsBucketType.TICKET,
+                        mongoFileId);
             } catch (RuntimeException cleanupException) {
 
                 // Preserve the original error and attach the cleanup failure.
@@ -168,15 +188,20 @@ public class TicketAttachmentService {
     }
 
     /**
-     * Retrieves the content of a specific ticket attachment.
+     * Resolves the stored file content of a specific ticket attachment.
      *
-     * Checks ticket access and verifies that the requested attachment
-     * belongs to the specified ticket.
+     * <p>
+     * Authorization is checked against the ticket before the attachment
+     * metadata is loaded. The attachment must belong to the specified ticket,
+     * preventing a caller from retrieving a file through an unrelated ticket.
+     * </p>
      *
-     * The MongoDB identifier is obtained from MySQL and used
-     * to locate the corresponding file in GridFS.
-     *
-     * This method is shared by download and preview operations.
+     * <p>
+     * The file is retrieved from the {@code TICKET} bucket; the shared MongoDB
+     * storage service also supports a temporary fallback to the legacy {@code fs}
+     * bucket for files uploaded before bucket separation. Both preview and download
+     * endpoints reuse this operation.
+     * </p>
      *
      * @param ticketId     identifier of the ticket
      * @param attachmentId identifier of the attachment
@@ -218,17 +243,17 @@ public class TicketAttachmentService {
 
         // 5. Retrieve the actual file from MongoDB GridFS.
         return mongoFileStorageService.getFile(
+                GridFsBucketType.TICKET,
                 attachment.getMongoFileId());
     }
 
     /**
-     * Retrieves the currently authenticated user from MySQL.
+     * Loads the authenticated user using the username provided by Spring Security.
      *
-     * Uses Spring Security's context to obtain the username
-     * established during JWT authentication.
-     *
-     * The user is then loaded from MySQL to access its role
-     * and identifier for authorization and ownership tracking.
+     * <p>
+     * The user entity is retrieved from MySQL because ticket authorization and
+     * attachment ownership require the current user's persisted role and ID.
+     * </p>
      *
      * @return authenticated user entity
      * @throws AccessDeniedException     if no valid authentication is available
@@ -251,15 +276,20 @@ public class TicketAttachmentService {
     }
 
     /**
-     * Validates whether a user can access attachments of a ticket.
+     * Enforces the access rules for ticket-level attachments.
      *
-     * Current authorization rules:
-     * - ADMIN: can access attachments of any ticket.
-     * - TECHNICIAN: can access attachments of assigned tickets.
-     * - USER: can access tickets they created or requested for.
+     * <ul>
+     * <li>{@code ADMIN}: may access attachments of any ticket.</li>
+     * <li>{@code TECHNICIAN}: may access attachments of tickets assigned to
+     * them.</li>
+     * <li>{@code USER}: may access attachments of tickets they created or for
+     * which they are the requested user.</li>
+     * </ul>
      *
-     * A successful validation returns normally.
-     * Unauthorized access results in an exception.
+     * <p>
+     * Returns normally when access is granted; otherwise throws an exception.
+     * This policy applies to listing, uploading, previewing and downloading.
+     * </p>
      *
      * @param ticket ticket being accessed
      * @param user   authenticated user
@@ -294,14 +324,16 @@ public class TicketAttachmentService {
         }
 
         throw new AccessDeniedException(
-                "You do not have permission to upload attachments to this ticket");
+                "You do not have permission to access attachments of this ticket");
     }
 
     /**
-     * Validates the presence and maximum size of an uploaded file.
+     * Rejects missing, empty or oversized uploads before storing them.
      *
-     * These checks complement the multipart upload limits
-     * configured in application.properties.
+     * <p>
+     * These application-level checks complement the HTTP multipart limits
+     * configured in {@code application.properties}.
+     * </p>
      *
      * @param file file to validate
      * @throws InvalidOperationException if the file is empty,
@@ -315,18 +347,19 @@ public class TicketAttachmentService {
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new InvalidOperationException(
-                    "File size cannot exceed 10 MB");
+                    "File size cannot exceed 10 MiB");
         }
     }
 
     /**
-     * Extracts the filename from the multipart upload.
+     * Extracts and performs basic validation of the original filename.
      *
-     * Removes any directory path supplied by the client,
-     * validates the resulting name and rejects control characters.
-     *
-     * This provides basic filename normalization, not complete
-     * sanitization for every possible filesystem.
+     * <p>
+     * Normalizes Windows and Unix path separators, discards directory
+     * components, limits the filename to 255 characters and rejects ISO control
+     * characters. This is basic normalization, not a general-purpose filesystem
+     * sanitization routine.
+     * </p>
      *
      * @param file uploaded multipart file
      * @return normalized filename without directory components
@@ -357,16 +390,21 @@ public class TicketAttachmentService {
     }
 
     /**
-     * Identifies the file's MIME type using its initial byte signature.
+     * Determines the MIME type from the initial bytes of the uploaded file.
      *
-     * Reads up to eight bytes and checks known signatures for:
-     * - PDF: %PDF-
-     * - PNG: 89 50 4E 47 0D 0A 1A 0A
-     * - JPEG: FF D8 FF
+     * <p>
+     * Reads at most eight bytes and recognizes these signatures:
+     * </p>
+     * <ul>
+     * <li>PDF: {@code %PDF-}</li>
+     * <li>PNG: {@code 89 50 4E 47 0D 0A 1A 0A}</li>
+     * <li>JPEG: {@code FF D8 FF}</li>
+     * </ul>
      *
-     * This avoids trusting the MIME type declared by the client.
-     * Signature matching is a basic format check and does not
-     * guarantee that the entire file is valid or safe.
+     * <p>
+     * This check does not trust the client-provided MIME type. A matching
+     * header does not, by itself, prove that the whole file is valid or safe.
+     * </p>
      *
      * @param file uploaded file
      * @return detected MIME type
@@ -419,13 +457,12 @@ public class TicketAttachmentService {
     }
 
     /**
-     * Converts a JPA attachment entity into its API response DTO.
+     * Maps an attachment entity to the public API response.
      *
-     * Includes the attachment's metadata and a summary of
-     * the uploading user.
-     *
-     * The internal MongoDB file identifier is intentionally
-     * excluded from the response.
+     * <p>
+     * Includes attachment metadata and a short uploader summary. The internal
+     * MongoDB file identifier is deliberately excluded from the response.
+     * </p>
      *
      * @param attachment attachment entity retrieved from MySQL
      * @return DTO containing the attachment's public information
