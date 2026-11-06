@@ -4,99 +4,121 @@ package com.example.back_end.service;
 import java.io.IOException;
 
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
-
-import com.mongodb.client.gridfs.model.GridFSFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.mongodb.client.gridfs.model.GridFSFile;
+
+import com.example.back_end.enums.GridFsBucketType;
 import com.example.back_end.exception.ResourceNotFoundException;
 
-import lombok.RequiredArgsConstructor;
-
 /**
- * Manages file storage in MongoDB using GridFS.
+ * Provides common GridFS storage operations for ticket attachments,
+ * comment attachments and user avatars.
  *
- * Provides operations to store, retrieve and remove files.
- * This service does not handle ticket permissions or MySQL metadata.
- *
- * File deletion is only used internally to clean up MongoDB
- * when an attachment cannot be registered in MySQL.
+ * File authorization and MySQL metadata are handled by the
+ * corresponding business services.
  */
 @Service
-@RequiredArgsConstructor
 public class MongoFileStorageService {
 
-    private final GridFsTemplate gridFsTemplate;
+    private final GridFsTemplate ticketGridFsTemplate;
+    private final GridFsTemplate commentGridFsTemplate;
+    private final GridFsTemplate avatarGridFsTemplate;
+
+    public MongoFileStorageService(
+            @Qualifier("ticketGridFsTemplate") GridFsTemplate ticketGridFsTemplate,
+
+            @Qualifier("commentGridFsTemplate") GridFsTemplate commentGridFsTemplate,
+
+            @Qualifier("avatarGridFsTemplate") GridFsTemplate avatarGridFsTemplate) {
+
+        this.ticketGridFsTemplate = ticketGridFsTemplate;
+        this.commentGridFsTemplate = commentGridFsTemplate;
+        this.avatarGridFsTemplate = avatarGridFsTemplate;
+    }
 
     /**
-     * Stores a file in MongoDB using GridFS.
+     * Selects the GridFS bucket associated with a file type.
+     */
+    private GridFsTemplate getTemplate(GridFsBucketType bucket) {
+        return switch (bucket) {
+            case TICKET -> ticketGridFsTemplate;
+            case COMMENT -> commentGridFsTemplate;
+            case AVATAR -> avatarGridFsTemplate;
+        };
+    }
+
+    /**
+     * Stores a file in the selected GridFS bucket.
      *
-     * @param file        the uploaded file
-     * @param fileName    the filename to store
-     * @param contentType the validated MIME type
-     * @return the MongoDB file ID as a hexadecimal String
-     * @throws IOException if the file content cannot be read
+     * @return hexadecimal MongoDB ObjectId
      */
     public String saveFile(
+            GridFsBucketType bucket,
             MultipartFile file,
             String fileName,
             String contentType) throws IOException {
 
-        ObjectId mongoFileId;
+        GridFsTemplate template = getTemplate(bucket);
 
-        // Store the file content and close the input stream automatically.
         try (var inputStream = file.getInputStream()) {
-            mongoFileId = gridFsTemplate.store(
+
+            ObjectId mongoFileId = template.store(
                     inputStream,
                     fileName,
                     contentType);
-        }
 
-        // Convert ObjectId to String for storage in MySQL.
-        return mongoFileId.toHexString();
+            return mongoFileId.toHexString();
+        }
     }
 
     /**
-     * Retrieves a stored file from MongoDB using its identifier.
+     * Retrieves a file from the selected bucket.
      *
-     * @param mongoFileId the MongoDB file identifier
-     * @return the GridFS resource containing access to the file
-     * @throws ResourceNotFoundException if the file does not exist
+     * Older ticket attachments can still be read from
+     * the legacy GridFS bucket.
      */
-    public GridFsResource getFile(String mongoFileId) {
+    public GridFsResource getFile(
+            GridFsBucketType bucket,
+            String mongoFileId) {
+
+        GridFsTemplate template = getTemplate(bucket);
 
         Query query = new Query(
                 Criteria.where("_id")
                         .is(new ObjectId(mongoFileId)));
 
-        GridFSFile gridFsFile = gridFsTemplate.findOne(query);
+        GridFSFile file = template.findOne(query);
 
-        if (gridFsFile == null) {
-            throw new ResourceNotFoundException(
-                    "File not found in MongoDB");
+        if (file != null) {
+            return template.getResource(file);
         }
 
-        return gridFsTemplate.getResource(gridFsFile);
+        throw new ResourceNotFoundException(
+                "File not found in MongoDB");
     }
 
     /**
-     * Removes a file from MongoDB using its identifier.
+     * Removes a file from the selected bucket.
      *
-     * Used only as a cleanup operation when saving the
-     * attachment metadata in MySQL fails.
-     *
-     * @param mongoFileId the MongoDB file identifier
+     * Used only for internal cleanup or file replacement.
      */
-    public void deleteFile(String mongoFileId) {
+    public void deleteFile(
+            GridFsBucketType bucket,
+            String mongoFileId) {
+
+        GridFsTemplate template = getTemplate(bucket);
 
         Query query = new Query(
                 Criteria.where("_id")
                         .is(new ObjectId(mongoFileId)));
 
-        gridFsTemplate.delete(query);
+        template.delete(query);
     }
 }
