@@ -23,21 +23,21 @@ public class MongoGridFsConfig {
                 databaseFactory, converter, "ticket_files");
     }
 
-    @Bean("commentGridFsTemplate")
-    public GridFsTemplate commentGridFsTemplate(
+    @Bean("ticketCommentGridFsTemplate")
+    public GridFsTemplate ticketCommentGridFsTemplate(
             MongoDatabaseFactory databaseFactory,
             MongoConverter converter) {
 
         return new GridFsTemplate(
-                databaseFactory, converter, "comment_files");
+                databaseFactory, converter, "ticket_comment_files");
     }
 
-    @Bean("avatarGridFsTemplate")
-    public GridFsTemplate avatarGridFsTemplate(
+    @Bean("userAvatarGridFsTemplate")
+    public GridFsTemplate userAvatarGridFsTemplate(
             MongoDatabaseFactory databaseFactory,
             MongoConverter converter) {
 
         return new GridFsTemplate(
-                databaseFactory, converter, "avatars");
+                databaseFactory, converter, "user_avatars");
     }
 }
