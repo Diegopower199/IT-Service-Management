@@ -28,29 +28,32 @@ import com.example.back_end.exception.ResourceNotFoundException;
 public class MongoFileStorageService {
 
     private final GridFsTemplate ticketGridFsTemplate;
-    private final GridFsTemplate commentGridFsTemplate;
-    private final GridFsTemplate avatarGridFsTemplate;
+    private final GridFsTemplate ticketCommentGridFsTemplate;
+    private final GridFsTemplate userAvatarGridFsTemplate;
 
     public MongoFileStorageService(
             @Qualifier("ticketGridFsTemplate") GridFsTemplate ticketGridFsTemplate,
 
-            @Qualifier("commentGridFsTemplate") GridFsTemplate commentGridFsTemplate,
+            @Qualifier("ticketCommentGridFsTemplate") GridFsTemplate ticketCommentGridFsTemplate,
 
-            @Qualifier("avatarGridFsTemplate") GridFsTemplate avatarGridFsTemplate) {
+            @Qualifier("userAvatarGridFsTemplate") GridFsTemplate userAvatarGridFsTemplate) {
 
         this.ticketGridFsTemplate = ticketGridFsTemplate;
-        this.commentGridFsTemplate = commentGridFsTemplate;
-        this.avatarGridFsTemplate = avatarGridFsTemplate;
+        this.ticketCommentGridFsTemplate = ticketCommentGridFsTemplate;
+        this.userAvatarGridFsTemplate = userAvatarGridFsTemplate;
     }
 
     /**
-     * Selects the GridFS bucket associated with a file type.
+     * Returns the GridFS template associated with the specified bucket.
+     *
+     * @param bucket type of GridFS bucket
+     * @return template configured for the selected bucket
      */
     private GridFsTemplate getTemplate(GridFsBucketType bucket) {
         return switch (bucket) {
-            case TICKET -> ticketGridFsTemplate;
-            case COMMENT -> commentGridFsTemplate;
-            case AVATAR -> avatarGridFsTemplate;
+            case TICKET_FILES -> ticketGridFsTemplate;
+            case TICKET_COMMENT_FILES -> ticketCommentGridFsTemplate;
+            case USER_AVATARS -> userAvatarGridFsTemplate;
         };
     }
 

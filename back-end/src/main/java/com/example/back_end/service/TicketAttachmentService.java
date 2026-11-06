@@ -147,7 +147,7 @@ public class TicketAttachmentService {
 
         // 4. Store the file content in MongoDB and obtain its identifier.
         String mongoFileId = mongoFileStorageService.saveFile(
-                GridFsBucketType.TICKET,
+                GridFsBucketType.TICKET_FILES,
                 file,
                 fileName,
                 contentType);
@@ -175,7 +175,7 @@ public class TicketAttachmentService {
             // Compensate for a failed metadata write by removing the new file.
             try {
                 mongoFileStorageService.deleteFile(
-                        GridFsBucketType.TICKET,
+                        GridFsBucketType.TICKET_FILES,
                         mongoFileId);
             } catch (RuntimeException cleanupException) {
 
@@ -243,7 +243,7 @@ public class TicketAttachmentService {
 
         // 5. Retrieve the actual file from MongoDB GridFS.
         return mongoFileStorageService.getFile(
-                GridFsBucketType.TICKET,
+                GridFsBucketType.TICKET_FILES,
                 attachment.getMongoFileId());
     }
 
