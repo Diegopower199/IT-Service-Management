@@ -129,7 +129,10 @@
         "createError": "Error creating comment.",
         "cancel": "Cancel",
         "adding": "Adding...",
-        "addComment": "Add Comment"
+        "addComment": "Add Comment",
+        "attachFile": "Attach file",
+        "invalidAttachmentType": "Only PDF, JPG and PNG files are allowed.",
+        "attachmentUploadFailed": "The comment was published, but the attachment could not be uploaded."
     },
     "Comments": {
         "title": "Ticket Comments",
@@ -144,7 +147,10 @@
         "internalComment": "Internal comment",
         "commentRequired": "Please enter a comment.",
         "adding": "Adding...",
-        "submit": "Add Comment"
+        "submit": "Add Comment",
+        "attachFile": "Attach file",
+        "invalidAttachmentType": "Only PDF, JPG and PNG files are allowed.",
+        "attachmentUploadFailed": "The comment was published, but the attachment could not be uploaded."
     },
     "CommentsPanel": {
         "title": "Comments",
@@ -185,5 +191,15 @@
         "preview": "Preview file",
         "previewError": "Error previewing the file.",
         "close": "Close"
+    },
+    "CommentAttachments": {
+        "showAttachments": "Show attachments",
+        "hideAttachments": "Hide attachments",
+        "noAttachments": "This comment has no attachments.",
+        "preview": "Preview",
+        "download": "Download",
+        "loadError": "Could not load attachments.",
+        "downloadError": "Could not download the file.",
+        "previewError": "Could not preview the file."
     }
 }

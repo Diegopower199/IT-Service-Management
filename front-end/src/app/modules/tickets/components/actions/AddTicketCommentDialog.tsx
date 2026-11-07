@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import type { ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import {
   Alert,
   Button,
   Checkbox,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,6 +20,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+
 import { useAuth } from "@/hooks/useAuth";
 
 import { USER_ROLES } from "@/types/roleTypes";
@@ -26,6 +30,7 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import { createTicketComment } from "../../services/ticketCommentsService";
+import { uploadTicketCommentAttachment } from "../../services/ticketCommentAttachmentService";
 
 interface AddTicketCommentDialogProps {
   open: boolean;
@@ -39,6 +44,10 @@ interface CommentForm {
   internal: boolean;
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+
 export default function AddTicketCommentDialog({
   open,
   ticketId,
@@ -48,19 +57,28 @@ export default function AddTicketCommentDialog({
   const { user } = useAuth();
 
   const t = useTranslations("Tickets.AddCommentDialog");
+  const tAttachments = useTranslations("Tickets.Attachments");
 
   const [formData, setFormData] = useState<CommentForm>({
     comment: "",
     internal: false,
   });
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const [savingComment, setSavingComment] = useState(false);
+  const [commentCreated, setCommentCreated] = useState(false);
 
   const [requiredFieldsIncomplete, setRequiredFieldsIncomplete] = useState<
     Partial<Record<keyof CommentForm, string>>
   >({});
 
   const [errorMessage, setErrorMessage] = useState("");
+  const [attachmentError, setAttachmentError] = useState("");
+  const [attachmentWarning, setAttachmentWarning] = useState("");
+
+  const canCreateInternalComment =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TECHNICIAN;
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -81,6 +99,34 @@ export default function AddTicketCommentDialog({
     }));
   };
 
+  /**
+   * Validates and stores the selected attachment.
+   */
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setSelectedFile(null);
+      setAttachmentError(tAttachments("fileTooLarge"));
+      return;
+    }
+
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      setSelectedFile(null);
+      setAttachmentError(t("invalidAttachmentType"));
+      return;
+    }
+
+    setSelectedFile(file);
+    setAttachmentError("");
+  };
+
   const validateRequiredFields = () => {
     const errorMissingFields: Partial<Record<keyof CommentForm, string>> = {};
 
@@ -93,19 +139,41 @@ export default function AddTicketCommentDialog({
     return Object.keys(errorMissingFields).length !== 0;
   };
 
-  const handleClose = () => {
+  /**
+   * Resets the comment form and attachment state.
+   */
+  const resetForm = () => {
     setFormData({
       comment: "",
       internal: false,
     });
 
+    setSelectedFile(null);
+    setCommentCreated(false);
+
     setRequiredFieldsIncomplete({});
     setErrorMessage("");
+    setAttachmentError("");
+    setAttachmentWarning("");
+  };
 
+  const handleClose = () => {
+    if (savingComment) {
+      return;
+    }
+
+    resetForm();
     onClose();
   };
 
+  /**
+   * Creates a comment and uploads its optional attachment.
+   */
   const handleConfirm = async () => {
+    if (savingComment || commentCreated) {
+      return;
+    }
+
     const requiredFieldsError = validateRequiredFields();
 
     if (requiredFieldsError) {
@@ -115,20 +183,51 @@ export default function AddTicketCommentDialog({
     try {
       setSavingComment(true);
       setErrorMessage("");
+      setAttachmentError("");
+      setAttachmentWarning("");
       setRequiredFieldsIncomplete({});
 
-      await createTicketComment(ticketId, {
+      // Create the comment to obtain its identifier.
+      const createdComment = await createTicketComment(ticketId, {
         comment: formData.comment,
-        internal:
-          user?.role === USER_ROLES.ADMIN ||
-          user?.role === USER_ROLES.TECHNICIAN
-            ? formData.internal
-            : false,
+        internal: canCreateInternalComment ? formData.internal : false,
       });
+
+      setCommentCreated(true);
+
+      // Upload the attachment only after the comment exists.
+      if (selectedFile) {
+        try {
+          await uploadTicketCommentAttachment(
+            ticketId,
+            createdComment.idComment,
+            selectedFile,
+          );
+        } catch (uploadError) {
+          logger.error(
+            "Failed to upload ticket comment attachment",
+            uploadError,
+            {
+              component: "AddTicketCommentDialog",
+              action: "handleConfirm",
+              ticketId,
+              commentId: createdComment.idComment,
+            },
+          );
+
+          setAttachmentWarning(t("attachmentUploadFailed"));
+          setSelectedFile(null);
+
+          // The comment exists even if the attachment failed.
+          onCommentsUpdated();
+          return;
+        }
+      }
 
       onCommentsUpdated();
 
-      handleClose();
+      resetForm();
+      onClose();
     } catch (error) {
       const apiError = getApiError(error);
 
@@ -211,22 +310,61 @@ export default function AddTicketCommentDialog({
             onChange={handleFormChange}
             error={Boolean(requiredFieldsIncomplete.comment)}
             helperText={requiredFieldsIncomplete.comment}
-            disabled={savingComment}
+            disabled={savingComment || commentCreated}
           />
 
-          {(user?.role === USER_ROLES.ADMIN ||
-            user?.role === USER_ROLES.TECHNICIAN) && (
+          {canCreateInternalComment && (
             <FormControlLabel
               control={
                 <Checkbox
                   name="internal"
                   checked={formData.internal}
                   onChange={handleFormChange}
-                  disabled={savingComment}
+                  disabled={savingComment || commentCreated}
                 />
               }
               label={t("internalComment")}
             />
+          )}
+
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<UploadFileIcon />}
+            disabled={savingComment || commentCreated}
+            sx={{ alignSelf: "flex-start" }}
+          >
+            {t("attachFile")}
+
+            <input
+              type="file"
+              hidden
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileChange}
+              disabled={savingComment || commentCreated}
+            />
+          </Button>
+
+          {selectedFile && (
+            <Chip
+              label={selectedFile.name}
+              onDelete={
+                savingComment || commentCreated
+                  ? undefined
+                  : () => setSelectedFile(null)
+              }
+              sx={{ alignSelf: "flex-start" }}
+            />
+          )}
+
+          <Typography variant="caption" color="text.secondary">
+            {tAttachments("allowedFormats")}
+          </Typography>
+
+          {attachmentError && <Alert severity="error">{attachmentError}</Alert>}
+
+          {attachmentWarning && (
+            <Alert severity="warning">{attachmentWarning}</Alert>
           )}
 
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
@@ -243,20 +381,22 @@ export default function AddTicketCommentDialog({
         }}
       >
         <Button onClick={handleClose} disabled={savingComment} color="inherit">
-          {t("cancel")}
+          {commentCreated ? tAttachments("close") : t("cancel")}
         </Button>
 
-        <Button
-          variant="contained"
-          onClick={handleConfirm}
-          disabled={savingComment}
-          sx={{
-            px: 3,
-            borderRadius: 2,
-          }}
-        >
-          {savingComment ? t("adding") : t("addComment")}
-        </Button>
+        {!commentCreated && (
+          <Button
+            variant="contained"
+            onClick={handleConfirm}
+            disabled={savingComment}
+            sx={{
+              px: 3,
+              borderRadius: 2,
+            }}
+          >
+            {savingComment ? t("adding") : t("addComment")}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

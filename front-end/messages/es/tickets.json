@@ -129,7 +129,10 @@
         "createError": "Error al crear el comentario.",
         "cancel": "Cancelar",
         "adding": "Añadiendo...",
-        "addComment": "Añadir comentario"
+        "addComment": "Añadir comentario",
+        "attachFile": "Adjuntar archivo",
+        "invalidAttachmentType": "Solo se permiten archivos PDF, JPG y PNG.",
+        "attachmentUploadFailed": "El comentario se ha publicado, pero no se ha podido adjuntar el archivo."
     },
     "Comments": {
         "title": "Comentarios del ticket",
@@ -144,7 +147,10 @@
         "internalComment": "Comentario interno",
         "commentRequired": "Introduce un comentario.",
         "adding": "Añadiendo...",
-        "submit": "Añadir comentario"
+        "submit": "Añadir comentario",
+        "attachFile": "Adjuntar archivo",
+        "invalidAttachmentType": "Solo se permiten archivos PDF, JPG y PNG.",
+        "attachmentUploadFailed": "El comentario se ha publicado, pero no se ha podido adjuntar el archivo."
     },
     "CommentsPanel": {
         "title": "Comentarios",
@@ -185,5 +191,15 @@
         "preview": "Previsualizar archivo",
         "previewError": "Error al previsualizar el archivo.",
         "close": "Cerrar"
+    },
+    "CommentAttachments": {
+        "showAttachments": "Mostrar adjuntos",
+        "hideAttachments": "Ocultar adjuntos",
+        "noAttachments": "Este comentario no tiene archivos adjuntos.",
+        "preview": "Previsualizar",
+        "download": "Descargar",
+        "loadError": "No se pudieron cargar los adjuntos.",
+        "downloadError": "No se pudo descargar el archivo.",
+        "previewError": "No se pudo previsualizar el archivo."
     }
 }
