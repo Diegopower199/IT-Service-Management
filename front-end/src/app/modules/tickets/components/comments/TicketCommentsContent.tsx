@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import dayjs from "dayjs";
@@ -8,6 +9,7 @@ import dayjs from "dayjs";
 import {
   Alert,
   Box,
+  Button as MuiButton,
   Checkbox,
   Chip,
   FormControlLabel,
@@ -16,6 +18,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import CustomPagination from "@/components/ui/CustomPagination";
 import Button from "@/components/ui/Button";
@@ -34,6 +38,10 @@ import {
   getAllTicketsCommentsById,
 } from "../../services/ticketCommentsService";
 
+import { uploadTicketCommentAttachment } from "../../services/ticketCommentAttachmentService";
+
+import TicketCommentAttachments from "../attachments/TicketCommentAttachments";
+
 interface TicketCommentsContentProps {
   ticketId: number;
 }
@@ -43,12 +51,17 @@ interface CommentForm {
   internal: boolean;
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+
 export default function TicketCommentsContent({
   ticketId,
 }: TicketCommentsContentProps) {
   const { user } = useAuth();
 
   const t = useTranslations("Tickets.Comments");
+  const tAttachments = useTranslations("Tickets.Attachments");
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
     [],
@@ -58,6 +71,8 @@ export default function TicketCommentsContent({
     comment: "",
     internal: false,
   });
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -75,6 +90,9 @@ export default function TicketCommentsContent({
 
   const [loadErrorMessage, setLoadErrorMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [attachmentError, setAttachmentError] = useState("");
+  const [attachmentWarning, setAttachmentWarning] = useState("");
 
   const canCreateInternalComment =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.TECHNICIAN;
@@ -149,6 +167,36 @@ export default function TicketCommentsContent({
     }));
   };
 
+  /**
+   * Validates and stores the selected attachment.
+   *
+   * The file will be uploaded only after the comment is created.
+   */
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setSelectedFile(null);
+      setAttachmentError(tAttachments("fileTooLarge"));
+      return;
+    }
+
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      setSelectedFile(null);
+      setAttachmentError(t("invalidAttachmentType"));
+      return;
+    }
+
+    setSelectedFile(file);
+    setAttachmentError("");
+  };
+
   const validateRequiredFields = () => {
     const errorMissingFields: Partial<Record<keyof CommentForm, string>> = {};
 
@@ -173,20 +221,50 @@ export default function TicketCommentsContent({
     try {
       setSavingComment(true);
       setErrorMessage("");
+      setAttachmentError("");
+      setAttachmentWarning("");
       setRequiredFieldsIncomplete({});
 
-      await createTicketComment(ticketId, {
+      // Create the comment first to obtain its identifier.
+      const createdComment = await createTicketComment(ticketId, {
         comment: formData.comment,
         internal: canCreateInternalComment ? formData.internal : false,
       });
 
+      // Clear the form because the comment has been created.
       setFormData({
         comment: "",
         internal: false,
       });
 
+      setSelectedFile(null);
       setRequiredFieldsIncomplete({});
 
+      // Upload the selected file to the newly created comment.
+      if (selectedFile) {
+        try {
+          await uploadTicketCommentAttachment(
+            ticketId,
+            createdComment.idComment,
+            selectedFile,
+          );
+        } catch (uploadError) {
+          logger.error(
+            "Failed to upload ticket comment attachment",
+            uploadError,
+            {
+              component: "TicketCommentsContent",
+              action: "handleSubmit",
+              ticketId,
+              commentId: createdComment.idComment,
+            },
+          );
+
+          setAttachmentWarning(t("attachmentUploadFailed"));
+        }
+      }
+
+      // Refresh the comments list.
       const newTotalElements = totalElements + 1;
 
       const lastPage =
@@ -234,12 +312,7 @@ export default function TicketCommentsContent({
       </Typography>
 
       {loadErrorMessage && (
-        <Alert
-          severity="error"
-          sx={{
-            mb: 2,
-          }}
-        >
+        <Alert severity="error" sx={{ mb: 2 }}>
           {loadErrorMessage}
         </Alert>
       )}
@@ -254,9 +327,7 @@ export default function TicketCommentsContent({
             <Paper
               key={ticketComment.idComment}
               variant="outlined"
-              sx={{
-                p: 2,
-              }}
+              sx={{ p: 2 }}
             >
               <Stack
                 direction="row"
@@ -282,6 +353,11 @@ export default function TicketCommentsContent({
               </Stack>
 
               <Typography sx={{ mt: 2 }}>{ticketComment.comment}</Typography>
+
+              <TicketCommentAttachments
+                ticketId={ticketId}
+                commentId={ticketComment.idComment}
+              />
             </Paper>
           ))}
 
@@ -321,6 +397,42 @@ export default function TicketCommentsContent({
               }
               label={t("internalComment")}
             />
+          )}
+
+          <MuiButton
+            component="label"
+            variant="outlined"
+            startIcon={<UploadFileIcon />}
+            disabled={savingComment}
+            sx={{ alignSelf: "flex-start" }}
+          >
+            {t("attachFile")}
+
+            <input
+              type="file"
+              hidden
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileChange}
+              disabled={savingComment}
+            />
+          </MuiButton>
+
+          {selectedFile && (
+            <Chip
+              label={selectedFile.name}
+              onDelete={() => setSelectedFile(null)}
+              sx={{ alignSelf: "flex-start" }}
+            />
+          )}
+
+          <Typography variant="caption" color="text.secondary">
+            {tAttachments("allowedFormats")}
+          </Typography>
+
+          {attachmentError && <Alert severity="error">{attachmentError}</Alert>}
+
+          {attachmentWarning && (
+            <Alert severity="warning">{attachmentWarning}</Alert>
           )}
 
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
