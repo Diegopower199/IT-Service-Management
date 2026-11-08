@@ -61,19 +61,25 @@ public class UserAvatarService {
     }
 
     /**
-     * Retrieves the actual avatar image from MongoDB GridFS.
+     * Retrieves the avatar image associated with a user.
+     *
+     * Returns an empty Optional if the user exists
+     * but has no avatar.
      *
      * @param userId identifier of the user
-     * @return GridFS image resource
+     * @return Optional containing the avatar image resource
      */
     @Transactional(readOnly = true)
-    public GridFsResource getAvatarFileByUserId(Long userId) {
+    public Optional<GridFsResource> getAvatarFileByUserId(Long userId) {
 
-        UserAvatarModel avatar = findAvatarByUserId(userId);
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User not found");
+        }
 
-        return mongoFileStorageService.getFile(
-                GridFsBucketType.USER_AVATARS,
-                avatar.getMongoFileId());
+        return userAvatarRepository.findByUser_IdUser(userId)
+                .map(avatar -> mongoFileStorageService.getFile(
+                        GridFsBucketType.USER_AVATARS,
+                        avatar.getMongoFileId()));
     }
 
     /**

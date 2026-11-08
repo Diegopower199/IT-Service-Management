@@ -12,7 +12,18 @@
         "email": "Correo electrónico",
         "department": "Departamento",
         "noDepartment": "Sin departamento",
-        "editProfile": "Editar perfil"
+        "editProfile": "Editar perfil",
+        "uploadAvatar": "Subir foto",
+        "changeAvatar": "Cambiar foto",
+        "uploadingAvatar": "Subiendo foto...",
+        "avatarTooLarge": "La imagen no puede superar los 5 MB.",
+        "avatarInvalidType": "Solo se permiten imágenes JPG y PNG.",
+        "avatarUploadSuccess": "Foto de perfil actualizada correctamente.",
+        "avatarUploadError": "No se pudo actualizar la foto de perfil.",
+        "deleteAvatar": "Eliminar foto",
+        "deletingAvatar": "Eliminando foto...",
+        "avatarDeleteSuccess": "Foto de perfil eliminada correctamente.",
+        "avatarDeleteError": "No se pudo eliminar la foto de perfil."
     },
     "ChangePassword": {
         "title": "Cambiar contraseña",

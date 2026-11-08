@@ -12,7 +12,18 @@
         "email": "Email",
         "department": "Department",
         "noDepartment": "No department",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "uploadAvatar": "Upload photo",
+        "changeAvatar": "Change photo",
+        "uploadingAvatar": "Uploading photo...",
+        "avatarTooLarge": "The image cannot exceed 5 MB.",
+        "avatarInvalidType": "Only JPG and PNG images are allowed.",
+        "avatarUploadSuccess": "Profile photo updated successfully.",
+        "avatarUploadError": "Could not update the profile photo.",
+        "deleteAvatar": "Delete photo",
+        "deletingAvatar": "Deleting photo...",
+        "avatarDeleteSuccess": "Profile photo deleted successfully.",
+        "avatarDeleteError": "Could not delete the profile photo."
     },
     "ChangePassword": {
         "title": "Change Password",

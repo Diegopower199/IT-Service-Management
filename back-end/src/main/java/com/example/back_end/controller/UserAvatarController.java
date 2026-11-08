@@ -1,6 +1,7 @@
 package com.example.back_end.controller;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
@@ -55,20 +56,27 @@ public class UserAvatarController {
     /**
      * Retrieves the avatar image associated with a user.
      *
+     * Returns HTTP 204 when the user exists but has no avatar.
+     *
      * @param userId identifier of the user
-     * @return avatar image
+     * @return avatar image or HTTP 204 No Content
      * @throws IOException if the image cannot be read
      */
     @GetMapping("/{userId}/avatar")
     public ResponseEntity<Resource> getAvatar(
             @PathVariable Long userId) throws IOException {
 
-        GridFsResource avatar = userAvatarService.getAvatarFileByUserId(userId);
+        Optional<GridFsResource> avatarOptional = userAvatarService.getAvatarFileByUserId(userId);
+
+        if (avatarOptional.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        GridFsResource avatar = avatarOptional.get();
 
         return ResponseEntity.ok()
                 .contentType(
-                        MediaType.parseMediaType(
-                                avatar.getContentType()))
+                        MediaType.parseMediaType(avatar.getContentType()))
                 .contentLength(avatar.contentLength())
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
