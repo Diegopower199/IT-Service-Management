@@ -17,6 +17,8 @@ Frontend for a full-stack **IT Service Management (ITSM) / Help Desk** applicati
 - Ticket creation, editing, assignment, priority changes, and status transitions.
 - Ticket listings with server-side pagination, sorting, and filters.
 - Ticket details, public/internal comments, and change history.
+- Upload, preview, and download ticket and comment attachments (PDF, JPEG, PNG; up to 10 MiB per file).
+- User avatar upload, replacement, and removal (JPEG, PNG; up to 5 MiB), synchronized between profile and header.
 - Dashboard statistics and recent tickets.
 - Administration of users, departments, categories, priorities, and statuses.
 - Profile editing and password changes.
@@ -52,11 +54,36 @@ front-end/
 
 - **Node.js 22.22.2+** (or another version supported by the installed dependencies)
 - **npm**
-- A running Spring Boot backend connected to the initialized MySQL database
+- A running Spring Boot backend connected to the initialized MySQL database and MongoDB GridFS
 
 For backend and database setup, see the [Backend README](../back-end/README.md) and [Database README](../database/README.md).
 
-## Getting Started
+## Run with Docker
+
+Docker Compose starts the frontend together with Spring Boot, MySQL, and MongoDB. Follow the [main README](../README.md) to configure `.env` or `.env.dev` at the repository root.
+
+Run these commands from the root:
+
+```bash
+# Compiled environment
+docker compose up -d --build
+
+# Live development
+docker compose --env-file .env.dev -f docker-compose.dev.yaml up -d --build
+```
+
+|                | DEV                             | PROD (local compiled build)    |
+| -------------- | ------------------------------- | ------------------------------ |
+| Frontend URL   | `http://localhost:3001`         | `http://localhost:3000`        |
+| Backend API    | `http://localhost:8081/api/v1`  | `http://localhost:8080/api/v1` |
+| Dockerfile     | `Dockerfile.dev`                | `Dockerfile`                   |
+| Source updates | Bind mount, Webpack and polling | Rebuild image                  |
+
+The production-mode image uses a multi-stage Node.js build and Next.js standalone output. `NEXT_PUBLIC_*` values are embedded at build time; rebuild the production frontend if they change. In Docker development the Compose configuration supplies the environment variables, so a separate frontend `.env` is not required. Use the host address and published backend port for browser requests, not the internal Docker service name.
+
+See [Docker Workflow](../DOCKER-WORKFLOW.md) for the development workflow and dependency update commands.
+
+## Getting Started (without Docker)
 
 From the `front-end/` directory:
 
@@ -104,6 +131,20 @@ Users sign in through `POST /api/v1/auth/login`. The application sends the JWT a
 The backend issues a rotating refresh token in an **HttpOnly cookie**. Axios handles access-token expiration by requesting a new token and retrying the original request. The current frontend stores its access token and basic user session information in `localStorage`.
 
 Role-based UI checks improve navigation and the user experience; **all authorization is enforced by the backend**.
+
+## Files and Avatars
+
+File operations use dedicated Axios services in the feature modules:
+
+| Service                             | Responsibility                                                                                     |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `ticketAttachmentService.ts`        | List, upload, preview, and download ticket attachments                                             |
+| `ticketCommentAttachmentService.ts` | List, upload, preview, and download comment attachments                                            |
+| `userAvatarService.ts`              | Retrieve, upload, replace, and remove the current user's avatar (image reads can target a user ID) |
+
+Uploads use `FormData`; image and document downloads use binary responses (`Blob`). Comment attachments are selected when creating a comment. Existing attachments can be previewed and downloaded, but not removed through the interface. Avatar changes update the header as well as the profile view. The interface handles the no-avatar response (`204 No Content`) with a fallback avatar.
+
+File validation in the UI improves usability; the backend remains responsible for enforcing permissions and validation.
 
 ## Main Pages
 

@@ -2,129 +2,197 @@
 
 A full-stack **IT Service Management (ITSM)** application for managing IT support requests, tracking ticket activity, and organizing service desk operations.
 
-Built with **Spring Boot**, **Next.js**, and **MySQL**, this project demonstrates end-to-end application development, JWT authentication, role-based access control, REST API design, and automated testing.
+Built with **Java, Spring Boot, Next.js, TypeScript, MySQL, and MongoDB**, the project demonstrates end-to-end software development, secure session management, role-based authorization, REST API design, hybrid data persistence, automated testing, and reproducible local deployment with Docker Compose.
 
 ## Features
 
-- **Authentication and sessions:** JWT access tokens, rotating refresh tokens, automatic session renewal, and logout.
-- **Role-based access:** Different permissions and interfaces for `ADMIN`, `TECHNICIAN`, and `USER`.
-- **Ticket management:** Create, update, assign, prioritize, and track support requests.
-- **Ticket search:** Server-side pagination, sorting, and filters.
-- **Comments and history:** Public/internal comments and a record of ticket changes.
+- **Authentication and authorization:** JWT access tokens, rotating refresh tokens in HttpOnly cookies, automatic session renewal, BCrypt password hashing, and role-based access control.
+- **Ticket management:** Create, update, assign, prioritize, and track support requests throughout their lifecycle.
+- **Search and filtering:** Server-side pagination, sorting, and dynamic filters.
+- **Comments and activity history:** Public and internal comments, with chronological tracking of ticket changes.
+- **File attachments:** Upload, download, and preview PDF and image files associated with tickets or ticket comments.
+- **User profiles:** Edit personal information, change passwords, and upload, replace, or remove profile pictures. Avatar changes are reflected in the application header without reloading the page.
 - **Dashboard:** Role-specific statistics, recent tickets, and shortcuts.
-- **Administration:** Manage users, departments, categories, priorities, and statuses; view configured roles.
-- **User profiles:** Edit profile information and change passwords.
-- **Internationalization:** English and Spanish interfaces.
-- **Automated tests:** Backend and frontend tests, plus linting and build checks.
+- **Administration:** Manage users, departments, categories, priorities, and statuses, and view configured roles.
+- **Internationalization:** English and Spanish interfaces with language selection.
+- **Development and delivery:** Separate Docker Compose environments, automatic development reloads, and multi-stage builds for compiled application images.
+- **Quality checks:** Backend and frontend automated tests, linting, and build checks.
 
 ## Tech Stack
 
-| Layer             | Technologies                                    |
-| ----------------- | ----------------------------------------------- |
-| Frontend          | Next.js 16, React 19, TypeScript                |
-| UI                | Material UI, MUI X Data Grid                    |
-| API client / i18n | Axios, next-intl                                |
-| Backend           | Java 17, Spring Boot 4.1.1, Spring Security     |
-| Authentication    | JWT, BCrypt, HttpOnly refresh-token cookies     |
-| Database          | MySQL 8+, Spring Data JPA, Hibernate            |
-| Testing           | JUnit 5, Mockito, Vitest, React Testing Library |
-| Tooling           | Maven Wrapper, npm, ESLint, Git                 |
+| Layer                  | Technologies                                            |
+| ---------------------- | ------------------------------------------------------- |
+| Frontend               | Next.js 16 (App Router), React 19, TypeScript           |
+| UI                     | Material UI, MUI X Data Grid                            |
+| API client / i18n      | Axios, next-intl                                        |
+| Backend                | Java 17, Spring Boot 4.1.1, Spring MVC, Spring Security |
+| Authentication         | JWT (HS256), BCrypt, HttpOnly refresh-token cookies     |
+| Relational persistence | MySQL 8.4, Spring Data JPA, Hibernate                   |
+| File storage           | MongoDB 8.0, Spring Data MongoDB, GridFS                |
+| Testing                | JUnit 5, Mockito, Vitest, React Testing Library         |
+| Infrastructure         | Docker, Docker Compose, Compose Watch                   |
+| Tooling                | Maven, npm, ESLint, Git                                 |
+
+## Architecture
+
+```mermaid
+flowchart TD
+    U[Browser] --> F[Next.js / React / TypeScript]
+    F -->|Axios / REST API / JWT| B[Spring Boot API]
+    subgraph Backend
+        B --> C[Controllers]
+        C --> S[Services]
+        S --> R[Spring Data JPA repositories]
+        S --> G[GridFS storage service]
+    end
+    R --> M[(MySQL)]
+    G --> N[(MongoDB GridFS)]
+```
+
+The REST API (`/api/v1`) uses a layered architecture with controllers, services, repositories, DTOs, validation, centralized exception handling, and JPA specifications for dynamic ticket queries. Authentication combines short-lived JWT access tokens with rotating, server-managed refresh tokens. Authorization is enforced by the backend.
+
+### Hybrid persistence
+
+MySQL stores business data, relationships, and file metadata. MongoDB GridFS stores the binary file contents in three dedicated buckets:
+
+| Functionality              | MySQL table                  | MongoDB GridFS bucket  |
+| -------------------------- | ---------------------------- | ---------------------- |
+| Ticket attachments         | `ticket_attachments`         | `ticket_files`         |
+| Ticket comment attachments | `ticket_comment_attachments` | `ticket_comment_files` |
+| User avatars               | `user_avatars`               | `user_avatars`         |
+
+The metadata includes a reference to the corresponding GridFS file. Uploads include file-size and file-signature checks. Avatars support replacement and removal, with best-effort GridFS cleanup coordinated with MySQL transaction completion. These operations do not constitute a distributed transaction across the two databases.
 
 ## User Roles
 
 | Role           | Main capabilities                                                                                           |
 | -------------- | ----------------------------------------------------------------------------------------------------------- |
-| **ADMIN**      | Manage all tickets, users and configuration catalogs; access system-wide statistics.                        |
+| **ADMIN**      | Manage all tickets, users, and configuration catalogs; access system-wide statistics.                       |
 | **TECHNICIAN** | Work with assigned tickets, update their workflow, add internal comments, and access technician statistics. |
-| **USER**       | Create and follow support requests, add public comments, and update their own profile.                      |
+| **USER**       | Create and follow support requests, add public comments, and manage their own profile.                      |
 
-The backend enforces authorization. Frontend permissions control navigation and available actions. The predefined roles can be viewed but not created or edited through the application.
+Frontend role checks control navigation and available actions. The predefined roles can be viewed but not created or edited through the application.
 
-## Architecture
+## Getting Started with Docker
 
-```text
-             Next.js + React + TypeScript
-                         |
-                     Axios / HTTP
-                         |
-                  Spring Boot API
-                     /api/v1
-                         |
-          Controllers -> Services -> Repositories
-                         |
-               Spring Data JPA / Hibernate
-                         |
-                       MySQL
-```
-
-The backend uses a layered architecture with DTOs, validation, centralized error handling, and specifications for dynamic ticket queries. Authentication combines short-lived JWT access tokens with rotating, server-managed refresh tokens.
-
-## Repository Structure
-
-```text
-IT-Service-Management/
-├── back-end/              # Spring Boot REST API and backend tests
-│   └── README.md          # Backend setup, configuration, security and endpoints
-├── front-end/             # Next.js application and frontend tests
-│   └── README.md          # Frontend setup, environment and UI documentation
-├── database/              # MySQL scripts and sample records
-│   ├── 00_create_database.sql
-│   ├── 01_create_tables.sql
-│   ├── 02_seed_data.sql
-│   └── README.md          # Database initialization guide
-├── GIT_WORKFLOW.md
-├── LICENSE
-└── README.md              # Project overview (this file)
-```
-
-## Getting Started
+Docker is the recommended way to run the full application locally. There is no need to install Java, Node.js, MySQL, or MongoDB separately when using this approach.
 
 ### Requirements
 
-- Java 17 or newer
-- MySQL 8.0 or newer
-- Node.js 22.22.2+ (or a version supported by the frontend dependencies) and npm
+- Docker Desktop (or Docker Engine with Docker Compose).
+- Docker Compose 2.32 or later for Compose Watch.
+- Available host ports: 3000 and 8080 for PROD; 3001 and 8081 for DEV.
 
-### 1. Set up the database
+Run the following commands from the root of the repository.
 
-Create the `helpdesk` database and load its schema and sample data using the provided SQL scripts.
+### Option 1 — Run the compiled application (recommended for demonstrations)
 
-**Follow the [Database README](./database/README.md)** for the execution order, precautions, and verification queries.
-
-### 2. Configure and run the backend
-
-Set the database connection, JWT signing secret, and frontend origin as described in the backend guide. Then, from `back-end/`, start Spring Boot:
+**1. Create the environment file.**
 
 ```powershell
-# Windows (PowerShell)
-.\mvnw.cmd spring-boot:run
+# Windows PowerShell
+Copy-Item .env.sample .env
 ```
 
 ```bash
 # Linux / macOS
-./mvnw spring-boot:run
+cp .env.sample .env
 ```
 
-By default, the API is available at `http://localhost:8080/api/v1`.
+Configure `.env` with your own values:
 
-**Follow the [Backend README](./back-end/README.md)** for environment variables, security configuration, endpoints, and backend tests.
+```dotenv
+MYSQL_ROOT_PASSWORD=replace_with_root_password
+DB_USERNAME=helpdesk
+DB_PASSWORD=replace_with_database_password
+JWT_SECRET=replace_with_base64_signing_key
+FRONTEND_URL=http://localhost:3000
+NEXT_PUBLIC_WEB_SERVER=localhost
+NEXT_PUBLIC_WEB_PORT_BACK_END=8080
+```
 
-### 3. Configure and run the frontend
+Replace the placeholders before starting. The JWT signing key must be a Base64-encoded random secret of at least 32 bytes (256 bits before Base64 encoding). For example, generate one with `openssl rand -base64 32` if OpenSSL is installed. In Windows PowerShell, the following is an alternative:
 
-From `front-end/`, configure the backend connection using `.env.sample`, then install dependencies and start the development server:
+```powershell
+$key = New-Object byte[] 32
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($key)
+[Convert]::ToBase64String($key)
+$rng.Dispose()
+```
+
+**2. Build and start the application.**
 
 ```bash
-npm ci
-npm run dev
+docker compose config --quiet
+docker compose up -d --build
 ```
 
-Open `http://localhost:3000` once the database and API are running.
+Docker Compose builds the backend and frontend images, initializes MySQL with the SQL scripts on first startup, and starts MongoDB. The backend waits for the database healthchecks to pass.
 
-**Follow the [Frontend README](./front-end/README.md)** for environment setup, available pages, authentication behavior, and frontend tests.
+**3. Open the application.**
 
-### Demo Accounts
+- Frontend: <http://localhost:3000>
+- REST API: `http://localhost:8080/api/v1`
 
-The sample database includes these accounts. **The password for all seeded demo users is `123456`** (stored as a BCrypt hash).
+On the first run, wait for image builds and application startup to finish. Use the demo accounts below to explore the interface.
+
+### Option 2 — Development with live reload
+
+Copy `.env.dev.sample` to `.env.dev` (using `Copy-Item` on Windows or `cp` on Linux/macOS). Edit the new file to use the following variables, with your own passwords and a valid Base64 JWT signing key:
+
+```dotenv
+DEV_MYSQL_ROOT_PASSWORD=replace_with_root_password
+DEV_DB_USERNAME=helpdesk
+DEV_DB_PASSWORD=replace_with_database_password
+DEV_JWT_SECRET=replace_with_base64_signing_key
+DEV_FRONTEND_URL=http://localhost:3001
+DEV_NEXT_PUBLIC_WEB_SERVER=localhost
+DEV_NEXT_PUBLIC_WEB_PORT_BACK_END=8081
+```
+
+```bash
+docker compose --env-file .env.dev -f docker-compose.dev.yaml config --quiet
+docker compose --env-file .env.dev -f docker-compose.dev.yaml up -d --build
+```
+
+In a separate terminal, enable automatic backend restart and recompilation when Java source files or the Maven configuration change:
+
+```bash
+docker compose --env-file .env.dev -f docker-compose.dev.yaml watch --no-up backend
+```
+
+The frontend reloads during development using Next.js, Webpack, and polling.
+
+- Frontend: <http://localhost:3001>
+- REST API: `http://localhost:8081/api/v1`
+
+### Docker environments
+
+| Resource         | DEV                       | PROD (local compiled build) |
+| ---------------- | ------------------------- | --------------------------- |
+| Compose file     | `docker-compose.dev.yaml` | `docker-compose.yaml`       |
+| Environment file | `.env.dev`                | `.env`                      |
+| Frontend         | `localhost:3001`          | `localhost:3000`            |
+| Backend          | `localhost:8081`          | `localhost:8080`            |
+| Source updates   | Live reload / restart     | Rebuild images              |
+| Database volumes | Independent DEV volumes   | Independent PROD volumes    |
+
+Both environments contain four services: frontend, backend, MySQL, and MongoDB. Named volumes preserve database data when containers are recreated. The production-mode application images use multi-stage builds and Next.js standalone output.
+
+To inspect or stop the compiled environment:
+
+```bash
+docker compose ps
+docker compose logs -f backend
+docker compose stop
+```
+
+See [Docker Workflow](./DOCKER-WORKFLOW.md) for development commands, logs, rebuilds, and troubleshooting. Do not use `docker compose down -v` unless you intend to remove persistent volumes and their data.
+
+### Demo accounts
+
+The included seed data provides accounts for exploring the three application roles.
 
 | Username     | Password | Role       |
 | ------------ | -------- | ---------- |
@@ -132,24 +200,89 @@ The sample database includes these accounts. **The password for all seeded demo 
 | `technician` | `123456` | TECHNICIAN |
 | `user`       | `123456` | USER       |
 
-Other sample accounts (`tech.sofia`, `tech.mario`, `user.pablo`, and `user.lucia`) use the same password.
+These credentials are for local demonstrations only. Never use them in a public deployment. Do not commit `.env`, `.env.dev`, or any real credentials. PROD in this repository means a **local production-mode build**, not a hardened public production deployment.
 
-> **Security:** These credentials are intended only for local development and demonstrations. Do not reuse them in production.
+## Manual Setup (without Docker)
+
+For development outside Docker, install Java 17, Node.js 22, npm, MySQL 8+, and MongoDB. Initialize MySQL using the four scripts in `database/`, configure `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `FRONTEND_URL`, and `MONGODB_URI` for the backend, and configure the frontend API connection.
+
+See the [Database README](./database/README.md), [Backend README](./back-end/README.md), and [Frontend README](./front-end/README.md) for detailed setup. Start Spring Boot before starting the frontend:
+
+```powershell
+# In back-end/ on Windows
+.\mvnw.cmd spring-boot:run
+```
+
+```bash
+# In back-end/ on Linux / macOS
+./mvnw spring-boot:run
+```
+
+```bash
+# In front-end/
+npm ci
+npm run dev
+```
+
+## Testing and Quality Checks
+
+The repository includes backend tests using JUnit and Mockito and frontend tests using Vitest and React Testing Library.
+
+```powershell
+# Backend — Windows, from back-end/
+.\mvnw.cmd clean verify
+```
+
+```bash
+# Backend — Linux / macOS, from back-end/
+./mvnw clean verify
+```
+
+```bash
+# Frontend, from front-end/
+npm ci
+npm run check
+```
+
+The frontend check runs linting, tests, and the production build. These checks complement, rather than replace, manual end-to-end testing with both databases running.
+
+## Repository Structure
+
+```text
+IT-Service-Management/
+├── back-end/                 # Spring Boot REST API and backend tests
+│   ├── Dockerfile
+│   ├── Dockerfile.dev
+│   └── README.md
+├── front-end/                # Next.js application and frontend tests
+│   ├── Dockerfile
+│   ├── Dockerfile.dev
+│   └── README.md
+├── database/                 # MySQL schema and demo data
+│   ├── 00_create_database.sql
+│   ├── 01_create_tables.sql
+│   ├── 02_seed_data.sql
+│   ├── 03_create_file_storage.sql
+│   └── README.md
+├── docker-compose.yaml
+├── docker-compose.dev.yaml
+├── .env.sample
+├── .env.dev.sample
+├── DOCKER-WORKFLOW.md
+├── GIT_WORKFLOW.md
+├── LICENSE
+└── README.md
+```
 
 ## Project Documentation
 
-| Document                                     | Contents                                                                               |
-| -------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **[Backend README](./back-end/README.md)**   | API architecture, authentication, authorization, configuration, endpoints and testing. |
-| **[Frontend README](./front-end/README.md)** | Next.js structure, environment variables, pages, session handling and testing.         |
-| **[Database README](./database/README.md)**  | SQL script order, schema initialization, seeded records and verification.              |
-| **[Git Workflow](./GIT_WORKFLOW.md)**        | Branches, commits, pull requests and collaboration guidelines.                         |
-
-## Future Improvements
-
-- Ticket attachments (PDF files and images), with MongoDB planned as attachment storage.
-
-*This feature is planned and is not part of v1.0.*
+| Document                                | Contents                                                        |
+| --------------------------------------- | --------------------------------------------------------------- |
+| [Backend](./back-end/README.md)         | API architecture, security, configuration, endpoints, and tests |
+| [Frontend](./front-end/README.md)       | UI architecture, environment setup, authentication, and tests   |
+| [Database](./database/README.md)        | MySQL schema, initialization, and demo data                     |
+| [Docker Workflow](./DOCKER-WORKFLOW.md) | Docker environments, commands, and development workflow         |
+| [Git Workflow](./GIT_WORKFLOW.md)       | Branches, commits, pull requests, and collaboration guidelines  |
 
 ## License
 
