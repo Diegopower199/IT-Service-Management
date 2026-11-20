@@ -1115,6 +1115,8 @@ class TicketServiceTest {
     @Test
     void assignTicketShouldThrowInvalidRoleWhenAssignedUserIsNotTechnician() {
 
+        configureAuthenticatedUser(createUser(1L, "admin", RoleName.ADMIN.name()));
+
         Long ticketId = 1L;
 
         UserModel user = createUser(
@@ -1145,6 +1147,8 @@ class TicketServiceTest {
 
     @Test
     void assignTicketShouldThrowInvalidOperationWhenAlreadyAssignedToTechnician() {
+
+        configureAuthenticatedUser(createUser(1L, "admin", RoleName.ADMIN.name()));
 
         Long ticketId = 1L;
 
@@ -1274,6 +1278,8 @@ class TicketServiceTest {
     @Test
     void changePriorityShouldThrowExceptionWhenPriorityIsNotActive() {
 
+        configureAuthenticatedUser(createUser(1L, "admin", RoleName.ADMIN.name()));
+
         Long ticketId = 1L;
 
         when(changePriorityRequest.getPriorityId())
@@ -1396,6 +1402,8 @@ class TicketServiceTest {
 
     @Test
     void changeStatusShouldThrowExceptionWhenStatusIsNotActive() {
+
+        configureAuthenticatedUser(createUser(1L, "admin", RoleName.ADMIN.name()));
 
         Long ticketId = 1L;
 

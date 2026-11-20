@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Button from "@mui/material/Button";
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
@@ -24,14 +23,13 @@ export default function TicketActivityHeader({
   reference,
   icon,
 }: TicketActivityHeaderProps) {
-  const searchParams = useSearchParams();
   const t = useTranslations("Tickets.Details");
 
   return (
     <header className={styles.activityHeader}>
       <Button
         component={Link}
-        href={ticketDetailsHref(ticketId, searchParams)}
+        href={ticketDetailsHref(ticketId)}
         variant="outlined"
         startIcon={<ArrowBackRounded />}
         className={sharedStyles.secondaryButton}

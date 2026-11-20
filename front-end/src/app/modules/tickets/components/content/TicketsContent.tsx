@@ -10,6 +10,7 @@ import {
   DataGrid,
   GridActionsCellItem,
   type GridColDef,
+  type GridPaginationModel,
 } from "@mui/x-data-grid";
 import { esES } from "@mui/x-data-grid/locales";
 
@@ -47,10 +48,10 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import TicketForm from "../form/TicketForm";
-import TicketDetailsContent from "../details/TicketDetailsContent";
 import TicketFiltersBar from "./TicketFiltersBar";
 import {
   readTicketListPagination,
+  rememberTicketList,
   ticketDetailsHref,
   ticketListHref,
 } from "../shared/ticketNavigation";
@@ -74,11 +75,6 @@ export default function TicketsContent() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const requestedTicketId = Number(searchParams.get("ticketId"));
-  const detailTicketId =
-    Number.isSafeInteger(requestedTicketId) && requestedTicketId > 0
-      ? requestedTicketId
-      : null;
 
   const t = useTranslations("Tickets.Content");
   const tStatuses = useTranslations("Common.Statuses");
@@ -102,7 +98,7 @@ export default function TicketsContent() {
   };
 
   const [tickets, setTickets] = useState<TicketResponse[]>([]);
-  const [totalElements, setTotalElements] = useState(0);
+  const [totalElements, setTotalElements] = useState(-1);
   const [loading, setLoading] = useState(false);
 
   const [statuses, setStatuses] = useState<StatusResponse[]>([]);
@@ -121,9 +117,8 @@ export default function TicketsContent() {
 
   const [ticketsUpdated, setTicketsUpdated] = useState(false);
 
-  const [paginationModel, setPaginationModel] = useState(() =>
-    readTicketListPagination(searchParams),
-  );
+  const { page, pageSize } = readTicketListPagination(searchParams);
+  const paginationModel = { page, pageSize };
 
   const fetchStatuses = useCallback(async (): Promise<boolean> => {
     try {
@@ -197,8 +192,8 @@ export default function TicketsContent() {
 
       if (isAdmin) {
         response = await getAllTickets({
-          page: paginationModel.page,
-          size: paginationModel.pageSize,
+          page,
+          size: pageSize,
           sort: DEFAULT_TICKET_SORT,
           title: titleFilter,
           status: statusFilter,
@@ -207,8 +202,8 @@ export default function TicketsContent() {
         });
       } else if (isTechnician) {
         response = await getAssignedTickets({
-          page: paginationModel.page,
-          size: paginationModel.pageSize,
+          page,
+          size: pageSize,
           sort: DEFAULT_TICKET_SORT,
           title: titleFilter,
           status: statusFilter,
@@ -217,8 +212,8 @@ export default function TicketsContent() {
         });
       } else {
         response = await getOwnTickets({
-          page: paginationModel.page,
-          size: paginationModel.pageSize,
+          page,
+          size: pageSize,
           sort: DEFAULT_TICKET_SORT,
           title: titleFilter,
           status: statusFilter,
@@ -244,7 +239,8 @@ export default function TicketsContent() {
   }, [
     isAdmin,
     isTechnician,
-    paginationModel,
+    page,
+    pageSize,
     titleFilter,
     statusFilter,
     priorityFilter,
@@ -254,7 +250,7 @@ export default function TicketsContent() {
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
-      if (!isAuthReady || !user || detailTicketId !== null) {
+      if (!isAuthReady || !user) {
         return;
       }
 
@@ -284,7 +280,6 @@ export default function TicketsContent() {
     isAuthReady,
     user,
     isUser,
-    detailTicketId,
     fetchCategories,
     fetchStatuses,
     fetchPriorities,
@@ -301,13 +296,11 @@ export default function TicketsContent() {
         return;
       }
 
-      if (detailTicketId === null) {
-        await fetchTickets();
-      }
+      await fetchTickets();
     };
 
     loadTickets();
-  }, [isAuthReady, user, router, detailTicketId, ticketsUpdated, fetchTickets]);
+  }, [isAuthReady, user, router, ticketsUpdated, fetchTickets]);
 
   const getStatusDisplayName = (statusName: string) => {
     if (tStatuses.has(statusName)) {
@@ -343,23 +336,17 @@ export default function TicketsContent() {
     updateParam("priority", nextFilters.priority);
     updateParam("category", nextFilters.category);
 
-    setPaginationModel((previous) => ({
-      ...previous,
-      page: 0,
-    }));
-
-    const query = params.toString();
-
-    router.replace(query ? `/tickets?${query}` : "/tickets");
+    router.replace(ticketListHref(params, { page: 0, pageSize }));
   };
 
   const handleClearFilters = () => {
-    setPaginationModel((previous) => ({
-      ...previous,
-      page: 0,
-    }));
+    router.replace(ticketListHref(new URLSearchParams(), { page: 0, pageSize }));
+  };
 
-    router.replace("/tickets");
+  const handlePaginationChange = (pagination: GridPaginationModel) => {
+    if (pagination.page !== page || pagination.pageSize !== pageSize) {
+      router.replace(ticketListHref(searchParams, pagination), { scroll: false });
+    }
   };
 
   const handleCreateTicket = () => {
@@ -372,7 +359,8 @@ export default function TicketsContent() {
   };
 
   const handleViewTicket = (ticket: TicketResponse) => {
-    router.push(ticketDetailsHref(ticket.idTicket, searchParams, paginationModel));
+    if (user) rememberTicketList(user, ticket.idTicket, searchParams);
+    router.push(ticketDetailsHref(ticket.idTicket));
   };
 
   const handleEditTicket = (ticket: TicketResponse) => {
@@ -486,18 +474,6 @@ export default function TicketsContent() {
     return <PageLoading />;
   }
 
-  if (detailTicketId !== null) {
-    return (
-      <TicketDetailsContent
-        key={`${user.userId}:${user.role}:${detailTicketId}`}
-        ticketId={detailTicketId}
-        userRole={user.role}
-        onClose={() => router.replace(ticketListHref(searchParams))}
-        onUpdated={handleSubmitSuccess}
-      />
-    );
-  }
-
   if (showForm) {
     return (
       <TicketForm
@@ -558,7 +534,7 @@ export default function TicketsContent() {
           pagination
           paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
+          onPaginationModelChange={handlePaginationChange}
           rowCount={totalElements}
           pageSizeOptions={PAGE_SIZE_OPTIONS}
           localeText={

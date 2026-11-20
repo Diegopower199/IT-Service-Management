@@ -82,6 +82,8 @@ class TicketHistoryServiceTest {
     @Test
     void getAllHistoryShouldReturnHistoryPage() {
 
+        configureAuthenticatedUser("admin", "ADMIN");
+
         TicketHistoryModel history = createHistory(
                 1L,
                 TicketHistoryAction.STATUS_CHANGED,
@@ -117,6 +119,29 @@ class TicketHistoryServiceTest {
 
         verify(ticketHistoryRepository)
                 .findAll(pageable);
+    }
+
+    @Test
+    void getAllHistoryShouldPageOnlyReadableTicketsForTechnician() {
+        configureAuthenticatedUser("technician", "TECHNICIAN");
+        when(currentUser.getIdUser()).thenReturn(3L);
+        when(ticketHistoryRepository.findReadableByTechnician(3L, pageable))
+                .thenReturn(Page.empty());
+
+        assertThat(ticketHistoryService.getAllHistory(pageable)).isEmpty();
+
+        verify(ticketHistoryRepository).findReadableByTechnician(3L, pageable);
+        verify(ticketHistoryRepository, never()).findAll(pageable);
+    }
+
+    @Test
+    void getAllHistoryShouldDenyRegularUsers() {
+        configureAuthenticatedUser("reporter", "USER");
+
+        assertThatThrownBy(() -> ticketHistoryService.getAllHistory(pageable))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(ticketHistoryRepository, never()).findAll(pageable);
     }
 
     @Test

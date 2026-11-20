@@ -61,6 +61,7 @@ public class TicketAttachmentService {
 
     /** Maximum accepted upload size, in bytes (10 MiB). */
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    private static final String ACCESS_DENIED = "You do not have permission to access attachments of this ticket";
 
     private final TicketAttachmentRepository attachmentRepository;
     private final TicketRepository ticketRepository;
@@ -91,7 +92,7 @@ public class TicketAttachmentService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        validateTicketAccess(ticket, currentUser);
+        TicketAccess.requireReadAccess(ticket, currentUser, ACCESS_DENIED);
 
         // Convert MySQL entities into DTOs without retrieving file content.
         return attachmentRepository.findByTicketId(ticketId)
@@ -137,7 +138,11 @@ public class TicketAttachmentService {
         // 2. Identify the authenticated user and verify ticket access.
         UserModel currentUser = getAuthenticatedUser();
 
-        validateTicketAccess(ticket, currentUser);
+        TicketAccess.requireReadAccess(ticket, currentUser, ACCESS_DENIED);
+        if (TicketAccess.hasRole(currentUser, RoleName.TECHNICIAN)
+                && !TicketAccess.isAssignedTo(ticket, currentUser)) {
+            throw new AccessDeniedException(ACCESS_DENIED);
+        }
 
         // 3. Validate the file before performing any storage operation.
         validateFile(file);
@@ -224,7 +229,7 @@ public class TicketAttachmentService {
         // 2. Verify the authenticated user's permissions.
         UserModel currentUser = getAuthenticatedUser();
 
-        validateTicketAccess(ticket, currentUser);
+        TicketAccess.requireReadAccess(ticket, currentUser, ACCESS_DENIED);
 
         // 3. Retrieve attachment metadata from MySQL.
         TicketAttachmentModel attachment = attachmentRepository
@@ -273,58 +278,6 @@ public class TicketAttachmentService {
         return userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Authenticated user not found"));
-    }
-
-    /**
-     * Enforces the access rules for ticket-level attachments.
-     *
-     * <ul>
-     * <li>{@code ADMIN}: may access attachments of any ticket.</li>
-     * <li>{@code TECHNICIAN}: may access attachments of tickets assigned to
-     * them.</li>
-     * <li>{@code USER}: may access attachments of tickets they created or for
-     * which they are the requested user.</li>
-     * </ul>
-     *
-     * <p>
-     * Returns normally when access is granted; otherwise throws an exception.
-     * This policy applies to listing, uploading, previewing and downloading.
-     * </p>
-     *
-     * @param ticket ticket being accessed
-     * @param user   authenticated user
-     * @throws AccessDeniedException if the user is not authorized
-     */
-    private void validateTicketAccess(
-            TicketModel ticket,
-            UserModel user) {
-
-        String role = user.getRole().getName();
-        Long userId = user.getIdUser();
-
-        // Administrators have unrestricted ticket access.
-        if (RoleName.ADMIN.name().equalsIgnoreCase(role)) {
-            return;
-        }
-
-        // Technicians can access attachments of their assigned tickets.
-        if (RoleName.TECHNICIAN.name().equalsIgnoreCase(role)) {
-            if (ticket.getAssignedTo() != null
-                    && ticket.getAssignedTo().getIdUser().equals(userId)) {
-                return;
-            }
-        }
-
-        // Regular users can access tickets they created or requested for.
-        if (RoleName.USER.name().equalsIgnoreCase(role)) {
-            if (ticket.getCreatedBy().getIdUser().equals(userId)
-                    || ticket.getRequestedFor().getIdUser().equals(userId)) {
-                return;
-            }
-        }
-
-        throw new AccessDeniedException(
-                "You do not have permission to access attachments of this ticket");
     }
 
     /**

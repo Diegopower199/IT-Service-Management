@@ -1,43 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Alert, Button } from "@mui/material";
-import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
+import { Alert } from "@mui/material";
 
 import PageLoading from "@/components/ui/PageLoading";
+import { useAuth } from "@/hooks/useAuth";
 import type { TicketResponse } from "@/types/ticketTypes";
-import type { UserRole } from "@/types/roleTypes";
 import { getApiError } from "@/utils/apiErrorUtils";
 import { FORM_MODES } from "@/utils/constans";
 import { logger } from "@/utils/logger";
 
 import { getTicketById } from "../../services/ticketService";
 import TicketForm from "../form/TicketForm";
+import TicketRouteError, { getTicketAccessError } from "../shared/TicketRouteError";
+import { restoreTicketListHref } from "../shared/ticketNavigation";
 import TicketDetails from "./TicketDetails";
-import styles from "../../styles/tickets.module.css";
 
 interface TicketDetailsContentProps {
   ticketId: number;
-  userRole: UserRole;
-  onClose: () => void;
-  onUpdated: () => void;
 }
 
-export default function TicketDetailsContent({
-  ticketId,
-  userRole,
-  onClose,
-  onUpdated,
-}: TicketDetailsContentProps) {
+export default function TicketDetailsContent({ ticketId }: TicketDetailsContentProps) {
+  const router = useRouter();
+  const { user } = useAuth();
   const t = useTranslations("Tickets.Details");
   const tContent = useTranslations("Tickets.Content");
   const [ticket, setTicket] = useState<TicketResponse | null>(null);
   const [loadError, setLoadError] = useState("");
+  const [accessError, setAccessError] = useState<ReturnType<typeof getTicketAccessError>>(null);
   const [refreshError, setRefreshError] = useState("");
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     let active = true;
 
     const loadTicket = async () => {
@@ -46,6 +43,7 @@ export default function TicketDetailsContent({
         if (active) {
           setTicket(response);
           setLoadError("");
+          setAccessError(null);
         }
       } catch (error) {
         if (active) {
@@ -53,7 +51,10 @@ export default function TicketDetailsContent({
             component: "TicketDetailsContent",
             ticketId,
           });
-          setLoadError(getApiError(error)?.message ?? t("loadError"));
+          const kind = getTicketAccessError(error);
+          setTicket(null);
+          setAccessError(kind);
+          setLoadError(kind ? "" : getApiError(error)?.message ?? t("loadError"));
         }
       }
     };
@@ -63,41 +64,36 @@ export default function TicketDetailsContent({
     return () => {
       active = false;
     };
-  }, [ticketId, t]);
+  }, [ticketId, t, user]);
+
+  const handleClose = () => {
+    router.replace(user ? restoreTicketListHref(user, ticketId) : "/tickets");
+  };
 
   const handleTicketUpdated = async () => {
     try {
       setRefreshError("");
       setTicket(await getTicketById(ticketId));
-      onUpdated();
     } catch (error) {
       logger.error("Failed to refresh ticket details", error, {
         component: "TicketDetailsContent",
         ticketId,
       });
-      setRefreshError(getApiError(error)?.message ?? tContent("detailsUpdateError"));
+      const kind = getTicketAccessError(error);
+      if (kind) {
+        setTicket(null);
+        setAccessError(kind);
+      } else {
+        setRefreshError(getApiError(error)?.message ?? tContent("detailsUpdateError"));
+      }
     }
   };
 
-  if (loadError) {
-    return (
-      <div className={styles.page}>
-        <div>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackRounded />}
-            className={styles.secondaryButton}
-            onClick={onClose}
-          >
-            {t("backToTickets")}
-          </Button>
-        </div>
-        <Alert severity="error">{loadError}</Alert>
-      </div>
-    );
+  if (accessError || loadError) {
+    return <TicketRouteError kind={accessError ?? undefined} message={loadError} ticketId={ticketId} />;
   }
 
-  if (!ticket) {
+  if (!ticket || !user) {
     return <PageLoading />;
   }
 
@@ -106,9 +102,8 @@ export default function TicketDetailsContent({
       <TicketForm
         formMode={FORM_MODES.EDIT}
         selectedTicket={ticket}
-        onClose={onClose}
+        onClose={handleClose}
         onCancel={() => setEditing(false)}
-        onSubmitSuccess={onUpdated}
       />
     );
   }
@@ -118,8 +113,8 @@ export default function TicketDetailsContent({
       {refreshError && <Alert severity="error" sx={{ mb: 2 }}>{refreshError}</Alert>}
       <TicketDetails
         ticket={ticket}
-        userRole={userRole}
-        onClose={onClose}
+        userRole={user.role}
+        onClose={handleClose}
         onEdit={() => {
           setRefreshError("");
           setEditing(true);

@@ -39,6 +39,7 @@ import AttachmentPicker from "../attachments/AttachmentPicker";
 import TicketCommentAttachments from "../attachments/TicketCommentAttachments";
 import TicketActivityHeader from "../shared/TicketActivityHeader";
 import TicketDate from "../shared/TicketDate";
+import TicketRouteError, { getTicketAccessError } from "../shared/TicketRouteError";
 import sharedStyles from "../../styles/tickets.module.css";
 import detailStyles from "../../styles/ticketDetails.module.css";
 import styles from "../../styles/ticketActivity.module.css";
@@ -91,6 +92,7 @@ export default function TicketCommentsContent({
   >({});
 
   const [loadErrorMessage, setLoadErrorMessage] = useState("");
+  const [accessError, setAccessError] = useState<ReturnType<typeof getTicketAccessError>>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const [attachmentError, setAttachmentError] = useState("");
@@ -121,9 +123,14 @@ export default function TicketCommentsContent({
         ticketId,
       });
 
-      const apiError = getApiError(error);
-
-      setLoadErrorMessage(apiError?.message ?? t("loadError"));
+      const kind = getTicketAccessError(error);
+      if (kind) {
+        setTicketComments([]);
+        setTotalElements(0);
+        setAccessError(kind);
+      } else {
+        setLoadErrorMessage(getApiError(error)?.message ?? t("loadError"));
+      }
 
       return false;
     } finally {
@@ -281,6 +288,13 @@ export default function TicketCommentsContent({
         await fetchTicketComments();
       }
     } catch (error) {
+      const kind = getTicketAccessError(error);
+      if (kind) {
+        setTicketComments([]);
+        setAccessError(kind);
+        return;
+      }
+
       const apiError = getApiError(error);
 
       if (apiError?.errors?.comment) {
@@ -302,6 +316,8 @@ export default function TicketCommentsContent({
       setSavingComment(false);
     }
   };
+
+  if (accessError) return <TicketRouteError kind={accessError} ticketId={ticketId} />;
 
   return (
     <div className={sharedStyles.page}>

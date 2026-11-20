@@ -63,7 +63,10 @@
     "Details": {
         "backToTickets": "Volver a tickets",
         "backToTicket": "Volver al ticket",
-        "loadError": "Error al cargar los detalles del ticket."
+        "loadError": "Error al cargar los detalles del ticket.",
+        "denied": "Acceso denegado. No tienes permiso para consultar este recurso del ticket.",
+        "notFound": "No se encontró el ticket.",
+        "invalidId": "El identificador del ticket en esta URL no es válido."
     },
     "Overview": {
         "title": "Resumen",

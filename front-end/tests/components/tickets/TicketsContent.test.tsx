@@ -3,6 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import TicketsContent from "@/app/modules/tickets/components/content/TicketsContent";
+import TicketDetailsContent from "@/app/modules/tickets/components/details/TicketDetailsContent";
+import TicketRouteGuard from "@/app/modules/tickets/components/shared/TicketRouteGuard";
+import { parseTicketId } from "@/app/modules/tickets/components/shared/ticketNavigation";
 import { USER_ROLES } from "@/types/roleTypes";
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
@@ -55,6 +58,10 @@ vi.mock("next-intl", () => {
     edit: "Edit",
     ticketsLoadError: "Failed to load tickets",
     loadError: "Failed to load ticket details",
+    backToTickets: "Back to tickets",
+    denied: "Access denied",
+    notFound: "Ticket not found",
+    invalidId: "Invalid ticket ID",
     title: "Filters",
     searchByTitle: "Search by title",
     status: "Status",
@@ -167,9 +174,18 @@ const ticket: TicketResponse = {
 
 const pagedTickets = { content: [ticket], totalElements: 1 };
 
+function renderTicketRoute(rawId: string) {
+  return render(
+    <TicketRouteGuard ticketId={parseTicketId(rawId)}>
+      <TicketDetailsContent ticketId={Number(rawId)} />
+    </TicketRouteGuard>,
+  );
+}
+
 describe("TicketsContent", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    sessionStorage.clear();
     mocks.searchParams = new URLSearchParams();
     mocks.useAuth.mockReturnValue({
       isAuthReady: true,
@@ -260,7 +276,7 @@ describe("TicketsContent", () => {
     await user.click(screen.getByRole("button", { name: "Apply Filters" }));
 
     expect(mocks.replace).toHaveBeenCalledWith(
-      "/tickets?status=OPEN&title=Printer",
+      "/tickets?title=Printer&status=OPEN",
     );
   });
 
@@ -278,6 +294,9 @@ describe("TicketsContent", () => {
     const view = render(<TicketsContent />);
 
     await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(mocks.replace).toHaveBeenCalledWith("/tickets?title=Printer&page=1", { scroll: false });
+    mocks.searchParams = new URLSearchParams("title=Printer&page=1");
+    view.rerender(<TicketsContent />);
     await waitFor(() => {
       expect(mocks.getAllTickets).toHaveBeenLastCalledWith(
         expect.objectContaining({ page: 1, title: "Printer" }),
@@ -285,10 +304,10 @@ describe("TicketsContent", () => {
     });
 
     await user.click(await screen.findByRole("button", { name: "View" }));
-    const detailQuery = "title=Printer&ticketId=42&listPage=1&listPageSize=20";
-    expect(mocks.push).toHaveBeenCalledWith(`/tickets?${detailQuery}`);
-    mocks.searchParams = new URLSearchParams(detailQuery);
-    view.rerender(<TicketsContent />);
+    expect(mocks.push).toHaveBeenCalledWith("/tickets/42");
+    view.unmount();
+
+    const detail = renderTicketRoute("42");
 
     await user.click(await screen.findByRole("button", { name: "Edit ticket" }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
@@ -298,21 +317,18 @@ describe("TicketsContent", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Back to tickets" }));
 
-    expect(mocks.replace).toHaveBeenCalledWith("/tickets?title=Printer");
-    mocks.searchParams = new URLSearchParams("title=Printer");
-    view.rerender(<TicketsContent />);
+    expect(mocks.replace).toHaveBeenLastCalledWith("/tickets?title=Printer&page=1");
+    detail.unmount();
+    render(<TicketsContent />);
     expect(screen.getByText("Page 2")).toBeInTheDocument();
     expect(
       screen.getByRole("textbox", { name: "Search by title" }),
     ).toHaveValue("Printer");
   });
 
-  it("restores a ticket and list page from a URL opened directly", async () => {
+  it("fetches a directly opened detail and returns to the default list", async () => {
     const user = userEvent.setup();
-    mocks.searchParams = new URLSearchParams(
-      "status=OPEN&ticketId=42&listPage=2&listPageSize=10",
-    );
-    const view = render(<TicketsContent />);
+    renderTicketRoute("42");
 
     expect(
       await screen.findByRole("heading", { name: "Ticket #42" }),
@@ -321,32 +337,59 @@ describe("TicketsContent", () => {
     expect(mocks.getAllTickets).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: "Back to tickets" }));
-    expect(mocks.replace).toHaveBeenCalledWith("/tickets?status=OPEN");
-    mocks.searchParams = new URLSearchParams("status=OPEN");
-    view.rerender(<TicketsContent />);
-    await waitFor(() =>
-      expect(mocks.getAllTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ page: 2, size: 10, status: "OPEN" }),
-      ),
-    );
+    expect(mocks.replace).toHaveBeenCalledWith("/tickets");
   });
 
-  it("shows the detail error when the requested ticket is denied", async () => {
-    mocks.searchParams = new URLSearchParams("ticketId=42");
+  it.each([[403, "Access denied"], [404, "Ticket not found"]])(
+    "shows the localized detail error for HTTP %i without private data",
+    async (status, message) => {
+      mocks.useAuth.mockReturnValue({
+        isAuthReady: true,
+        user: { userId: 5, username: "john", role: USER_ROLES.USER },
+      });
+      mocks.getTicketById.mockRejectedValue({
+        isAxiosError: true,
+        response: { status, data: { message: "Internal server message" } },
+      });
+
+      renderTicketRoute("42");
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(message);
+      expect(screen.queryByRole("heading", { name: "Ticket #42" })).not.toBeInTheDocument();
+      expect(mocks.getOwnTickets).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not use the originating list of a different account", async () => {
+    const user = userEvent.setup();
+    mocks.searchParams = new URLSearchParams("status=OPEN&page=1&pageSize=10");
+    const list = render(<TicketsContent />);
+    await user.click(await screen.findByRole("button", { name: "View" }));
+    list.unmount();
+
     mocks.useAuth.mockReturnValue({
       isAuthReady: true,
-      user: { userId: 5, username: "john", role: USER_ROLES.USER },
+      user: { userId: 2, username: "another-admin", role: USER_ROLES.ADMIN },
     });
-    mocks.getTicketById.mockRejectedValue({
-      isAxiosError: true,
-      response: { status: 403, data: { message: "Access denied" } },
-    });
+    renderTicketRoute("42");
 
-    render(<TicketsContent />);
+    await user.click(await screen.findByRole("button", { name: "Back to tickets" }));
+    expect(mocks.replace).toHaveBeenLastCalledWith("/tickets");
+  });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Access denied");
-    expect(screen.queryByRole("heading", { name: "Ticket #42" })).not.toBeInTheDocument();
-    expect(mocks.getOwnTickets).not.toHaveBeenCalled();
+  it.each(["0", "1e2", "unsafe", "9007199254740992"])("rejects invalid route ID %s", (id) => {
+    renderTicketRoute(id);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Invalid ticket ID");
+    expect(mocks.getTicketById).not.toHaveBeenCalled();
+  });
+
+  it("redirects an unauthenticated direct detail without requesting data", async () => {
+    mocks.useAuth.mockReturnValue({ isAuthReady: true, user: null });
+    renderTicketRoute("42");
+
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/login"));
+    expect(mocks.getTicketById).not.toHaveBeenCalled();
   });
 
   it.each(["Create ticket", "Edit"])(
@@ -369,15 +412,14 @@ describe("TicketsContent", () => {
 
   it("keeps the existing return to the list after saving an edit from detail", async () => {
     const user = userEvent.setup();
-    mocks.searchParams = new URLSearchParams("ticketId=42");
-    const view = render(<TicketsContent />);
+    const view = renderTicketRoute("42");
 
     await user.click(await screen.findByRole("button", { name: "Edit ticket" }));
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(mocks.replace).toHaveBeenCalledWith("/tickets");
-    mocks.searchParams = new URLSearchParams();
-    view.rerender(<TicketsContent />);
+    view.unmount();
+    render(<TicketsContent />);
     expect(
       screen.getByRole("heading", { name: "All tickets" }),
     ).toBeInTheDocument();

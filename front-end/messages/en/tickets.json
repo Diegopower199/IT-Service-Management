@@ -63,7 +63,10 @@
     "Details": {
         "backToTickets": "Back to Tickets",
         "backToTicket": "Back to Ticket",
-        "loadError": "Error loading the ticket details."
+        "loadError": "Error loading the ticket details.",
+        "denied": "Access denied. You do not have permission to view this ticket resource.",
+        "notFound": "Ticket not found.",
+        "invalidId": "The ticket ID in this URL is invalid."
     },
     "Overview": {
         "title": "Overview",

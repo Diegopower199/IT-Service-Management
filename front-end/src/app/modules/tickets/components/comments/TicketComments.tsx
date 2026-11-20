@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Alert, Button, Paper } from "@mui/material";
@@ -34,8 +33,6 @@ export default function TicketComments({
   ticketId,
   commentsUpdated,
 }: TicketCommentsProps) {
-  const searchParams = useSearchParams();
-
   const t = useTranslations("Tickets.CommentsPanel");
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
@@ -114,7 +111,7 @@ export default function TicketComments({
       {ticketComments.length > 0 && (
         <Button
           component={Link}
-          href={ticketActivityHref(ticketId, "comments", searchParams)}
+          href={ticketActivityHref(ticketId, "comments")}
           variant="outlined"
           endIcon={<ArrowForwardRounded />}
           className={sharedStyles.secondaryButton}

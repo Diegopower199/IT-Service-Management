@@ -40,36 +40,12 @@ public class TicketCommentService {
                         "Ticket with id " + ticketId + " not found"));
 
         UserModel currentUser = getAuthenticatedUser();
+        TicketAccess.requireReadAccess(existingTicket, currentUser,
+                "You are not allowed to view comments on this ticket");
 
-        String role = currentUser.getRole().getName();
-
-        Page<TicketCommentModel> ticketComments;
-
-        if (role.equalsIgnoreCase(RoleName.USER.name())) {
-            boolean isCreatedBy = existingTicket.getCreatedBy()
-                    .getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            boolean isRequestedFor = existingTicket.getRequestedFor()
-                    .getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            if (!isCreatedBy && !isRequestedFor) {
-                throw new AccessDeniedException(
-                        "You are not allowed to view comments on this ticket");
-            }
-
-            ticketComments = ticketCommentRepository
-                    .findByTicketAndInternalFalse(
-                            existingTicket,
-                            pageable);
-
-        } else {
-            ticketComments = ticketCommentRepository
-                    .findByTicket(
-                            existingTicket,
-                            pageable);
-        }
+        Page<TicketCommentModel> ticketComments = TicketAccess.hasRole(currentUser, RoleName.USER)
+                ? ticketCommentRepository.findByTicketAndInternalFalse(existingTicket, pageable)
+                : ticketCommentRepository.findByTicket(existingTicket, pageable);
 
         return ticketComments.map(this::convertToResponse);
     }
@@ -83,26 +59,11 @@ public class TicketCommentService {
                         "Ticket with id " + ticketId + " not found"));
 
         UserModel currentUser = getAuthenticatedUser();
+        TicketAccess.requireReadAccess(existingTicket, currentUser,
+                "You are not allowed to comment on this ticket");
 
-        // Validate whether the current user can comment on this ticket.
-        String role = currentUser.getRole().getName();
-
-        if (role.equalsIgnoreCase(RoleName.USER.name())) {
-            boolean isCreatedBy = existingTicket.getCreatedBy().getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            boolean isRequestedFor = existingTicket.getRequestedFor().getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            if (!isCreatedBy && !isRequestedFor) {
-                throw new AccessDeniedException(
-                        "You are not allowed to comment on this ticket");
-            }
-
-            if (request.isInternal()) {
-                throw new AccessDeniedException(
-                        "Users are not allowed to create internal comments");
-            }
+        if (TicketAccess.hasRole(currentUser, RoleName.USER) && request.isInternal()) {
+            throw new AccessDeniedException("Users are not allowed to create internal comments");
         }
 
         TicketCommentModel ticketComment = new TicketCommentModel();

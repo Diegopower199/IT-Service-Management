@@ -22,6 +22,7 @@ import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
 import TicketActivityHeader from "../shared/TicketActivityHeader";
 import TicketDate from "../shared/TicketDate";
+import TicketRouteError, { getTicketAccessError } from "../shared/TicketRouteError";
 import sharedStyles from "../../styles/tickets.module.css";
 import styles from "../../styles/ticketActivity.module.css";
 
@@ -55,6 +56,7 @@ export default function TicketHistoryContent({
   const [loading, setLoading] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState("");
+  const [accessError, setAccessError] = useState<ReturnType<typeof getTicketAccessError>>(null);
 
   const fetchTicketHistory = useCallback(async () => {
     try {
@@ -76,9 +78,14 @@ export default function TicketHistoryContent({
         ticketId,
       });
 
-      const apiError = getApiError(error);
-
-      setErrorMessage(apiError?.message ?? t("loadError"));
+      const kind = getTicketAccessError(error);
+      if (kind) {
+        setTicketHistory([]);
+        setTotalElements(0);
+        setAccessError(kind);
+      } else {
+        setErrorMessage(getApiError(error)?.message ?? t("loadError"));
+      }
     } finally {
       setLoading(false);
     }
@@ -141,6 +148,8 @@ export default function TicketHistoryContent({
       renderCell: ({ value }) => value ? <TicketDate value={value} /> : null,
     },
   ];
+
+  if (accessError) return <TicketRouteError kind={accessError} ticketId={ticketId} />;
 
   return (
     <div className={sharedStyles.page}>

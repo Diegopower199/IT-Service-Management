@@ -39,7 +39,7 @@ interface TicketFormProps {
   selectedTicket: TicketResponse | null;
   onClose: () => void;
   onCancel?: () => void;
-  onSubmitSuccess: () => void;
+  onSubmitSuccess?: () => void;
 }
 
 interface TicketFormData {
@@ -313,7 +313,7 @@ export default function TicketForm({
         });
       }
 
-      onSubmitSuccess();
+      onSubmitSuccess?.();
       onClose();
     } catch (error) {
       const apiError = getApiError(error);

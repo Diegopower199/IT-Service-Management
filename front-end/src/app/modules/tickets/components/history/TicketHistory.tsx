@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Alert, Button, Paper } from "@mui/material";
@@ -33,8 +32,6 @@ export default function TicketHistory({
   ticketId,
   historyUpdated,
 }: TicketHistoryProps) {
-  const searchParams = useSearchParams();
-
   const t = useTranslations("Tickets.HistoryPanel");
 
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
@@ -127,7 +124,7 @@ export default function TicketHistory({
       {ticketHistory.length > 0 && (
         <Button
           component={Link}
-          href={ticketActivityHref(ticketId, "history", searchParams)}
+          href={ticketActivityHref(ticketId, "history")}
           variant="outlined"
           endIcon={<ArrowForwardRounded />}
           className={sharedStyles.secondaryButton}
