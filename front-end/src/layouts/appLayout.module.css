@@ -1,14 +1,44 @@
+:global(body):has(.app) {
+  margin: 0;
+}
+
 .app {
+  --app-ink: #102044;
+  --app-muted: #52627d;
+  --app-accent: #2452cb;
+  --app-accent-hover: #1b42ad;
+  --app-accent-soft: #eaf0ff;
+  --app-border: #dee6f1;
+  --app-surface: #fff;
+
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--app-ink);
+  background: #f5f7fc;
+  font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 .body {
   display: flex;
-  min-height: calc(100vh - 74px);
+  flex: 1;
 }
 
 .content {
   flex: 1;
-  padding: 28px 36px;
-  background-color: #ffffff;
+  min-width: 0;
+  padding: clamp(20px, 3vw, 40px);
+}
+
+@media (max-width: 900px) {
+  .body {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .content {
+    padding: 22px 16px;
+  }
 }

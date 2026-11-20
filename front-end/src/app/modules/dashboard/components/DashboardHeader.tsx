@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 
+import styles from "../styles/dashboard.module.css";
+
 interface DashboardHeaderProps {
   username: string;
   role: string;
@@ -30,7 +32,7 @@ export default function DashboardHeader({
   };
 
   return (
-    <header>
+    <header className={styles.heading}>
       <h1>{t("welcome", { username })}</h1>
 
       <p>{getDescription()}</p>

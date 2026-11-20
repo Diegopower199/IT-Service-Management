@@ -1,8 +1,10 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { Chip } from "@mui/material";
 
 import type { TicketResponse } from "@/types/ticketTypes";
+import { getPriorityColor, getStatusColor } from "@/utils/ticketUiUtils";
 
 import styles from "../styles/dashboard.module.css";
 
@@ -14,6 +16,9 @@ export default function DashboardRecentTickets({
   tickets,
 }: DashboardRecentTicketsProps) {
   const t = useTranslations("Dashboard.RecentTickets");
+  const locale = useLocale();
+  const dateFormatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+  const timeFormatter = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
 
   const tStatuses = useTranslations("Common.Statuses");
   const tPriorities = useTranslations("Common.Priorities");
@@ -36,38 +41,72 @@ export default function DashboardRecentTickets({
 
   return (
     <section className={styles.recentTickets}>
-      <h2 className={styles.sectionTitle}>{t("title")}</h2>
+      <h2 id="recent-tickets-heading" className={styles.sectionTitle}>
+        {t("title")}
+      </h2>
 
-      <table className={styles.ticketTable}>
-        <thead>
-          <tr>
-            <th>{t("id")}</th>
-            <th>{t("ticketTitle")}</th>
-            <th>{t("status")}</th>
-            <th>{t("priority")}</th>
-            <th>{t("assigned")}</th>
-            <th>{t("updated")}</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {tickets.map((ticket) => (
-            <tr key={ticket.idTicket}>
-              <td className={styles.ticketId}>#{ticket.idTicket}</td>
-
-              <td>{ticket.title}</td>
-
-              <td>{getStatusDisplayName(ticket.status.name)}</td>
-
-              <td>{getPriorityDisplayName(ticket.priority.name)}</td>
-
-              <td>{ticket.assignedTo?.username ?? "-"}</td>
-
-              <td>{ticket.lastUpdated}</td>
+      <div
+        className={styles.tableScroll}
+        role="region"
+        aria-labelledby="recent-tickets-heading"
+        tabIndex={0}
+      >
+        <table className={styles.ticketTable} aria-labelledby="recent-tickets-heading">
+          <thead>
+            <tr>
+              <th scope="col" className={styles.idColumn}>{t("id")}</th>
+              <th scope="col">{t("ticketTitle")}</th>
+              <th scope="col" className={styles.statusColumn}>{t("status")}</th>
+              <th scope="col" className={styles.priorityColumn}>{t("priority")}</th>
+              <th scope="col" className={styles.assignedColumn}>{t("assigned")}</th>
+              <th scope="col" className={styles.updatedColumn}>{t("updated")}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {tickets.map((ticket) => {
+              const updatedAt = new Date(ticket.lastUpdated);
+              const hasValidDate = !Number.isNaN(updatedAt.getTime());
+
+              return (
+                <tr key={ticket.idTicket}>
+                  <td className={styles.ticketId}>#{ticket.idTicket}</td>
+                  <td className={styles.ticketTitle}>{ticket.title}</td>
+                  <td>
+                    <Chip
+                      className={styles.ticketBadge}
+                      size="small"
+                      color={getStatusColor(ticket.status.name)}
+                      label={getStatusDisplayName(ticket.status.name)}
+                    />
+                  </td>
+                  <td>
+                    <Chip
+                      className={styles.ticketBadge}
+                      size="small"
+                      color={getPriorityColor(ticket.priority.name)}
+                      label={getPriorityDisplayName(ticket.priority.name)}
+                    />
+                  </td>
+                  <td>{ticket.assignedTo?.username ?? "-"}</td>
+                  <td>
+                    {hasValidDate ? (
+                      <time dateTime={ticket.lastUpdated} title={ticket.lastUpdated}>
+                        <span>{dateFormatter.format(updatedAt)}</span>
+                        <span className={styles.ticketTime}>
+                          {timeFormatter.format(updatedAt)}
+                        </span>
+                      </time>
+                    ) : (
+                      ticket.lastUpdated
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

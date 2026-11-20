@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-
-import Button from "@/components/ui/Button";
+import AssignmentIndOutlined from "@mui/icons-material/AssignmentIndOutlined";
+import FilterListRounded from "@mui/icons-material/FilterListRounded";
+import SwapHorizRounded from "@mui/icons-material/SwapHorizRounded";
 
 import { USER_ROLES, type UserRole } from "@/types/roleTypes";
 
@@ -18,57 +19,29 @@ export default function DashboardQuickActions({
 }: DashboardQuickActionsProps) {
   const t = useTranslations("Dashboard.QuickActions");
 
-  if (role === USER_ROLES.USER) {
+  if (role !== USER_ROLES.ADMIN && role !== USER_ROLES.TECHNICIAN) {
     return null;
   }
 
-  if (role === USER_ROLES.TECHNICIAN) {
-    return (
-      <section className={styles.quickActions}>
-        <h2 className={styles.sectionTitle}>{t("title")}</h2>
+  const isAdmin = role === USER_ROLES.ADMIN;
+  const SecondaryIcon = isAdmin ? SwapHorizRounded : FilterListRounded;
 
-        <div className={styles.quickActionsLinks}>
-          <Link href="/tickets">
-            <Button type="button" variant="primary">
-              {t("assignToMe")}
-            </Button>
-          </Link>
-        </div>
+  return (
+    <section className={styles.quickActions} aria-labelledby="quick-actions-heading">
+      <h2 id="quick-actions-heading" className={styles.sectionTitle}>
+        {t("title")}
+      </h2>
 
-        <div className={styles.quickActionsLinks}>
-          <Link href="/tickets">
-            <Button type="button" variant="secondary">
-              {t("viewUnassigned")}
-            </Button>
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
-  if (role === USER_ROLES.ADMIN) {
-    return (
-      <section className={styles.quickActions}>
-        <h2 className={styles.sectionTitle}>{t("title")}</h2>
-
-        <div className={styles.quickActionsLinks}>
-          <Link href="/tickets">
-            <Button type="button" variant="primary">
-              {t("assign")}
-            </Button>
-          </Link>
-        </div>
-
-        <div className={styles.quickActionsLinks}>
-          <Link href="/tickets">
-            <Button type="button" variant="secondary">
-              {t("reassign")}
-            </Button>
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
-  return null;
+      <div className={styles.quickActionsLinks}>
+        <Link href="/tickets" className={styles.primaryAction}>
+          <AssignmentIndOutlined fontSize="small" aria-hidden="true" />
+          <span>{t(isAdmin ? "assign" : "assignToMe")}</span>
+        </Link>
+        <Link href="/tickets" className={styles.secondaryAction}>
+          <SecondaryIcon fontSize="small" aria-hidden="true" />
+          <span>{t(isAdmin ? "reassign" : "viewUnassigned")}</span>
+        </Link>
+      </div>
+    </section>
+  );
 }
