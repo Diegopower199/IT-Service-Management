@@ -19,6 +19,7 @@ import { logger } from "@/utils/logger";
 
 import { getAllTicketsCommentsById } from "../../services/ticketCommentsService";
 
+import TicketCommentAttachments from "../attachments/TicketCommentAttachments";
 import TicketDate from "../shared/TicketDate";
 import { ticketActivityHref } from "../shared/ticketNavigation";
 import sharedStyles from "../../styles/tickets.module.css";
@@ -104,6 +105,7 @@ export default function TicketComments({
                 <TicketDate value={ticketComment.createdAt} />
               </div>
               <p className={styles.activityText}>{ticketComment.comment}</p>
+              <TicketCommentAttachments ticketId={ticketId} commentId={ticketComment.idComment} />
             </article>
           ))}
         </div>

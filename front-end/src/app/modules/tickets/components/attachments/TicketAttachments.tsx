@@ -5,19 +5,9 @@ import type { ChangeEvent } from "react";
 
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Box,
-  Button,
-  IconButton,
-  Paper,
-} from "@mui/material";
+import { Alert, Paper } from "@mui/material";
 
 import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
-import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
-import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
-import UploadFileOutlined from "@mui/icons-material/UploadFileOutlined";
-import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -34,33 +24,17 @@ import {
 } from "../../services/ticketAttachmentService";
 
 import TicketDate from "../shared/TicketDate";
-import TicketDialog from "../shared/TicketDialog";
-import sharedStyles from "../../styles/tickets.module.css";
-import styles from "../../styles/ticketDetails.module.css";
+import { AttachmentRow } from "./AttachmentFile";
+import AttachmentPicker from "./AttachmentPicker";
+import AttachmentPreviewDialog, { type AttachmentPreview } from "./AttachmentPreviewDialog";
+import detailStyles from "../../styles/ticketDetails.module.css";
+import styles from "../../styles/ticketAttachments.module.css";
 
 interface TicketAttachmentsProps {
   ticketId: number;
 }
 
-interface AttachmentPreview {
-  url: string;
-  fileName: string;
-  contentType: string;
-}
-
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 
 export default function TicketAttachments({
   ticketId,
@@ -72,7 +46,7 @@ export default function TicketAttachments({
   );
 
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [previewingId, setPreviewingId] = useState<number | null>(null);
 
@@ -145,7 +119,7 @@ export default function TicketAttachments({
     }
 
     try {
-      setUploading(true);
+      setUploadingFile(file);
       setErrorMessage("");
       setSuccessMessage("");
 
@@ -164,7 +138,7 @@ export default function TicketAttachments({
       const apiError = getApiError(error);
       setErrorMessage(apiError?.message ?? t("uploadError"));
     } finally {
-      setUploading(false);
+      setUploadingFile(null);
     }
   };
 
@@ -255,31 +229,21 @@ export default function TicketAttachments({
 
   return (
     <>
-      <Paper component="section" variant="outlined" className={styles.panel}>
-        <div className={styles.attachmentHeader}>
-          <h2 className={styles.panelTitle}>
+      <Paper component="section" variant="outlined" className={`${detailStyles.panel} ${styles.panel}`}>
+        <div className={styles.header}>
+          <h2 className={detailStyles.panelTitle}>
             <AttachFileRounded aria-hidden="true" />
             {t("title")}
           </h2>
 
-          <Button
-            component="label"
-            variant="contained"
-            disableElevation
-            startIcon={<UploadFileOutlined />}
-            disabled={uploading}
-            className={sharedStyles.primaryButton}
-          >
-            {uploading ? t("uploading") : t("upload")}
-
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.png,.jpg,.jpeg"
-              onChange={handleFileChange}
-              disabled={uploading}
-            />
-          </Button>
+          <AttachmentPicker
+            primary
+            label={uploadingFile ? t("uploading") : t("upload")}
+            file={uploadingFile}
+            onChange={handleFileChange}
+            disabled={uploadingFile !== null}
+            busy={uploadingFile !== null}
+          />
         </div>
 
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
@@ -287,95 +251,36 @@ export default function TicketAttachments({
         {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
         {loading ? (
-          <div className={styles.panelLoading}>
+          <div className={detailStyles.panelLoading}>
             <PageLoading />
           </div>
         ) : attachments.length === 0 ? (
-          <p className={styles.emptyState}>{t("empty")}</p>
+          !errorMessage && <p className={detailStyles.emptyState}>{t("empty")}</p>
         ) : (
-          <ul className={styles.attachmentList}>
+          <ul className={styles.list}>
             {attachments.map((attachment) => (
-              <li key={attachment.idAttachment} className={styles.attachmentRow}>
-                <span className={styles.fileIcon} aria-hidden="true">
-                  <DescriptionOutlined />
-                </span>
-
-                <div className={styles.fileDetails}>
-                  <span className={styles.fileName}>{attachment.fileName}</span>
-
-                  <div className={styles.fileMetadata}>
-                    <span className={styles.fileType}>{attachment.contentType}</span>
-                    <span>{formatFileSize(attachment.fileSize)}</span>
+              <AttachmentRow
+                key={attachment.idAttachment}
+                name={attachment.fileName}
+                contentType={attachment.contentType}
+                size={attachment.fileSize}
+                metadata={
+                  <>
                     <span>{attachment.uploadedBy.username}</span>
                     <TicketDate value={attachment.createdAt} />
-                  </div>
-                </div>
-
-                <div className={styles.attachmentActions}>
-                  <IconButton
-                    onClick={() => void handlePreviewAttachment(attachment)}
-                    disabled={previewingId !== null}
-                    aria-label={t("preview")}
-                    title={t("preview")}
-                    className={styles.fileAction}
-                  >
-                    <VisibilityOutlined fontSize="small" />
-                  </IconButton>
-
-                  <IconButton
-                    onClick={() => void handleDownloadAttachment(attachment)}
-                    disabled={downloadingId !== null}
-                    aria-label={t("download")}
-                    title={t("download")}
-                    className={styles.fileAction}
-                  >
-                    <DownloadOutlined fontSize="small" />
-                  </IconButton>
-                </div>
-              </li>
+                  </>
+                }
+                onPreview={() => void handlePreviewAttachment(attachment)}
+                previewDisabled={previewingId !== null}
+                onDownload={() => void handleDownloadAttachment(attachment)}
+                downloadDisabled={downloadingId !== null}
+              />
             ))}
           </ul>
         )}
-
-        <p className={styles.helpText}>{t("allowedFormats")}</p>
       </Paper>
 
-      <TicketDialog
-        open={preview !== null}
-        onClose={handleClosePreview}
-        maxWidth="lg"
-        title={preview?.fileName ?? ""}
-        icon={<VisibilityOutlined />}
-        actions={
-          <Button
-            variant="outlined"
-            onClick={handleClosePreview}
-            className={sharedStyles.secondaryButton}
-          >
-            {t("close")}
-          </Button>
-        }
-      >
-        <div className={styles.previewViewport}>
-          {preview?.contentType.startsWith("image/") && (
-            <Box
-              component="img"
-              src={preview.url}
-              alt={preview.fileName}
-              className={styles.previewImage}
-            />
-          )}
-
-          {preview?.contentType === "application/pdf" && (
-            <Box
-              component="iframe"
-              src={preview.url}
-              title={preview.fileName}
-              className={styles.previewDocument}
-            />
-          )}
-        </div>
-      </TicketDialog>
+      <AttachmentPreviewDialog preview={preview} onClose={handleClosePreview} />
     </>
   );
 }

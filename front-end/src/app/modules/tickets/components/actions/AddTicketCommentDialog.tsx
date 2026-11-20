@@ -8,13 +8,11 @@ import {
   Alert,
   Button,
   Checkbox,
-  Chip,
   FormControlLabel,
   TextField,
 } from "@mui/material";
 
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
-import UploadFileOutlined from "@mui/icons-material/UploadFileOutlined";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -26,6 +24,7 @@ import { logger } from "@/utils/logger";
 import { createTicketComment } from "../../services/ticketCommentsService";
 import { uploadTicketCommentAttachment } from "../../services/ticketCommentAttachmentService";
 
+import AttachmentPicker from "../attachments/AttachmentPicker";
 import TicketDialog from "../shared/TicketDialog";
 import sharedStyles from "../../styles/tickets.module.css";
 import styles from "../../styles/ticketDetails.module.css";
@@ -310,39 +309,14 @@ export default function AddTicketCommentDialog({
           />
         )}
 
-        <div className={styles.attachmentPicker}>
-          <Button
-            component="label"
-            variant="outlined"
-            startIcon={<UploadFileOutlined />}
-            disabled={savingComment || commentCreated}
-            className={sharedStyles.secondaryButton}
-          >
-            {t("attachFile")}
-
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileChange}
-              disabled={savingComment || commentCreated}
-            />
-          </Button>
-
-          {selectedFile && (
-            <Chip
-              label={selectedFile.name}
-              onDelete={
-                savingComment || commentCreated
-                  ? undefined
-                  : () => setSelectedFile(null)
-              }
-              className={sharedStyles.ticketBadge}
-            />
-          )}
-
-          <p className={styles.helpText}>{tAttachments("allowedFormats")}</p>
-        </div>
+        <AttachmentPicker
+          label={t("attachFile")}
+          file={selectedFile}
+          onChange={handleFileChange}
+          onRemove={savingComment || commentCreated ? undefined : () => setSelectedFile(null)}
+          disabled={savingComment || commentCreated}
+          busy={savingComment && selectedFile !== null}
+        />
 
         {attachmentError && <Alert severity="error">{attachmentError}</Alert>}
 

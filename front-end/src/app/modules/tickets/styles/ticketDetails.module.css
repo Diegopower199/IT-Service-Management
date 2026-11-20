@@ -128,8 +128,7 @@
 
 .actionList,
 .activityList,
-.dialogFields,
-.attachmentList {
+.dialogFields {
   display: grid;
   gap: 8px;
   min-width: 0;
@@ -150,8 +149,7 @@
   justify-self: start;
 }
 
-.activityItem,
-.attachmentRow {
+.activityItem {
   min-width: 0;
   padding: 12px;
   border: 1px solid #e5ecf6;
@@ -213,102 +211,6 @@
   min-height: 80px;
 }
 
-.attachmentHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 16px;
-}
-
-.attachmentList {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.attachmentRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-}
-
-.fileIcon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  color: var(--app-accent);
-  background: var(--app-accent-soft);
-}
-
-.fileIcon svg {
-  font-size: 1.25rem;
-}
-
-.fileDetails {
-  min-width: 0;
-}
-
-.fileName {
-  color: var(--app-ink);
-  font-size: 0.875rem;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.fileMetadata {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
-  margin-top: 3px;
-  color: var(--app-muted);
-  font-size: 0.75rem;
-}
-
-.fileType {
-  padding: 2px 6px;
-  border-radius: 6px;
-  color: #3e5577;
-  background: #eaf0f8;
-}
-
-.attachmentActions {
-  display: flex;
-  gap: 6px;
-}
-
-.attachmentActions .fileAction {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #dce6f5;
-  border-radius: 8px;
-}
-
-.attachmentActions .fileAction:not(:global(.Mui-disabled)) {
-  color: var(--app-accent);
-  background: #fff;
-}
-
-.attachmentActions .fileAction:hover:not(:global(.Mui-disabled)) {
-  background: var(--app-accent-soft);
-}
-
-.attachmentActions .fileAction:focus-visible {
-  outline: 2px solid var(--app-accent);
-  outline-offset: 2px;
-}
-
-.helpText {
-  margin: 0;
-  color: var(--app-muted);
-  font-size: 0.75rem;
-  line-height: 1.45;
-}
-
 .dialogPaper:global(.MuiDialog-paper) {
   border: 1px solid var(--app-border);
   border-radius: 16px;
@@ -361,20 +263,16 @@
   gap: 16px;
 }
 
-.currentValue,
-.attachmentPicker {
-  padding: 12px;
-  border: 1px solid #e5ecf6;
-  border-radius: 9px;
-  background: #f5f8fd;
-}
-
 .currentValue {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 6px 10px;
+  padding: 12px;
+  border: 1px solid #e5ecf6;
+  border-radius: 9px;
+  background: #f5f8fd;
   overflow-wrap: anywhere;
 }
 
@@ -408,36 +306,6 @@
   margin: 0;
 }
 
-.attachmentPicker {
-  display: grid;
-  justify-items: start;
-  gap: 8px;
-  min-width: 0;
-}
-
-.previewViewport {
-  display: grid;
-  place-items: center;
-  min-height: min(40dvh, 260px);
-  border: 1px solid #e5ecf6;
-  border-radius: 10px;
-  background: #f5f8fd;
-  overflow: hidden;
-}
-
-.previewImage {
-  display: block;
-  max-width: 100%;
-  max-height: 65dvh;
-  object-fit: contain;
-}
-
-.previewDocument {
-  width: 100%;
-  height: min(65dvh, 740px);
-  border: 0;
-}
-
 @container (min-width: 740px) {
   .detailPrimary {
     grid-template-columns: minmax(0, 1fr) minmax(248px, 0.44fr);
@@ -467,15 +335,6 @@
 }
 
 @media (max-width: 480px) {
-  .attachmentRow {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .attachmentActions {
-    grid-column: 2;
-  }
-
   .dialogPaper:global(.MuiDialog-paper) {
     width: calc(100% - 24px);
     max-height: calc(100% - 24px);

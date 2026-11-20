@@ -1,0 +1,271 @@
+.header,
+.pickerControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.header {
+  justify-content: space-between;
+}
+
+.panel:global(.MuiPaper-root) {
+  container-type: inline-size;
+}
+
+.ticketPicker,
+.commentPicker,
+.commentFiles {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ticketPicker {
+  max-width: 100%;
+}
+
+.commentPicker {
+  padding: 10px 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: #f8faff;
+}
+
+.commentFiles {
+  justify-items: start;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--app-border);
+}
+
+.commentResults,
+.commentFiles > :global(.MuiAlert-root) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.commentResults:empty,
+.selectionStatus:empty {
+  display: none;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.fileRow,
+.selectedFile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.fileRow:focus-within {
+  border-color: var(--app-accent);
+}
+
+.selectedFile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 8px;
+}
+
+.selectedFile > :first-child {
+  grid-column: 1 / -1;
+}
+
+.file {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fileRow > .file {
+  flex: 1 1 15rem;
+}
+
+.fileIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+
+.pdfIcon {
+  color: #9f2d33;
+  background: #fdf0f0;
+}
+
+.imageIcon {
+  color: #165d54;
+  background: #e9f6f2;
+}
+
+.fileDetails {
+  min-width: 0;
+  align-self: center;
+  overflow-wrap: anywhere;
+}
+
+.fileName {
+  display: block;
+  color: var(--app-ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.fileMetadata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
+  margin-top: 3px;
+  color: var(--app-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.fileType,
+.fileCount {
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #374d70;
+  background: #eaf0f8;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.fileCount {
+  margin-inline-start: 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fileActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-inline-start: auto;
+}
+
+.fileActions > :global(.MuiButton-root),
+.toggle:global(.MuiButton-root) {
+  min-width: 0;
+  min-height: 36px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: start;
+  text-transform: none;
+}
+
+.fileActions > :global(.MuiButton-root):not(:global(.Mui-disabled)),
+.toggle:global(.MuiButton-root) {
+  color: #1b4f9b;
+}
+
+.fileActions > :global(.MuiButton-root) {
+  padding-inline: 8px;
+  border-color: #dce6f5;
+}
+
+.toggle:global(.MuiButton-root) {
+  max-width: 100%;
+  padding-inline: 8px;
+}
+
+.fileActions :global(.MuiButton-startIcon),
+.toggle :global(.MuiButton-startIcon) {
+  margin-inline: 0 6px;
+}
+
+.fileActions > :global(.MuiButton-root):hover:not(:global(.Mui-disabled)),
+.toggle:global(.MuiButton-root):hover:not([aria-disabled="true"]),
+.selectedFile > :global(.MuiIconButton-root):hover {
+  background: var(--app-accent-soft);
+}
+
+.toggle :global(.MuiButton-endIcon) {
+  margin-inline: 6px 0;
+}
+
+.expandedIcon {
+  transform: rotate(180deg);
+}
+
+.toggle[aria-disabled="true"] {
+  cursor: wait;
+}
+
+.fileActions > :focus-visible,
+.pickerControls > :focus-visible,
+.selectedFile > :focus-visible,
+.toggle:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+.helpText {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.previewViewport {
+  display: grid;
+  place-items: center;
+  min-height: min(40dvh, 260px);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: #f5f8fd;
+  overflow: hidden;
+}
+
+.previewImage {
+  display: block;
+  max-width: 100%;
+  max-height: 65dvh;
+  object-fit: contain;
+}
+
+.previewDocument {
+  width: 100%;
+  height: min(65dvh, 740px);
+  border: 0;
+}
+
+@container (max-width: 530px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .commentResults > :global(.MuiCollapse-root) {
+    transition-duration: 0ms !important;
+  }
+}

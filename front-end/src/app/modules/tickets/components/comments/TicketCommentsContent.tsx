@@ -15,7 +15,6 @@ import {
   TextField,
 } from "@mui/material";
 
-import UploadFileIcon from "@mui/icons-material/UploadFile";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 
 import CustomPagination from "@/components/ui/CustomPagination";
@@ -36,6 +35,7 @@ import {
 
 import { uploadTicketCommentAttachment } from "../../services/ticketCommentAttachmentService";
 
+import AttachmentPicker from "../attachments/AttachmentPicker";
 import TicketCommentAttachments from "../attachments/TicketCommentAttachments";
 import TicketActivityHeader from "../shared/TicketActivityHeader";
 import TicketDate from "../shared/TicketDate";
@@ -347,12 +347,7 @@ export default function TicketCommentsContent({
 
                   <p className={styles.commentText}>{ticketComment.comment}</p>
 
-                  <div className={styles.commentAttachments}>
-                    <TicketCommentAttachments
-                      ticketId={ticketId}
-                      commentId={ticketComment.idComment}
-                    />
-                  </div>
+                  <TicketCommentAttachments ticketId={ticketId} commentId={ticketComment.idComment} />
                 </article>
               ))}
 
@@ -411,35 +406,14 @@ export default function TicketCommentsContent({
             />
           )}
 
-          <div className={styles.composerAttachment}>
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<UploadFileIcon />}
-              disabled={savingComment}
-              className={sharedStyles.secondaryButton}
-            >
-              {t("attachFile")}
-
-              <input
-                type="file"
-                hidden
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileChange}
-                disabled={savingComment}
-              />
-            </Button>
-
-            {selectedFile && (
-              <Chip
-                label={selectedFile.name}
-                onDelete={() => setSelectedFile(null)}
-                className={sharedStyles.ticketBadge}
-              />
-            )}
-
-            <p className={detailStyles.helpText}>{tAttachments("allowedFormats")}</p>
-          </div>
+          <AttachmentPicker
+            label={t("attachFile")}
+            file={selectedFile}
+            onChange={handleFileChange}
+            onRemove={() => setSelectedFile(null)}
+            disabled={savingComment}
+            busy={savingComment && selectedFile !== null}
+          />
 
           {attachmentError && <Alert severity="error">{attachmentError}</Alert>}
 
