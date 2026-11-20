@@ -61,7 +61,9 @@
         "saveChanges": "Guardar cambios"
     },
     "Details": {
-        "backToTickets": "Volver a tickets"
+        "backToTickets": "Volver a tickets",
+        "backToTicket": "Volver al ticket",
+        "loadError": "Error al cargar los detalles del ticket."
     },
     "Overview": {
         "title": "Resumen",
@@ -142,6 +144,9 @@
         "createError": "Error al crear el comentario.",
         "loading": "Cargando comentarios...",
         "empty": "Todavía no se ha añadido ningún comentario.",
+        "results": "{count, plural, one {# comentario} other {# comentarios}}",
+        "pagination": "Páginas de comentarios",
+        "paginationItem": "{type, select, first {Ir a la primera página} last {Ir a la última página} next {Ir a la página siguiente} previous {Ir a la página anterior} page {Página {page}} other {Más páginas}}",
         "internal": "INTERNO",
         "addComment": "Añadir comentario",
         "internalComment": "Comentario interno",
@@ -162,6 +167,7 @@
         "title": "Historial del ticket",
         "ticket": "Ticket #{ticketId}",
         "loadError": "Error al cargar el historial del ticket.",
+        "empty": "Todavía no se ha registrado ningún cambio.",
         "action": "Acción",
         "field": "Campo",
         "oldValue": "Valor anterior",

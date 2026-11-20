@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Alert, Button, Paper } from "@mui/material";
@@ -19,6 +20,7 @@ import { logger } from "@/utils/logger";
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
 
 import TicketDate from "../shared/TicketDate";
+import { ticketActivityHref } from "../shared/ticketNavigation";
 import sharedStyles from "../../styles/tickets.module.css";
 import styles from "../../styles/ticketDetails.module.css";
 
@@ -31,7 +33,7 @@ export default function TicketHistory({
   ticketId,
   historyUpdated,
 }: TicketHistoryProps) {
-  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const t = useTranslations("Tickets.HistoryPanel");
 
@@ -124,10 +126,11 @@ export default function TicketHistory({
 
       {ticketHistory.length > 0 && (
         <Button
+          component={Link}
+          href={ticketActivityHref(ticketId, "history", searchParams)}
           variant="outlined"
           endIcon={<ArrowForwardRounded />}
           className={sharedStyles.secondaryButton}
-          onClick={() => router.push(`/tickets/${ticketId}/history`)}
         >
           {t("viewAll")}
         </Button>

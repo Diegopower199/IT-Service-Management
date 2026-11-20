@@ -61,7 +61,9 @@
         "saveChanges": "Save Changes"
     },
     "Details": {
-        "backToTickets": "Back to Tickets"
+        "backToTickets": "Back to Tickets",
+        "backToTicket": "Back to Ticket",
+        "loadError": "Error loading the ticket details."
     },
     "Overview": {
         "title": "Overview",
@@ -142,6 +144,9 @@
         "createError": "Error creating comment.",
         "loading": "Loading comments...",
         "empty": "No comments have been added yet.",
+        "results": "{count, plural, one {# comment} other {# comments}}",
+        "pagination": "Comment pages",
+        "paginationItem": "{type, select, first {Go to first page} last {Go to last page} next {Go to next page} previous {Go to previous page} page {Page {page}} other {More pages}}",
         "internal": "INTERNAL",
         "addComment": "Add comment",
         "internalComment": "Internal comment",
@@ -162,6 +167,7 @@
         "title": "Ticket History",
         "ticket": "Ticket #{ticketId}",
         "loadError": "Error loading ticket history.",
+        "empty": "No history has been recorded yet.",
         "action": "Action",
         "field": "Field",
         "oldValue": "Old Value",

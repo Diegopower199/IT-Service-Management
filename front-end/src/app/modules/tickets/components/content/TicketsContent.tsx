@@ -31,12 +31,10 @@ import {
   getAllTickets,
   getAssignedTickets,
   getOwnTickets,
-  getTicketById,
 } from "../../services/ticketService";
 
 import {
   DATA_GRID_LOCALE_TEXT,
-  DEFAULT_PAGE_SIZE,
   DEFAULT_TICKET_SORT,
   FORM_MODES,
   type FormMode,
@@ -49,8 +47,13 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import TicketForm from "../form/TicketForm";
-import TicketDetails from "../details/TicketDetails";
+import TicketDetailsContent from "../details/TicketDetailsContent";
 import TicketFiltersBar from "./TicketFiltersBar";
+import {
+  readTicketListPagination,
+  ticketDetailsHref,
+  ticketListHref,
+} from "../shared/ticketNavigation";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -71,6 +74,11 @@ export default function TicketsContent() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  const requestedTicketId = Number(searchParams.get("ticketId"));
+  const detailTicketId =
+    Number.isSafeInteger(requestedTicketId) && requestedTicketId > 0
+      ? requestedTicketId
+      : null;
 
   const t = useTranslations("Tickets.Content");
   const tStatuses = useTranslations("Common.Statuses");
@@ -104,8 +112,6 @@ export default function TicketsContent() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [showForm, setShowForm] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const [returnToDetailsOnCancel, setReturnToDetailsOnCancel] = useState(false);
 
   const [formMode, setFormMode] = useState<FormMode>(FORM_MODES.CREATE);
 
@@ -115,10 +121,9 @@ export default function TicketsContent() {
 
   const [ticketsUpdated, setTicketsUpdated] = useState(false);
 
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: DEFAULT_PAGE_SIZE,
-  });
+  const [paginationModel, setPaginationModel] = useState(() =>
+    readTicketListPagination(searchParams),
+  );
 
   const fetchStatuses = useCallback(async (): Promise<boolean> => {
     try {
@@ -249,7 +254,7 @@ export default function TicketsContent() {
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
-      if (!isAuthReady || !user) {
+      if (!isAuthReady || !user || detailTicketId !== null) {
         return;
       }
 
@@ -279,6 +284,7 @@ export default function TicketsContent() {
     isAuthReady,
     user,
     isUser,
+    detailTicketId,
     fetchCategories,
     fetchStatuses,
     fetchPriorities,
@@ -295,11 +301,13 @@ export default function TicketsContent() {
         return;
       }
 
-      await fetchTickets();
+      if (detailTicketId === null) {
+        await fetchTickets();
+      }
     };
 
     loadTickets();
-  }, [isAuthReady, user, router, ticketsUpdated, fetchTickets]);
+  }, [isAuthReady, user, router, detailTicketId, ticketsUpdated, fetchTickets]);
 
   const getStatusDisplayName = (statusName: string) => {
     if (tStatuses.has(statusName)) {
@@ -357,31 +365,22 @@ export default function TicketsContent() {
   const handleCreateTicket = () => {
     setSelectedTicket(null);
     setFormMode(FORM_MODES.CREATE);
-    setReturnToDetailsOnCancel(false);
 
     setErrorMessage("");
 
-    setShowDetails(false);
     setShowForm(true);
   };
 
   const handleViewTicket = (ticket: TicketResponse) => {
-    setSelectedTicket(ticket);
-
-    setErrorMessage("");
-
-    setShowForm(false);
-    setShowDetails(true);
+    router.push(ticketDetailsHref(ticket.idTicket, searchParams, paginationModel));
   };
 
-  const handleEditTicket = (ticket: TicketResponse, fromDetails = false) => {
+  const handleEditTicket = (ticket: TicketResponse) => {
     setSelectedTicket(ticket);
     setFormMode(FORM_MODES.EDIT);
-    setReturnToDetailsOnCancel(fromDetails);
 
     setErrorMessage("");
 
-    setShowDetails(false);
     setShowForm(true);
   };
 
@@ -392,52 +391,7 @@ export default function TicketsContent() {
   const handleCloseForm = () => {
     setShowForm(false);
     setSelectedTicket(null);
-    setReturnToDetailsOnCancel(false);
     setErrorMessage("");
-  };
-
-  const handleCancelForm = () => {
-    if (returnToDetailsOnCancel && selectedTicket) {
-      setShowForm(false);
-      setShowDetails(true);
-      setReturnToDetailsOnCancel(false);
-      setErrorMessage("");
-      return;
-    }
-
-    handleCloseForm();
-  };
-
-  const handleCloseDetails = () => {
-    setShowDetails(false);
-    setSelectedTicket(null);
-    setErrorMessage("");
-  };
-
-  const handleTicketUpdated = async () => {
-    if (!selectedTicket) {
-      return;
-    }
-
-    try {
-      setErrorMessage("");
-
-      const updatedTicket = await getTicketById(selectedTicket.idTicket);
-
-      setSelectedTicket(updatedTicket);
-
-      setTicketsUpdated((previous) => !previous);
-    } catch (error) {
-      logger.error("Failed to refresh ticket details", error, {
-        component: "TicketsContent",
-        action: "handleTicketUpdated",
-        ticketId: selectedTicket.idTicket,
-      });
-
-      const apiError = getApiError(error);
-
-      setErrorMessage(apiError?.message ?? t("detailsUpdateError"));
-    }
   };
 
   const columns: GridColDef<TicketResponse>[] = [
@@ -532,23 +486,15 @@ export default function TicketsContent() {
     return <PageLoading />;
   }
 
-  if (showDetails && selectedTicket) {
+  if (detailTicketId !== null) {
     return (
-      <>
-        {errorMessage && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errorMessage}
-          </Alert>
-        )}
-
-        <TicketDetails
-          ticket={selectedTicket}
-          userRole={user.role}
-          onClose={handleCloseDetails}
-          onEdit={() => handleEditTicket(selectedTicket, true)}
-          onTicketUpdated={handleTicketUpdated}
-        />
-      </>
+      <TicketDetailsContent
+        key={`${user.userId}:${user.role}:${detailTicketId}`}
+        ticketId={detailTicketId}
+        userRole={user.role}
+        onClose={() => router.replace(ticketListHref(searchParams))}
+        onUpdated={handleSubmitSuccess}
+      />
     );
   }
 
@@ -558,7 +504,6 @@ export default function TicketsContent() {
         formMode={formMode}
         selectedTicket={selectedTicket}
         onClose={handleCloseForm}
-        onCancel={handleCancelForm}
         onSubmitSuccess={handleSubmitSuccess}
       />
     );

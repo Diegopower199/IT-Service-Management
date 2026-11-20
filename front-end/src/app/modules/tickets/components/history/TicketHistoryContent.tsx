@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
-import dayjs from "dayjs";
-
-import { Alert, Typography } from "@mui/material";
+import { Alert } from "@mui/material";
+import HistoryRounded from "@mui/icons-material/HistoryRounded";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
 
 import {
   DATA_GRID_LOCALE_TEXT,
@@ -20,15 +20,26 @@ import { logger } from "@/utils/logger";
 import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
+import TicketActivityHeader from "../shared/TicketActivityHeader";
+import TicketDate from "../shared/TicketDate";
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketActivity.module.css";
 
 interface TicketHistoryContentProps {
   ticketId: number;
 }
 
+const getHistoryRowHeight = () => "auto" as const;
+
 export default function TicketHistoryContent({
   ticketId,
 }: TicketHistoryContentProps) {
   const t = useTranslations("Tickets.HistoryContent");
+  const locale = useLocale();
+  const localeText =
+    locale === "es"
+      ? esES.components.MuiDataGrid.defaultProps.localeText
+      : DATA_GRID_LOCALE_TEXT;
 
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
     [],
@@ -41,7 +52,7 @@ export default function TicketHistoryContent({
 
   const [totalElements, setTotalElements] = useState(0);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -86,70 +97,84 @@ export default function TicketHistoryContent({
       field: "action",
       headerName: t("action"),
       flex: 1,
+      minWidth: 158,
+      cellClassName: `${sharedStyles.wrapCell} ${styles.historyAction}`,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "fieldName",
       headerName: t("field"),
-      flex: 1,
+      flex: 0.7,
+      minWidth: 110,
+      cellClassName: sharedStyles.wrapCell,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "oldValue",
       headerName: t("oldValue"),
-      flex: 1,
+      flex: 1.35,
+      minWidth: 172,
+      cellClassName: `${sharedStyles.wrapCell} ${styles.historyPrevious}`,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "newValue",
       headerName: t("newValue"),
-      flex: 1,
+      flex: 1.35,
+      minWidth: 172,
+      cellClassName: sharedStyles.wrapCell,
       valueFormatter: (value) => value ?? "-",
     },
     {
       field: "user",
       headerName: t("user"),
-      flex: 1,
+      flex: 0.8,
+      minWidth: 116,
+      cellClassName: sharedStyles.wrapCell,
       valueGetter: (_, row) => row.user.username,
     },
     {
       field: "createdAt",
       headerName: t("date"),
-      flex: 1,
-      valueFormatter: (value) =>
-        value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "",
+      width: 181,
+      cellClassName: sharedStyles.ticketDate,
+      renderCell: ({ value }) => value ? <TicketDate value={value} /> : null,
     },
   ];
 
   return (
-    <>
-      <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
-        {t("title")}
-      </Typography>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        {t("ticket", { ticketId })}
-      </Typography>
-
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
-
-      <DataGrid
-        rows={ticketHistory}
-        columns={columns}
-        getRowId={(row) => row.idHistory}
-        pagination
-        paginationMode="server"
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        rowCount={totalElements}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-        localeText={DATA_GRID_LOCALE_TEXT}
-        loading={loading}
+    <div className={sharedStyles.page}>
+      <TicketActivityHeader
+        ticketId={ticketId}
+        title={t("title")}
+        reference={t("ticket", { ticketId })}
+        icon={<HistoryRounded />}
       />
-    </>
+
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+
+      <div className={sharedStyles.gridPanel}>
+        <DataGrid
+          className={`${sharedStyles.grid} ${styles.historyGrid}`}
+          aria-labelledby="ticket-activity-title"
+          rows={ticketHistory}
+          columns={columns}
+          getRowId={(row) => row.idHistory}
+          getRowHeight={getHistoryRowHeight}
+          columnHeaderHeight={46}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rowCount={totalElements}
+          pageSizeOptions={PAGE_SIZE_OPTIONS}
+          localeText={{ ...localeText, noRowsLabel: errorMessage ? "" : t("empty") }}
+          loading={loading}
+          slotProps={{
+            loadingOverlay: { variant: "linear-progress", noRowsVariant: "skeleton" },
+          }}
+        />
+      </div>
+    </div>
   );
 }

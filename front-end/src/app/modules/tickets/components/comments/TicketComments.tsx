@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Alert, Button, Paper } from "@mui/material";
@@ -19,6 +20,7 @@ import { logger } from "@/utils/logger";
 import { getAllTicketsCommentsById } from "../../services/ticketCommentsService";
 
 import TicketDate from "../shared/TicketDate";
+import { ticketActivityHref } from "../shared/ticketNavigation";
 import sharedStyles from "../../styles/tickets.module.css";
 import styles from "../../styles/ticketDetails.module.css";
 
@@ -31,7 +33,7 @@ export default function TicketComments({
   ticketId,
   commentsUpdated,
 }: TicketCommentsProps) {
-  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const t = useTranslations("Tickets.CommentsPanel");
 
@@ -109,10 +111,11 @@ export default function TicketComments({
 
       {ticketComments.length > 0 && (
         <Button
+          component={Link}
+          href={ticketActivityHref(ticketId, "comments", searchParams)}
           variant="outlined"
           endIcon={<ArrowForwardRounded />}
           className={sharedStyles.secondaryButton}
-          onClick={() => router.push(`/tickets/${ticketId}/comments`)}
         >
           {t("viewAll")}
         </Button>
