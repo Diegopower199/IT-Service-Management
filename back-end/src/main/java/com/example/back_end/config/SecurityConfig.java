@@ -19,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.example.back_end.security.JwtAuthenticationEntryPoint;
 import com.example.back_end.security.JwtAuthenticationFilter;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 
 import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults;
@@ -71,6 +72,7 @@ public class SecurityConfig {
                                 mvc.matcher("/auth/refresh"),
                                 mvc.matcher("/auth/logout"))
                         .permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .anyRequest()
                         .authenticated())
 
