@@ -101,7 +101,7 @@
   gap: 8px;
 }
 
-:is(.page, .formPanel) :is(.primaryButton, .secondaryButton, .clearButton) {
+:is(.page, .formPanel, .dialog) :is(.primaryButton, .secondaryButton, .clearButton) {
   min-height: 40px;
   padding-inline: 12px;
   border-radius: 9px;
@@ -112,16 +112,16 @@
   text-transform: none;
 }
 
-:is(.page, .formPanel) .primaryButton:not(:global(.Mui-disabled)) {
+:is(.page, .formPanel, .dialog) .primaryButton:not(:global(.Mui-disabled)) {
   color: #fff;
   background: var(--app-accent);
 }
 
-:is(.page, .formPanel) .primaryButton:hover:not(:global(.Mui-disabled)) {
+:is(.page, .formPanel, .dialog) .primaryButton:hover:not(:global(.Mui-disabled)) {
   background: var(--app-accent-hover);
 }
 
-.formPanel .secondaryButton:not(:global(.Mui-disabled)) {
+:is(.page, .formPanel, .dialog) .secondaryButton:not(:global(.Mui-disabled)) {
   border-color: #c4d2ec;
   color: var(--app-accent);
 }
@@ -130,9 +130,22 @@
   color: var(--app-muted);
 }
 
-:is(.page, .formPanel) :is(.primaryButton, .secondaryButton, .clearButton):focus-visible {
+:is(.page, .formPanel, .dialog) :is(.primaryButton, .secondaryButton, .clearButton):focus-visible {
   outline: 2px solid var(--app-accent);
   outline-offset: 3px;
+}
+
+.dialog {
+  /* MUI renders its dialogs in a portal outside AppLayout. */
+  --app-ink: #102044;
+  --app-muted: #52627d;
+  --app-accent: #2452cb;
+  --app-accent-hover: #1b42ad;
+  --app-accent-soft: #eaf0ff;
+  --app-border: #dee6f1;
+  --app-surface: #fff;
+
+  font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 .gridPanel {
@@ -214,7 +227,7 @@
   font-weight: 650;
 }
 
-.grid .ticketBadge {
+.ticketBadge:global(.MuiChip-root) {
   max-width: 100%;
   min-height: 24px;
   height: auto;
@@ -232,29 +245,34 @@
   overflow-wrap: anywhere;
 }
 
-.grid .ticketBadge:global(.MuiChip-colorInfo) {
+.ticketBadge:global(.MuiChip-root.MuiChip-colorInfo) {
   color: #155384;
   background: #e7f3ff;
 }
 
-.grid .ticketBadge:global(.MuiChip-colorWarning) {
+.ticketBadge:global(.MuiChip-root.MuiChip-colorWarning) {
   color: #795000;
   background: #fff1d4;
 }
 
-.grid .ticketBadge:global(.MuiChip-colorError) {
+.ticketBadge:global(.MuiChip-root.MuiChip-colorError) {
   color: #9e2d41;
   background: #fce8ed;
 }
 
-.grid .ticketBadge:global(.MuiChip-colorSuccess) {
+.ticketBadge:global(.MuiChip-root.MuiChip-colorSuccess) {
   color: #216344;
   background: #e6f5ec;
 }
 
-.grid .ticketBadge:global(.MuiChip-colorSecondary) {
+.ticketBadge:global(.MuiChip-root.MuiChip-colorSecondary) {
   color: #634383;
   background: #f3edfa;
+}
+
+.ticketBadge:global(.MuiChip-root.MuiChip-colorPrimary) {
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
 }
 
 .grid :global(.MuiDataGrid-actionsCell) {

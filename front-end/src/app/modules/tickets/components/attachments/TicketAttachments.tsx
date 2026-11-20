@@ -3,28 +3,21 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 
-import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
 import {
   Alert,
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
   IconButton,
   Paper,
-  Stack,
-  Typography,
 } from "@mui/material";
 
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import DownloadIcon from "@mui/icons-material/Download";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
+import DescriptionOutlined from "@mui/icons-material/DescriptionOutlined";
+import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
+import UploadFileOutlined from "@mui/icons-material/UploadFileOutlined";
+import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -39,6 +32,11 @@ import {
   downloadTicketAttachment,
   previewTicketAttachment,
 } from "../../services/ticketAttachmentService";
+
+import TicketDate from "../shared/TicketDate";
+import TicketDialog from "../shared/TicketDialog";
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketDetails.module.css";
 
 interface TicketAttachmentsProps {
   ticketId: number;
@@ -257,22 +255,20 @@ export default function TicketAttachments({
 
   return (
     <>
-      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={2}
-          sx={{
-            alignItems: { xs: "stretch", sm: "center" },
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography variant="h6">{t("title")}</Typography>
+      <Paper component="section" variant="outlined" className={styles.panel}>
+        <div className={styles.attachmentHeader}>
+          <h2 className={styles.panelTitle}>
+            <AttachFileRounded aria-hidden="true" />
+            {t("title")}
+          </h2>
 
           <Button
             component="label"
             variant="contained"
-            startIcon={<UploadFileIcon />}
+            disableElevation
+            startIcon={<UploadFileOutlined />}
             disabled={uploading}
+            className={sharedStyles.primaryButton}
           >
             {uploading ? t("uploading") : t("upload")}
 
@@ -284,65 +280,46 @@ export default function TicketAttachments({
               disabled={uploading}
             />
           </Button>
-        </Stack>
+        </div>
 
-        <Divider sx={{ my: 2 }} />
+        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        {errorMessage && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errorMessage}
-          </Alert>
-        )}
-
-        {successMessage && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {successMessage}
-          </Alert>
-        )}
+        {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
         {loading ? (
-          <PageLoading />
+          <div className={styles.panelLoading}>
+            <PageLoading />
+          </div>
         ) : attachments.length === 0 ? (
-          <Typography color="text.secondary">{t("empty")}</Typography>
+          <p className={styles.emptyState}>{t("empty")}</p>
         ) : (
-          <Stack spacing={2}>
+          <ul className={styles.attachmentList}>
             {attachments.map((attachment) => (
-              <Paper
-                key={attachment.idAttachment}
-                variant="outlined"
-                sx={{ p: 2 }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={{ alignItems: "center" }}
-                >
-                  <AttachFileIcon color="action" />
+              <li key={attachment.idAttachment} className={styles.attachmentRow}>
+                <span className={styles.fileIcon} aria-hidden="true">
+                  <DescriptionOutlined />
+                </span>
 
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography
-                      variant="body1"
-                      sx={{ overflowWrap: "anywhere", fontWeight: 500 }}
-                    >
-                      {attachment.fileName}
-                    </Typography>
+                <div className={styles.fileDetails}>
+                  <span className={styles.fileName}>{attachment.fileName}</span>
 
-                    <Typography variant="body2" color="text.secondary">
-                      {formatFileSize(attachment.fileSize)}
-                      {" · "}
-                      {attachment.uploadedBy.username}
-                      {" · "}
-                      {dayjs(attachment.createdAt).format("DD/MM/YYYY HH:mm")}
-                    </Typography>
-                  </Box>
+                  <div className={styles.fileMetadata}>
+                    <span className={styles.fileType}>{attachment.contentType}</span>
+                    <span>{formatFileSize(attachment.fileSize)}</span>
+                    <span>{attachment.uploadedBy.username}</span>
+                    <TicketDate value={attachment.createdAt} />
+                  </div>
+                </div>
 
+                <div className={styles.attachmentActions}>
                   <IconButton
                     onClick={() => void handlePreviewAttachment(attachment)}
                     disabled={previewingId !== null}
                     aria-label={t("preview")}
                     title={t("preview")}
+                    className={styles.fileAction}
                   >
-                    <VisibilityIcon />
+                    <VisibilityOutlined fontSize="small" />
                   </IconButton>
 
                   <IconButton
@@ -350,51 +327,42 @@ export default function TicketAttachments({
                     disabled={downloadingId !== null}
                     aria-label={t("download")}
                     title={t("download")}
+                    className={styles.fileAction}
                   >
-                    <DownloadIcon />
+                    <DownloadOutlined fontSize="small" />
                   </IconButton>
-                </Stack>
-              </Paper>
+                </div>
+              </li>
             ))}
-          </Stack>
+          </ul>
         )}
 
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ display: "block", mt: 2 }}
-        >
-          {t("allowedFormats")}
-        </Typography>
+        <p className={styles.helpText}>{t("allowedFormats")}</p>
       </Paper>
 
-      <Dialog
+      <TicketDialog
         open={preview !== null}
         onClose={handleClosePreview}
         maxWidth="lg"
-        fullWidth
+        title={preview?.fileName ?? ""}
+        icon={<VisibilityOutlined />}
+        actions={
+          <Button
+            variant="outlined"
+            onClick={handleClosePreview}
+            className={sharedStyles.secondaryButton}
+          >
+            {t("close")}
+          </Button>
+        }
       >
-        <DialogTitle>{preview?.fileName}</DialogTitle>
-
-        <DialogContent
-          dividers
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: 300,
-          }}
-        >
+        <div className={styles.previewViewport}>
           {preview?.contentType.startsWith("image/") && (
             <Box
               component="img"
               src={preview.url}
               alt={preview.fileName}
-              sx={{
-                maxWidth: "100%",
-                maxHeight: "70vh",
-                objectFit: "contain",
-              }}
+              className={styles.previewImage}
             />
           )}
 
@@ -403,19 +371,11 @@ export default function TicketAttachments({
               component="iframe"
               src={preview.url}
               title={preview.fileName}
-              sx={{
-                width: "100%",
-                height: "70vh",
-                border: 0,
-              }}
+              className={styles.previewDocument}
             />
           )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleClosePreview}>{t("close")}</Button>
-        </DialogActions>
-      </Dialog>
+        </div>
+      </TicketDialog>
     </>
   );
 }

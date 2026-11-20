@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
+import { Button, Paper } from "@mui/material";
+import AssignmentIndOutlined from "@mui/icons-material/AssignmentIndOutlined";
+import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import FlagOutlined from "@mui/icons-material/FlagOutlined";
+import SwapHorizRounded from "@mui/icons-material/SwapHorizRounded";
 
 import type { TicketResponse } from "@/types/ticketTypes";
 import { USER_ROLES, type UserRole } from "@/types/roleTypes";
@@ -12,6 +17,9 @@ import ChangeTicketStatusDialog from "../actions/ChangeTicketStatusDialog";
 import ChangeTicketPriorityDialog from "../actions/ChangeTicketPriorityDialog";
 import AddTicketCommentDialog from "../actions/AddTicketCommentDialog";
 import AssignTicketTechnicianDialog from "../actions/AssignTicketTechnicianDialog";
+
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketDetails.module.css";
 
 interface TicketActionsProps {
   ticket: TicketResponse;
@@ -89,41 +97,63 @@ export default function TicketActions({
 
   return (
     <>
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 3,
-        }}
-      >
-        <Typography variant="h6">{t("title")}</Typography>
+      <Paper component="section" variant="outlined" className={styles.panel}>
+        <h2 className={styles.panelTitle}>
+          <SwapHorizRounded aria-hidden="true" />
+          {t("title")}
+        </h2>
 
-        <Divider sx={{ my: 2 }} />
-
-        <Stack spacing={2}>
+        <div className={styles.actionList}>
           {(isTechnician || isAdmin) && (
             <>
-              <Button variant="contained" onClick={handleOpenAssignTechnician}>
+              <Button
+                variant="contained"
+                disableElevation
+                startIcon={<AssignmentIndOutlined />}
+                className={sharedStyles.primaryButton}
+                onClick={handleOpenAssignTechnician}
+              >
                 {t("assignTechnician")}
               </Button>
 
-              <Button variant="outlined" onClick={handleOpenChangeStatus}>
+              <Button
+                variant="outlined"
+                startIcon={<SwapHorizRounded />}
+                className={sharedStyles.secondaryButton}
+                onClick={handleOpenChangeStatus}
+              >
                 {t("changeStatus")}
               </Button>
 
-              <Button variant="outlined" onClick={handleOpenChangePriority}>
+              <Button
+                variant="outlined"
+                startIcon={<FlagOutlined />}
+                className={sharedStyles.secondaryButton}
+                onClick={handleOpenChangePriority}
+              >
                 {t("changePriority")}
               </Button>
             </>
           )}
 
-          <Button variant="outlined" onClick={onEdit}>
+          <Button
+            variant="outlined"
+            startIcon={<EditOutlined />}
+            className={sharedStyles.secondaryButton}
+            onClick={onEdit}
+          >
             {t("editTicket")}
           </Button>
 
-          <Button variant="outlined" onClick={handleOpenAddComment}>
+          <Button
+            variant="outlined"
+            startIcon={<ChatBubbleOutlineRounded />}
+            className={sharedStyles.secondaryButton}
+            onClick={handleOpenAddComment}
+          >
             {t("addComment")}
           </Button>
-        </Stack>
+        </div>
       </Paper>
 
       <AssignTicketTechnicianDialog

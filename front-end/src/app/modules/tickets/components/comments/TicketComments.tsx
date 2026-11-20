@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { Alert, Button, Divider, Paper, Typography } from "@mui/material";
-
-import dayjs from "dayjs";
+import { Alert, Button, Paper } from "@mui/material";
+import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
+import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -17,6 +17,10 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import { getAllTicketsCommentsById } from "../../services/ticketCommentsService";
+
+import TicketDate from "../shared/TicketDate";
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketDetails.module.css";
 
 interface TicketCommentsProps {
   ticketId: number;
@@ -75,58 +79,39 @@ export default function TicketComments({
   }, [fetchTicketComments, commentsUpdated]);
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 3,
-        minHeight: 180,
-      }}
-    >
-      <Typography variant="h6">{t("title")}</Typography>
+    <Paper component="section" variant="outlined" className={styles.panel}>
+      <h2 className={styles.panelTitle}>
+        <ChatBubbleOutlineRounded aria-hidden="true" />
+        {t("title")}
+      </h2>
 
-      <Divider sx={{ my: 2 }} />
-
-      {errorMessage && (
-        <Alert
-          severity="error"
-          sx={{
-            mb: 2,
-          }}
-        >
-          {errorMessage}
-        </Alert>
-      )}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
       {loading ? (
-        <PageLoading />
+        <div className={styles.panelLoading}>
+          <PageLoading />
+        </div>
       ) : ticketComments.length === 0 ? (
-        <Typography color="text.secondary">{t("empty")}</Typography>
+        <p className={styles.emptyState}>{t("empty")}</p>
       ) : (
-        ticketComments.map((ticketComment) => (
-          <Paper
-            key={ticketComment.idComment}
-            variant="outlined"
-            sx={{
-              p: 2,
-              mb: 2,
-            }}
-          >
-            <Typography variant="subtitle1">
-              {ticketComment.user.username}
-            </Typography>
-
-            <Typography variant="body2" color="text.secondary">
-              {dayjs(ticketComment.createdAt).format("DD/MM/YYYY HH:mm")}
-            </Typography>
-
-            <Typography sx={{ mt: 1 }}>{ticketComment.comment}</Typography>
-          </Paper>
-        ))
+        <div className={styles.activityList}>
+          {ticketComments.map((ticketComment) => (
+            <article className={styles.activityItem} key={ticketComment.idComment}>
+              <div className={styles.activityMeta}>
+                <h3>{ticketComment.user.username}</h3>
+                <TicketDate value={ticketComment.createdAt} />
+              </div>
+              <p className={styles.activityText}>{ticketComment.comment}</p>
+            </article>
+          ))}
+        </div>
       )}
 
       {ticketComments.length > 0 && (
         <Button
           variant="outlined"
+          endIcon={<ArrowForwardRounded />}
+          className={sharedStyles.secondaryButton}
           onClick={() => router.push(`/tickets/${ticketId}/comments`)}
         >
           {t("viewAll")}

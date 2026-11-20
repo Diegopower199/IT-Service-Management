@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Box, Button, Chip, Stack, Typography } from "@mui/material";
+import { Button, Chip } from "@mui/material";
+import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
+import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { UserRole } from "@/types/roleTypes";
@@ -15,6 +17,9 @@ import TicketActions from "./TicketActions";
 import TicketComments from "../comments/TicketComments";
 import TicketHistory from "../history/TicketHistory";
 import TicketAttachments from "../attachments/TicketAttachments";
+
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketDetails.module.css";
 
 interface TicketDetailsProps {
   ticket: TicketResponse;
@@ -63,43 +68,46 @@ export default function TicketDetails({
   };
 
   return (
-    <Box>
-      <Stack spacing={2} sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1">
-          #{ticket.idTicket} - {ticket.title}
-        </Typography>
+    <div className={sharedStyles.page}>
+      <div>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackRounded />}
+          onClick={onClose}
+          className={sharedStyles.secondaryButton}
+        >
+          {t("backToTickets")}
+        </Button>
+      </div>
 
-        <Stack direction="row" spacing={2}>
-          <Chip
-            label={getStatusDisplayName(ticket.status.name)}
-            color={getStatusColor(ticket.status.name)}
-            variant="outlined"
-            sx={{
-              fontWeight: 600,
-            }}
-          />
+      <header className={styles.hero}>
+        <span className={sharedStyles.headingIcon} aria-hidden="true">
+          <ConfirmationNumberOutlined />
+        </span>
+        <div className={styles.heroBody}>
+          <h1>
+            <span className={styles.ticketReference}>#{ticket.idTicket}</span>
+            {" "}
+            {ticket.title}
+          </h1>
+          <div className={styles.badges}>
+            <Chip
+              size="small"
+              label={getStatusDisplayName(ticket.status.name)}
+              color={getStatusColor(ticket.status.name)}
+              className={sharedStyles.ticketBadge}
+            />
+            <Chip
+              size="small"
+              label={getPriorityDisplayName(ticket.priority.name)}
+              color={getPriorityColor(ticket.priority.name)}
+              className={sharedStyles.ticketBadge}
+            />
+          </div>
+        </div>
+      </header>
 
-          <Chip
-            label={getPriorityDisplayName(ticket.priority.name)}
-            color={getPriorityColor(ticket.priority.name)}
-            sx={{
-              fontWeight: 600,
-            }}
-          />
-        </Stack>
-      </Stack>
-
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            md: "2fr 1fr",
-          },
-          gap: 3,
-          mb: 3,
-        }}
-      >
+      <div className={styles.detailPrimary}>
         <TicketOverview ticket={ticket} />
 
         <TicketActions
@@ -110,19 +118,9 @@ export default function TicketDetails({
           onCommentsUpdated={handleCommentsUpdated}
           onHistoryUpdated={handleHistoryUpdated}
         />
-      </Box>
+      </div>
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            md: "1fr 1fr",
-          },
-          gap: 3,
-          mb: 3,
-        }}
-      >
+      <div className={styles.detailActivity}>
         <TicketComments
           ticketId={ticket.idTicket}
           commentsUpdated={commentsUpdated}
@@ -132,13 +130,9 @@ export default function TicketDetails({
           ticketId={ticket.idTicket}
           historyUpdated={historyUpdated}
         />
-      </Box>
+      </div>
 
       <TicketAttachments key={ticket.idTicket} ticketId={ticket.idTicket} />
-
-      <Button variant="outlined" onClick={onClose}>
-        {t("backToTickets")}
-      </Button>
-    </Box>
+    </div>
   );
 }

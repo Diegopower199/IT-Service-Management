@@ -1,18 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
   Alert,
-  Box,
   Button,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -22,6 +16,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import FlagOutlined from "@mui/icons-material/FlagOutlined";
 
 import type { PriorityResponse } from "@/types/priorityTypes";
 import { USER_ROLES } from "@/types/roleTypes";
@@ -35,6 +30,10 @@ import { logger } from "@/utils/logger";
 import { getPriorityColor } from "@/utils/ticketUiUtils";
 
 import { changeTicketPriority } from "../../services/ticketService";
+
+import TicketDialog from "../shared/TicketDialog";
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketDetails.module.css";
 
 interface ChangeTicketPriorityDialogProps {
   open: boolean;
@@ -54,6 +53,7 @@ export default function ChangeTicketPriorityDialog({
   const { user } = useAuth();
 
   const t = useTranslations("Tickets.ChangePriorityDialog");
+  const selectId = useId();
   const tPriorities = useTranslations("Common.Priorities");
 
   const [priorities, setPriorities] = useState<PriorityResponse[]>([]);
@@ -179,185 +179,116 @@ export default function ChangeTicketPriorityDialog({
   };
 
   return (
-    <Dialog
+    <TicketDialog
       open={open}
       onClose={handleClose}
-      fullWidth
-      maxWidth="sm"
-      slotProps={{
-        paper: {
-          sx: {
-            borderRadius: 3,
-          },
-        },
-      }}
-    >
-      <DialogTitle
-        component="div"
-        sx={{
-          px: 3,
-          pt: 3,
-          pb: 2,
-        }}
-      >
-        <Typography
-          variant="h5"
-          component="h2"
-          sx={{
-            fontWeight: 600,
-          }}
-        >
-          {t("title")}
-        </Typography>
-
-        <Typography
-          variant="body2"
-          component="p"
-          color="text.secondary"
-          sx={{
-            mt: 0.5,
-            mb: 0,
-          }}
-        >
-          {t("subtitle", { ticketId })}
-        </Typography>
-      </DialogTitle>
-
-      <Divider />
-
-      <DialogContent sx={{ p: 3 }}>
-        <Stack spacing={3}>
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: "action.hover",
-            }}
+      title={t("title")}
+      description={t("subtitle", { ticketId })}
+      icon={<FlagOutlined />}
+      actions={
+        <>
+          <Button
+            variant="outlined"
+            onClick={handleClose}
+            disabled={saving}
+            className={sharedStyles.secondaryButton}
           >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{
-                display: "block",
-                mb: 1,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
+            {t("cancel")}
+          </Button>
+
+          <Button
+            variant="contained"
+            disableElevation
+            className={sharedStyles.primaryButton}
+            onClick={handleConfirm}
+            disabled={
+              !selectedPriorityId ||
+              Number(selectedPriorityId) === currentPriority.idPriority ||
+              saving
+            }
+          >
+            {saving ? t("updating") : t("updatePriority")}
+          </Button>
+        </>
+      }
+    >
+      <div className={styles.dialogFields}>
+        <div className={styles.currentValue}>
+          <span className={styles.fieldLabel}>
+            {t("currentPriority")}
+          </span>
+
+          <Chip
+            label={getPriorityDisplayName(currentPriority.name)}
+            color={getPriorityColor(currentPriority.name)}
+            size="small"
+            className={sharedStyles.ticketBadge}
+          />
+        </div>
+
+        <div>
+          <p className={styles.selectHeading}>
+            {t("selectNewPriority")}
+          </p>
+
+          <FormControl fullWidth error={Boolean(priorityError)}>
+            <InputLabel id={selectId}>{t("priority")}</InputLabel>
+
+            <Select
+              labelId={selectId}
+              value={
+                selectedPriorityId ||
+                (priorities.some(
+                  (priority) =>
+                    priority.idPriority === currentPriority.idPriority,
+                )
+                  ? String(currentPriority.idPriority)
+                  : "")
+              }
+              label={t("priority")}
+              onChange={handlePriorityChange}
+              disabled={saving}
             >
-              {t("currentPriority")}
-            </Typography>
-
-            <Chip
-              label={getPriorityDisplayName(currentPriority.name)}
-              color={getPriorityColor(currentPriority.name)}
-              sx={{
-                fontWeight: 600,
-              }}
-            />
-          </Box>
-
-          <Box>
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 500,
-                mb: 1,
-              }}
-            >
-              {t("selectNewPriority")}
-            </Typography>
-
-            <FormControl fullWidth error={Boolean(priorityError)}>
-              <InputLabel>{t("priority")}</InputLabel>
-
-              <Select
-                value={
-                  selectedPriorityId ||
-                  (priorities.some(
-                    (priority) =>
-                      priority.idPriority === currentPriority.idPriority,
-                  )
-                    ? String(currentPriority.idPriority)
-                    : "")
-                }
-                label={t("priority")}
-                onChange={handlePriorityChange}
-                disabled={saving}
-                sx={{
-                  borderRadius: 2,
-                }}
-              >
-                {priorities.map((priority) => (
-                  <MenuItem
-                    key={priority.idPriority}
-                    value={String(priority.idPriority)}
+              {priorities.map((priority) => (
+                <MenuItem
+                  key={priority.idPriority}
+                  value={String(priority.idPriority)}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={1.5}
+                    sx={{
+                      alignItems: "center",
+                    }}
                   >
-                    <Stack
-                      direction="row"
-                      spacing={1.5}
+                    <Chip
+                      size="small"
+                      color={getPriorityColor(priority.name)}
                       sx={{
-                        alignItems: "center",
+                        width: 10,
+                        height: 10,
+                        "& .MuiChip-label": {
+                          display: "none",
+                        },
                       }}
-                    >
-                      <Chip
-                        size="small"
-                        color={getPriorityColor(priority.name)}
-                        sx={{
-                          width: 10,
-                          height: 10,
-                          "& .MuiChip-label": {
-                            display: "none",
-                          },
-                        }}
-                      />
+                    />
 
-                      <Typography variant="body2">
-                        {getPriorityDisplayName(priority.name)}
-                      </Typography>
-                    </Stack>
-                  </MenuItem>
-                ))}
-              </Select>
+                    <Typography variant="body2">
+                      {getPriorityDisplayName(priority.name)}
+                    </Typography>
+                  </Stack>
+                </MenuItem>
+              ))}
+            </Select>
 
-              {priorityError && (
-                <FormHelperText>{priorityError}</FormHelperText>
-              )}
-            </FormControl>
-          </Box>
+            {priorityError && (
+              <FormHelperText>{priorityError}</FormHelperText>
+            )}
+          </FormControl>
+        </div>
 
-          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-        </Stack>
-      </DialogContent>
-
-      <Divider />
-
-      <DialogActions
-        sx={{
-          px: 3,
-          py: 2,
-          bgcolor: "action.hover",
-        }}
-      >
-        <Button onClick={handleClose} disabled={saving} color="inherit">
-          {t("cancel")}
-        </Button>
-
-        <Button
-          variant="contained"
-          onClick={handleConfirm}
-          disabled={
-            !selectedPriorityId ||
-            Number(selectedPriorityId) === currentPriority.idPriority ||
-            saving
-          }
-          sx={{
-            px: 3,
-            borderRadius: 2,
-          }}
-        >
-          {saving ? t("updating") : t("updatePriority")}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      </div>
+    </TicketDialog>
   );
 }
