@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import TicketsContent from "@/app/modules/tickets/components/content/TicketsContent";
 import { USER_ROLES } from "@/types/roleTypes";
 import type { TicketResponse } from "@/types/ticketTypes";
+import type { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 
 const mocks = vi.hoisted(() => ({
   useAuth: vi.fn(),
@@ -49,6 +50,8 @@ vi.mock("next-intl", () => {
     assignedTickets: "Assigned tickets",
     myTickets: "My tickets",
     createTicket: "Create ticket",
+    view: "View",
+    edit: "Edit",
     ticketsLoadError: "Failed to load tickets",
     title: "Filters",
     searchByTitle: "Search by title",
@@ -64,25 +67,86 @@ vi.mock("next-intl", () => {
   const translate = Object.assign((key: string) => labels[key] ?? key, {
     has: () => false,
   });
-  return { useTranslations: () => translate };
+  return { useLocale: () => "en", useTranslations: () => translate };
 });
 
 // DataGrid is a third-party widget; keep the real page and real TicketFiltersBar.
 vi.mock("@mui/x-data-grid", () => ({
-  DataGrid: ({ rows }: { rows: TicketResponse[] }) => (
-    <div data-testid="tickets-grid">
-      {rows.map((ticket) => (
-        <div key={ticket.idTicket}>{ticket.title}</div>
-      ))}
-    </div>
+  DataGrid: ({
+    rows,
+    columns,
+    paginationModel,
+    onPaginationModelChange,
+  }: {
+    rows: TicketResponse[];
+    columns: GridColDef<TicketResponse>[];
+    paginationModel: GridPaginationModel;
+    onPaginationModelChange: (model: GridPaginationModel) => void;
+  }) => {
+    const actions = columns.find((column) => column.field === "actions");
+
+    return (
+      <div data-testid="tickets-grid">
+        {rows.map((ticket) => (
+          <div key={ticket.idTicket}>
+            {ticket.title}
+            {actions && "getActions" in actions &&
+              actions.getActions({ id: ticket.idTicket, row: ticket, columns })}
+          </div>
+        ))}
+        <span>Page {paginationModel.page + 1}</span>
+        <button
+          type="button"
+          onClick={() =>
+            onPaginationModelChange({
+              ...paginationModel,
+              page: paginationModel.page + 1,
+            })
+          }
+        >
+          Next page
+        </button>
+      </div>
+    );
+  },
+  GridActionsCellItem: ({ label, onClick }: { label: string; onClick: () => void }) => (
+    <button type="button" onClick={onClick}>
+      {label}
+    </button>
   ),
-  GridActionsCellItem: () => null,
 }));
 vi.mock("@/app/modules/tickets/components/form/TicketForm", () => ({
-  default: () => <div>Ticket form</div>,
+  default: ({ onCancel, onClose }: { onCancel: () => void; onClose: () => void }) => (
+    <div>
+      <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
+      <button type="button" onClick={onClose}>
+        Save changes
+      </button>
+    </div>
+  ),
 }));
 vi.mock("@/app/modules/tickets/components/details/TicketDetails", () => ({
-  default: () => <div>Ticket details</div>,
+  default: ({
+    ticket,
+    onEdit,
+    onClose,
+  }: {
+    ticket: TicketResponse;
+    onEdit: () => void;
+    onClose: () => void;
+  }) => (
+    <div>
+      <h2>Ticket #{ticket.idTicket}</h2>
+      <button type="button" onClick={onEdit}>
+        Edit ticket
+      </button>
+      <button type="button" onClick={onClose}>
+        Back to tickets
+      </button>
+    </div>
+  ),
 }));
 
 const ticket: TicketResponse = {
@@ -203,6 +267,65 @@ describe("TicketsContent", () => {
 
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/login"));
     expect(mocks.getAllTickets).not.toHaveBeenCalled();
+  });
+
+  it("cancels an edit back to the same detail and preserves list context", async () => {
+    const user = userEvent.setup();
+    mocks.searchParams = new URLSearchParams("title=Printer");
+    render(<TicketsContent />);
+
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    await waitFor(() => {
+      expect(mocks.getAllTickets).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, title: "Printer" }),
+      );
+    });
+
+    await user.click(await screen.findByRole("button", { name: "View" }));
+    await user.click(screen.getByRole("button", { name: "Edit ticket" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Ticket #42" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back to tickets" }));
+
+    expect(screen.getByText("Page 2")).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Search by title" }),
+    ).toHaveValue("Printer");
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it.each(["Create ticket", "Edit"])(
+    "returns to the list when cancelling %s from it",
+    async (action) => {
+      const user = userEvent.setup();
+      render(<TicketsContent />);
+
+      await user.click(await screen.findByRole("button", { name: action }));
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+      expect(
+        screen.getByRole("heading", { name: "All tickets" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Ticket #42" }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps the existing return to the list after saving an edit from detail", async () => {
+    const user = userEvent.setup();
+    render(<TicketsContent />);
+
+    await user.click(await screen.findByRole("button", { name: "View" }));
+    await user.click(screen.getByRole("button", { name: "Edit ticket" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(
+      screen.getByRole("heading", { name: "All tickets" }),
+    ).toBeInTheDocument();
   });
 
   it("shows an error if the ticket list cannot be loaded", async () => {
