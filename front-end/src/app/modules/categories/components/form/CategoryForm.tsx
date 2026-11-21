@@ -3,14 +3,10 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+
+import { CatalogEntityDetails, CatalogNameForm } from "@/app/modules/adminCatalog/CatalogEntityView";
 
 import type { CategoryResponse } from "@/types/categoryTypes";
 
@@ -174,68 +170,36 @@ export default function CategoryForm({
     }
   };
 
-  const getTitle = () => {
-    if (formMode === FORM_MODES.CREATE) {
-      return t("createTitle");
-    }
+  if (isViewMode) {
+    return selectedCategory ? (
+      <CatalogEntityDetails
+        title={t("viewTitle")}
+        icon={<CategoryOutlined />}
+        name={formData.name}
+        active={selectedCategory.active}
+        statusLabel={t(selectedCategory.active ? "active" : "inactive")}
+        backLabel={t("back")}
+        onClose={onClose}
+      />
+    ) : null;
+  }
 
-    if (formMode === FORM_MODES.VIEW) {
-      return t("viewTitle");
-    }
-
-    return t("editTitle");
-  };
+  const isCreate = formMode === FORM_MODES.CREATE;
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {getTitle()}
-      </Typography>
-
-      <Stack spacing={3}>
-        <TextField
-          label={t("name")}
-          name="name"
-          value={formData.name}
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.name)}
-          helperText={requiredFieldsIncomplete.name}
-          disabled={isViewMode || loading}
-          fullWidth
-        />
-
-        {selectedCategory && formMode === FORM_MODES.VIEW && (
-          <TextField
-            label={t("status")}
-            value={selectedCategory.active ? t("active") : t("inactive")}
-            disabled
-            fullWidth
-          />
-        )}
-
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-
-        <Stack direction="row" spacing={2}>
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={onClose}
-            disabled={loading}
-          >
-            {isViewMode ? t("back") : t("cancel")}
-          </Button>
-
-          {!isViewMode && (
-            <Button type="submit" variant="contained" disabled={loading}>
-              {loading
-                ? t("saving")
-                : formMode === FORM_MODES.CREATE
-                  ? t("createCategory")
-                  : t("saveChanges")}
-            </Button>
-          )}
-        </Stack>
-      </Stack>
-    </Box>
+    <CatalogNameForm
+      title={t(isCreate ? "createTitle" : "editTitle")}
+      icon={isCreate ? <CategoryOutlined /> : <EditOutlined />}
+      name={formData.name}
+      nameLabel={t("name")}
+      nameError={requiredFieldsIncomplete.name}
+      errorMessage={errorMessage}
+      loading={loading}
+      cancelLabel={t("cancel")}
+      submitLabel={t(loading ? "saving" : isCreate ? "createCategory" : "saveChanges")}
+      onChange={handleFormChange}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    />
   );
 }

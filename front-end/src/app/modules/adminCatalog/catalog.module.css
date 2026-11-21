@@ -1,0 +1,35 @@
+.grid :global(.MuiDataGrid-overlay) {
+  color: var(--app-muted);
+}
+
+.name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.grid .action:global(.Mui-disabled) {
+  pointer-events: auto;
+  color: var(--app-muted);
+  background: var(--app-border);
+  opacity: 0.52;
+}
+
+.compact {
+  width: min(100%, 560px);
+}
+
+.confirmation {
+  display: grid;
+  gap: 12px;
+  color: var(--app-ink);
+  overflow-wrap: anywhere;
+}
+
+.confirmation p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}

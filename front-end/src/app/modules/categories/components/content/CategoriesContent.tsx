@@ -4,45 +4,23 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from "@mui/material";
-
-import {
-  DataGrid,
-  GridActionsCellItem,
-  type GridColDef,
-} from "@mui/x-data-grid";
-
-import AddIcon from "@mui/icons-material/Add";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditIcon from "@mui/icons-material/Edit";
-import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
+import type { GridColDef } from "@mui/x-data-grid";
+import CategoryOutlined from "@mui/icons-material/CategoryOutlined";
 
 import { useAuth } from "@/hooks/useAuth";
 
 import type { CategoryResponse } from "@/types/categoryTypes";
 import { USER_ROLES } from "@/types/roleTypes";
 
-import {
-  DATA_GRID_LOCALE_TEXT,
-  DEFAULT_PAGE_SIZE,
-  FORM_MODES,
-  PAGE_SIZE_OPTIONS,
-  type FormMode,
-} from "@/utils/constans";
+import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
+import { CatalogList, catalogRowActions } from "@/app/modules/adminCatalog/CatalogList";
+import { CatalogStatusBadge, CatalogStatusDialog } from "@/app/modules/adminCatalog/CatalogEntityView";
+import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
 
 import {
   activateCategory,
@@ -60,7 +38,7 @@ export default function CategoriesContent() {
 
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [changingStatus, setChangingStatus] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
@@ -200,57 +178,36 @@ export default function CategoriesContent() {
     {
       field: "idCategory",
       headerName: t("id"),
-      width: 100,
+      width: 80,
+      cellClassName: sharedStyles.ticketId,
     },
     {
       field: "name",
       headerName: t("name"),
       flex: 1,
-      minWidth: 200,
+      minWidth: 156,
+      cellClassName: sharedStyles.ticketTitle,
     },
     {
       field: "active",
       headerName: t("status"),
-      width: 150,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.active ? t("active") : t("inactive")}
-          color={params.row.active ? "success" : "default"}
-          size="small"
-          variant="outlined"
-          sx={{
-            fontWeight: 600,
-          }}
-        />
-      ),
+      width: 112,
+      renderCell: ({ row }) => <CatalogStatusBadge active={row.active} label={t(row.active ? "active" : "inactive")} />,
     },
     {
       field: "actions",
       type: "actions",
       headerName: t("actions"),
-      width: 170,
-      getActions: ({ row }) => [
-        <GridActionsCellItem
-          key="view"
-          icon={<VisibilityIcon />}
-          label={t("view")}
-          onClick={() => handleViewCategory(row)}
-        />,
-
-        <GridActionsCellItem
-          key="edit"
-          icon={<EditIcon />}
-          label={t("edit")}
-          onClick={() => handleEditCategory(row)}
-        />,
-
-        <GridActionsCellItem
-          key="status"
-          icon={<ChangeCircleIcon />}
-          label={row.active ? t("deactivate") : t("activate")}
-          onClick={() => handleOpenStatusDialog(row)}
-        />,
-      ],
+      width: 138,
+      getActions: ({ row }) => catalogRowActions({
+        view: t("view"),
+        edit: t("edit"),
+        toggle: t(row.active ? "deactivate" : "activate"),
+        active: row.active,
+        onView: () => handleViewCategory(row),
+        onEdit: () => handleEditCategory(row),
+        onToggle: () => handleOpenStatusDialog(row),
+      }),
     },
   ];
 
@@ -273,103 +230,31 @@ export default function CategoriesContent() {
     );
   }
 
+  const deactivating = categoryStatusToChange?.active ?? false;
+
   return (
-    <main>
-      <h1>{t("title")}</h1>
-
-      <Button variant="contained" onClick={handleCreateCategory}>
-        {t("createCategory")} <AddIcon />
-      </Button>
-
-      {errorMessage && (
-        <Alert
-          severity="error"
-          sx={{
-            my: 2,
-          }}
-        >
-          {errorMessage}
-        </Alert>
-      )}
-
-      <DataGrid
-        rows={categories}
-        columns={columns}
-        getRowId={(row) => row.idCategory}
-        loading={loading}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              page: 0,
-              pageSize: DEFAULT_PAGE_SIZE,
-            },
-          },
-        }}
-        localeText={DATA_GRID_LOCALE_TEXT}
-      />
-
-      <Dialog
+    <CatalogList
+      title={t("title")}
+      icon={<CategoryOutlined />}
+      rows={categories}
+      columns={columns}
+      getRowId={(row) => row.idCategory}
+      loading={loading}
+      errorMessage={errorMessage}
+      create={{ label: t("createCategory"), onClick: handleCreateCategory }}
+    >
+      <CatalogStatusDialog
         open={Boolean(categoryStatusToChange)}
+        active={deactivating}
+        title={t(deactivating ? "deactivateTitle" : "activateTitle")}
+        message={categoryStatusToChange ? t(deactivating ? "deactivateConfirmation" : "activateConfirmation", { name: categoryStatusToChange.name }) : undefined}
+        errorMessage={statusErrorMessage}
+        saving={changingStatus}
+        cancelLabel={t("cancel")}
+        confirmLabel={t(changingStatus ? "saving" : deactivating ? "deactivate" : "activate")}
         onClose={handleCloseStatusDialog}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>
-          {categoryStatusToChange?.active
-            ? t("deactivateTitle")
-            : t("activateTitle")}
-        </DialogTitle>
-
-        <DialogContent>
-          {categoryStatusToChange && (
-            <Typography>
-              {categoryStatusToChange.active
-                ? t("deactivateConfirmation", {
-                    name: categoryStatusToChange.name,
-                  })
-                : t("activateConfirmation", {
-                    name: categoryStatusToChange.name,
-                  })}
-            </Typography>
-          )}
-
-          {statusErrorMessage && (
-            <Alert
-              severity="error"
-              sx={{
-                mt: 2,
-              }}
-            >
-              {statusErrorMessage}
-            </Alert>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={handleCloseStatusDialog}
-            disabled={changingStatus}
-          >
-            {t("cancel")}
-          </Button>
-
-          <Button
-            type="button"
-            variant="contained"
-            onClick={handleChangeCategoryStatus}
-            disabled={changingStatus}
-          >
-            {changingStatus
-              ? t("saving")
-              : categoryStatusToChange?.active
-                ? t("deactivate")
-                : t("activate")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </main>
+        onConfirm={handleChangeCategoryStatus}
+      />
+    </CatalogList>
   );
 }
