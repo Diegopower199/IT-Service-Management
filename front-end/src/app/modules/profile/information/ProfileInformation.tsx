@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 
-import { Alert, Box, Button, Paper, Stack, Typography } from "@mui/material";
+import { Alert, Button, Chip, CircularProgress, Paper } from "@mui/material";
 
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import DeleteIcon from "@mui/icons-material/Delete";
+import BadgeOutlined from "@mui/icons-material/BadgeOutlined";
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import UploadFileOutlined from "@mui/icons-material/UploadFileOutlined";
 
 import type { UserResponse } from "@/types/userTypes";
 
@@ -16,6 +18,9 @@ import { logger } from "@/utils/logger";
 
 import ProfileForm from "../form/ProfileForm";
 import UserAvatar from "@/app/modules/users/components/avatar/UserAvatar";
+import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
+import detailStyles from "@/app/modules/tickets/styles/ticketDetails.module.css";
+import styles from "../styles/profile.module.css";
 
 import {
   deleteUserAvatar,
@@ -37,6 +42,7 @@ export default function ProfileInformation({
 }: ProfileInformationProps) {
   const t = useTranslations("Profile.Information");
   const tRoles = useTranslations("Common.Roles");
+  const photoInput = useRef<HTMLInputElement>(null);
 
   const [editing, setEditing] = useState(false);
 
@@ -159,96 +165,96 @@ export default function ProfileInformation({
 
   return (
     <Paper
+      component="section"
       variant="outlined"
-      sx={{
-        p: 3,
-        borderRadius: 3,
-      }}
+      aria-labelledby="profile-account-heading"
+      className={detailStyles.panel}
     >
-      <Typography variant="h6" gutterBottom>
+      <h2 id="profile-account-heading" className={detailStyles.panelTitle}>
+        <BadgeOutlined aria-hidden="true" />
         {t("title")}
-      </Typography>
+      </h2>
 
-      <Stack spacing={2} sx={{ mt: 3, alignItems: "center" }}>
-        <UserAvatar
-          key={avatarVersion}
-          userId={profile.idUser}
-          size={100}
-          onAvatarStatusChange={setHasAvatar}
+      <div className={styles.identity}>
+        <div className={styles.avatarFrame}>
+          <UserAvatar
+            key={avatarVersion}
+            userId={profile.idUser}
+            size={80}
+            onAvatarStatusChange={setHasAvatar}
+          />
+        </div>
+        <div className={styles.identityDetails}>
+          <h3>{profile.firstName} {profile.lastName}</h3>
+          <p><span>{t("username")}</span> {profile.username}</p>
+          <Chip
+            size="small"
+            color="primary"
+            label={tRoles(profile.role.name)}
+            className={sharedStyles.ticketBadge}
+          />
+        </div>
+      </div>
+
+      <div className={styles.photoActions} aria-busy={avatarBusy}>
+        <input
+          ref={photoInput}
+          type="file"
+          hidden
+          accept=".jpg,.jpeg,.png"
+          onChange={handleAvatarChange}
+          disabled={avatarBusy}
         />
-
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={2}
-          sx={{ alignItems: "center" }}
+        <Button
+          type="button"
+          variant="outlined"
+          startIcon={uploadingAvatar ? <CircularProgress size={16} color="inherit" /> : <UploadFileOutlined />}
+          onClick={() => photoInput.current?.click()}
+          disabled={avatarBusy}
+          className={sharedStyles.secondaryButton}
         >
+          {uploadingAvatar ? t("uploadingAvatar") : hasAvatar ? t("changeAvatar") : t("uploadAvatar")}
+        </Button>
+
+        {hasAvatar && (
           <Button
-            component="label"
+            type="button"
             variant="outlined"
-            startIcon={<UploadFileIcon />}
+            color="error"
+            startIcon={deletingAvatar ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineRounded />}
+            onClick={handleDeleteAvatar}
             disabled={avatarBusy}
+            className={`${sharedStyles.secondaryButton} ${styles.deletePhoto}`}
           >
-            {uploadingAvatar
-              ? t("uploadingAvatar")
-              : hasAvatar
-                ? t("changeAvatar")
-                : t("uploadAvatar")}
-
-            <input
-              type="file"
-              hidden
-              accept=".jpg,.jpeg,.png"
-              onChange={handleAvatarChange}
-              disabled={avatarBusy}
-            />
+            {deletingAvatar ? t("deletingAvatar") : t("deleteAvatar")}
           </Button>
-
-          {hasAvatar && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleDeleteAvatar}
-              disabled={avatarBusy}
-            >
-              {deletingAvatar ? t("deletingAvatar") : t("deleteAvatar")}
-            </Button>
-          )}
-        </Stack>
-
-        {avatarError && (
-          <Alert severity="error" sx={{ width: "100%" }}>
-            {avatarError}
-          </Alert>
         )}
+      </div>
 
-        {avatarSuccess && (
-          <Alert severity="success" sx={{ width: "100%" }}>
-            {avatarSuccess}
-          </Alert>
-        )}
-      </Stack>
-
-      <Stack spacing={2} sx={{ mt: 3 }}>
-        <ProfileRow label={t("username")} value={profile.username} />
-
-        <ProfileRow label={t("role")} value={tRoles(profile.role.name)} />
-
+      {avatarError && <Alert severity="error">{avatarError}</Alert>}
+      {avatarSuccess && <Alert severity="success" role="status">{avatarSuccess}</Alert>}
+      <dl className={`${detailStyles.metadata} ${styles.metadata}`}>
         <ProfileRow label={t("firstName")} value={profile.firstName} />
-
         <ProfileRow label={t("lastName")} value={profile.lastName} />
-
         <ProfileRow label={t("email")} value={profile.email} />
-
         <ProfileRow
           label={t("department")}
           value={profile.department?.name ?? t("noDepartment")}
         />
-      </Stack>
+      </dl>
 
-      <Button variant="contained" sx={{ mt: 3 }} onClick={handleEditProfile}>
-        {t("editProfile")}
-      </Button>
+      <div className={sharedStyles.formActions}>
+        <Button
+          type="button"
+          variant="contained"
+          disableElevation
+          startIcon={<EditOutlined />}
+          onClick={handleEditProfile}
+          className={sharedStyles.primaryButton}
+        >
+          {t("editProfile")}
+        </Button>
+      </div>
     </Paper>
   );
 }
@@ -260,18 +266,9 @@ interface ProfileRowProps {
 
 function ProfileRow({ label, value }: ProfileRowProps) {
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "120px 1fr",
-        gap: 2,
-      }}
-    >
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
-
-      <Typography variant="body2">{value}</Typography>
-    </Box>
+    <div className={detailStyles.metadataItem}>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }

@@ -1,0 +1,92 @@
+.profile {
+  width: min(100%, 1120px);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(12px, 2vw, 18px);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  background: #f5f8fd;
+}
+
+.avatarFrame {
+  flex: 0 0 auto;
+  padding: 4px;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+  background: var(--app-surface);
+}
+
+.identityDetails {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.identityDetails h3 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.identityDetails p {
+  margin: 4px 0 7px;
+  color: var(--app-ink);
+  font-size: 0.875rem;
+}
+
+.identityDetails p span {
+  margin-inline-end: 4px;
+  color: var(--app-muted);
+  font-weight: 650;
+}
+
+.photoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.photoActions .deletePhoto:global(.MuiButton-colorError):not(:global(.Mui-disabled)) {
+  color: var(--mui-palette-error-main, #9e2d41);
+  border-color: currentColor;
+}
+
+.layout .metadata {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@container (min-width: 720px) {
+  .layout {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  }
+}
+
+@container (max-width: 520px) {
+  .layout .editFields,
+  .layout .metadata {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .identity {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .photoActions {
+    justify-content: center;
+  }
+}

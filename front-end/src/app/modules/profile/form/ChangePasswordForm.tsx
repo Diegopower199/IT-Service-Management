@@ -3,19 +3,15 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Button, Paper, TextField } from "@mui/material";
+import LockOutlined from "@mui/icons-material/LockOutlined";
 
 import { changePassword } from "@/app/modules/users/services/userService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
+import detailStyles from "@/app/modules/tickets/styles/ticketDetails.module.css";
 
 interface ChangePasswordFormData {
   currentPassword: string;
@@ -127,13 +123,22 @@ export default function ChangePasswordForm() {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h6" gutterBottom>
+    <Paper
+      component="form"
+      variant="outlined"
+      onSubmit={handleSubmit}
+      aria-labelledby="change-password-heading"
+      aria-busy={loading}
+      className={detailStyles.panel}
+    >
+      <h2 id="change-password-heading" className={detailStyles.panelTitle}>
+        <LockOutlined aria-hidden="true" />
         {t("title")}
-      </Typography>
+      </h2>
 
-      <Stack spacing={3}>
+      <div className={sharedStyles.formFields}>
         <TextField
+          className={sharedStyles.fullWidth}
           label={t("currentPassword")}
           name="currentPassword"
           type="password"
@@ -146,6 +151,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
+          className={sharedStyles.fullWidth}
           label={t("newPassword")}
           name="newPassword"
           type="password"
@@ -158,6 +164,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
+          className={sharedStyles.fullWidth}
           label={t("confirmPassword")}
           name="confirmPassword"
           type="password"
@@ -168,15 +175,23 @@ export default function ChangePasswordForm() {
           disabled={loading}
           fullWidth
         />
+      </div>
 
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        {successMessage && <Alert severity="success">{successMessage}</Alert>}
+      {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
-        <Button type="submit" variant="contained" disabled={loading}>
+      <div className={sharedStyles.formActions}>
+        <Button
+          type="submit"
+          variant="contained"
+          disableElevation
+          disabled={loading}
+          className={sharedStyles.primaryButton}
+        >
           {loading ? t("saving") : t("submit")}
         </Button>
-      </Stack>
-    </Box>
+      </div>
+    </Paper>
   );
 }
