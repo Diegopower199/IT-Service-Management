@@ -2,19 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   DataGrid,
   GridActionsCellItem,
   type GridColDef,
 } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
 
-import { Alert, Chip } from "@mui/material";
+import { Alert, Button, Chip } from "@mui/material";
 
-import AddIcon from "@mui/icons-material/Add";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditIcon from "@mui/icons-material/Edit";
+import AddRounded from "@mui/icons-material/AddRounded";
+import CheckCircleOutlineRounded from "@mui/icons-material/CheckCircleOutlineRounded";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import PeopleOutlineRounded from "@mui/icons-material/PeopleOutlineRounded";
+import RemoveCircleOutlineRounded from "@mui/icons-material/RemoveCircleOutlineRounded";
+import VisibilityOutlined from "@mui/icons-material/VisibilityOutlined";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -36,8 +40,17 @@ import { getAllUsers } from "../../services/userService";
 
 import UserForm from "../form/UserForm";
 
-import Button from "@/components/ui/Button";
 import PageLoading from "@/components/ui/PageLoading";
+import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
+import styles from "../../styles/users.module.css";
+
+const getUserRowHeight = () => "auto" as const;
+
+function getRoleBadgeColor(role: string) {
+  if (role === USER_ROLES.ADMIN) return "primary";
+  if (role === USER_ROLES.TECHNICIAN) return "info";
+  return "default";
+}
 
 export default function UsersContent() {
   const { user, isAuthReady } = useAuth();
@@ -48,10 +61,14 @@ export default function UsersContent() {
 
   const t = useTranslations("Users.Content");
   const tRoles = useTranslations("Common.Roles");
+  const locale = useLocale();
+  const gridLocaleText = locale === "es"
+    ? esES.components.MuiDataGrid.defaultProps.localeText
+    : DATA_GRID_LOCALE_TEXT;
 
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -152,25 +169,28 @@ export default function UsersContent() {
       field: "username",
       headerName: t("username"),
       flex: 1,
-      minWidth: 150,
+      minWidth: 126,
+      cellClassName: sharedStyles.ticketTitle,
     },
     {
       field: "name",
       headerName: t("name"),
-      flex: 1,
-      minWidth: 180,
+      flex: 1.15,
+      minWidth: 156,
+      cellClassName: sharedStyles.wrapCell,
       valueGetter: (_, row) => `${row.firstName} ${row.lastName}`,
     },
     {
       field: "email",
       headerName: t("email"),
-      flex: 1,
-      minWidth: 220,
+      flex: 1.5,
+      minWidth: 210,
+      cellClassName: sharedStyles.wrapCell,
     },
     {
       field: "role",
       headerName: t("role"),
-      width: 150,
+      width: 135,
       valueGetter: (_, row) => row.role.name,
       renderCell: (params) => (
         <Chip
@@ -180,33 +200,31 @@ export default function UsersContent() {
               : params.row.role.name
           }
           size="small"
-          variant="outlined"
-          sx={{
-            fontWeight: 600,
-          }}
+          color={getRoleBadgeColor(params.row.role.name)}
+          className={sharedStyles.ticketBadge}
         />
       ),
     },
     {
       field: "department",
       headerName: t("department"),
-      width: 170,
+      flex: 0.85,
+      minWidth: 142,
+      cellClassName: sharedStyles.wrapCell,
       valueGetter: (_, row) => row.department?.name ?? "",
       renderCell: (params) => params.row.department?.name ?? "-",
     },
     {
       field: "enabled",
       headerName: t("status"),
-      width: 130,
+      width: 116,
       renderCell: (params) => (
         <Chip
           label={params.row.enabled ? t("enabled") : t("disabled")}
           color={params.row.enabled ? "success" : "default"}
           size="small"
-          variant="outlined"
-          sx={{
-            fontWeight: 600,
-          }}
+          icon={params.row.enabled ? <CheckCircleOutlineRounded /> : <RemoveCircleOutlineRounded />}
+          className={`${sharedStyles.ticketBadge} ${styles.statusBadge}`}
         />
       ),
     },
@@ -214,18 +232,22 @@ export default function UsersContent() {
       field: "actions",
       type: "actions",
       headerName: t("actions"),
-      width: 120,
+      width: 108,
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="view"
-          icon={<VisibilityIcon />}
+          icon={<VisibilityOutlined />}
           label={t("view")}
+          title={t("view")}
+          className={sharedStyles.viewAction}
           onClick={() => handleViewUser(row)}
         />,
         <GridActionsCellItem
           key="edit"
-          icon={<EditIcon />}
+          icon={<EditOutlined />}
           label={t("edit")}
+          title={t("edit")}
+          className={sharedStyles.editAction}
           onClick={() => handleEditUser(row)}
         />,
       ],
@@ -252,37 +274,49 @@ export default function UsersContent() {
   }
 
   return (
-    <main>
-      <h1>{t("title")}</h1>
-
-      <Button onClick={handleCreateUser}>
-        {t("createUser")} <AddIcon />
-      </Button>
-
-      {errorMessage && (
-        <Alert
-          severity="error"
-          sx={{
-            my: 2,
-          }}
+    <div className={sharedStyles.page}>
+      <header className={sharedStyles.listHeader}>
+        <div className={sharedStyles.heading}>
+          <span className={sharedStyles.headingIcon} aria-hidden="true">
+            <PeopleOutlineRounded />
+          </span>
+          <h1 id="users-heading">{t("title")}</h1>
+        </div>
+        <Button
+          variant="contained"
+          disableElevation
+          startIcon={<AddRounded />}
+          onClick={handleCreateUser}
+          className={sharedStyles.primaryButton}
         >
-          {errorMessage}
-        </Alert>
-      )}
+          {t("createUser")}
+        </Button>
+      </header>
 
-      <DataGrid
-        rows={users}
-        columns={columns}
-        getRowId={(row) => row.idUser}
-        pagination
-        paginationMode="server"
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        rowCount={totalElements}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-        localeText={DATA_GRID_LOCALE_TEXT}
-        loading={loading}
-      />
-    </main>
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+
+      <div className={sharedStyles.gridPanel}>
+        <DataGrid
+          className={`${sharedStyles.grid} ${styles.usersGrid}`}
+          aria-labelledby="users-heading"
+          rows={users}
+          columns={columns}
+          getRowId={(row) => row.idUser}
+          getRowHeight={getUserRowHeight}
+          columnHeaderHeight={46}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rowCount={totalElements}
+          pageSizeOptions={PAGE_SIZE_OPTIONS}
+          localeText={{ ...gridLocaleText, noRowsLabel: errorMessage ? "" : t("empty") }}
+          loading={loading}
+          slotProps={{
+            loadingOverlay: { variant: "linear-progress", noRowsVariant: "skeleton" },
+          }}
+        />
+      </div>
+    </div>
   );
 }

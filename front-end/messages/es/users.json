@@ -3,6 +3,7 @@
         "title": "Usuarios",
         "createUser": "Crear usuario",
         "loadError": "Error al cargar los usuarios.",
+        "empty": "No hay usuarios para mostrar.",
         "username": "Usuario",
         "name": "Nombre",
         "email": "Correo electrónico",
@@ -14,6 +15,10 @@
         "disabled": "Inactivo",
         "view": "Ver",
         "edit": "Editar"
+    },
+    "Details": {
+        "accountInformation": "Información de la cuenta",
+        "noDepartment": "Sin departamento asignado"
     },
     "Form": {
         "createTitle": "Crear usuario",

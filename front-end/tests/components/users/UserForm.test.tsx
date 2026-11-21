@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -37,6 +37,8 @@ vi.mock("next-intl", () => {
     role: "Role",
     department: "Department",
     enabled: "Enabled",
+    disabled: "Disabled",
+    accountInformation: "Account information",
     selectRole: "Select role",
     selectDepartment: "Select department",
     noRolesAvailable: "No roles",
@@ -56,7 +58,7 @@ vi.mock("next-intl", () => {
     departmentRequired: "Department required",
   };
   const translate = (key: string) => labels[key] ?? key;
-  const translateRole = (key: string) => key;
+  const translateRole = Object.assign((key: string) => key, { has: () => true });
   return {
     useTranslations: (namespace: string) =>
       namespace === "Common.Roles" ? translateRole : translate,
@@ -183,8 +185,10 @@ describe("UserForm", () => {
     );
     expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
     const firstName = screen.getByRole("textbox", { name: "First name" });
+    expect(firstName).toHaveValue("John");
     await user.clear(firstName);
     await user.type(firstName, "Jane");
+    await user.click(screen.getByRole("checkbox", { name: "Enabled" }));
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
@@ -195,26 +199,47 @@ describe("UserForm", () => {
         lastName: "Smith",
         roleId: 1,
         departmentId: 3,
-        enabled: true,
+        enabled: false,
       });
     });
     expect(mocks.createUser).not.toHaveBeenCalled();
     expect(onSubmitSuccess).toHaveBeenCalledTimes(1);
   });
 
-  it("displays user data as read-only in view mode", () => {
-    renderForm(FORM_MODES.VIEW, selectedUser);
+  it("validates the edit fields and cancels without an update", async () => {
+    const user = userEvent.setup();
+    renderForm(FORM_MODES.EDIT, selectedUser);
 
-    expect(
-      screen.getByRole("heading", { name: "View user" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Username" })).toHaveValue(
-      "john",
-    );
-    expect(screen.getByRole("textbox", { name: "Username" })).toBeDisabled();
-    expect(
-      screen.queryByRole("button", { name: "Save changes" }),
-    ).not.toBeInTheDocument();
+    await user.clear(screen.getByRole("textbox", { name: "First name" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(screen.getByText("First name required")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onSubmitSuccess).not.toHaveBeenCalled();
+    expect(mocks.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("shows each user detail once and returns with Back", async () => {
+    const user = userEvent.setup();
+    renderForm(FORM_MODES.VIEW, { ...selectedUser, enabled: false });
+
+    expect(screen.getByRole("heading", { name: /View user John Smith/ })).toBeInTheDocument();
+    expect(screen.getByText("john")).toBeInTheDocument();
+    expect(screen.getByText("ADMIN")).toBeInTheDocument();
+    expect(screen.getByText("Disabled")).toBeInTheDocument();
+    expect(screen.queryByText("John")).not.toBeInTheDocument();
+    expect(screen.queryByText("Smith")).not.toBeInTheDocument();
+    const account = within(screen.getByRole("region", { name: "Account information" }));
+    expect(account.getByText("john@example.com")).toBeInTheDocument();
+    expect(account.getByText("IT")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    expect(mocks.getAllRoles).not.toHaveBeenCalled();
+    expect(mocks.getAllActiveDepartments).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Back" }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
     expect(mocks.updateUser).not.toHaveBeenCalled();
   });
 

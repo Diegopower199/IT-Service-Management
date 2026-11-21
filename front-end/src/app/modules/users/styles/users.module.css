@@ -1,0 +1,52 @@
+.usersGrid :global(.MuiDataGrid-overlay) {
+  color: var(--app-muted);
+}
+
+.statusBadge :global(.MuiChip-icon) {
+  margin-inline: 6px -3px;
+  color: inherit;
+  font-size: 0.875rem;
+}
+
+.enabledControl:global(.MuiFormControlLabel-root) {
+  align-self: start;
+  min-height: 56px;
+  box-sizing: border-box;
+  margin: 0;
+  padding-inline: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  color: var(--app-ink);
+  background: #f8faff;
+}
+
+.enabledControl :global(.MuiFormControlLabel-label) {
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.enabledControl :global(.MuiCheckbox-root.Mui-checked:not(.Mui-disabled)) {
+  color: var(--app-accent);
+}
+
+.enabledControl :global(.MuiCheckbox-root.Mui-focusVisible) {
+  outline: 2px solid var(--app-accent);
+  outline-offset: -4px;
+}
+
+.details {
+  width: min(100%, 1040px);
+}
+
+.detailsUsername {
+  margin: 5px 0 0;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+@container (max-width: 520px) {
+  .details .detailsMetadata {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
