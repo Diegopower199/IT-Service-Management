@@ -8,11 +8,10 @@ import RemoveCircleOutlineRounded from "@mui/icons-material/RemoveCircleOutlineR
 import ToggleOffOutlined from "@mui/icons-material/ToggleOffOutlined";
 import ToggleOnOutlined from "@mui/icons-material/ToggleOnOutlined";
 
-import TicketDialog from "@/app/modules/tickets/components/shared/TicketDialog";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
-import detailStyles from "@/app/modules/tickets/styles/ticketDetails.module.css";
-import usersStyles from "@/app/modules/users/styles/users.module.css";
-import styles from "./catalog.module.css";
+import PanelDialog from "@/components/ui/PanelDialog";
+
+import sharedStyles from "./catalog.module.css";
+import styles from "./CatalogEntityView.module.css";
 
 export function CatalogStatusBadge({ active, label }: { active: boolean; label: string }) {
   return (
@@ -21,7 +20,7 @@ export function CatalogStatusBadge({ active, label }: { active: boolean; label: 
       size="small"
       color={active ? "success" : "default"}
       icon={active ? <CheckCircleOutlineRounded /> : <RemoveCircleOutlineRounded />}
-      className={`${sharedStyles.ticketBadge} ${usersStyles.statusBadge}`}
+      className={`${sharedStyles.badge} ${sharedStyles.statusBadge}`}
     />
   );
 }
@@ -49,13 +48,13 @@ export function CatalogEntityDetails({ title, icon, name, active, statusLabel, b
           {backLabel}
         </Button>
       </div>
-      <header className={detailStyles.hero}>
+      <header className={styles.hero}>
         <span className={sharedStyles.headingIcon} aria-hidden="true">{icon}</span>
-        <div className={detailStyles.heroBody}>
+        <div className={styles.heroBody}>
           <h1>
-            <span className={detailStyles.ticketReference}>{title}</span>{" "}{name}
+            <span className={styles.reference}>{title}</span>{" "}{name}
           </h1>
-          <div className={detailStyles.badges}>
+          <div className={styles.badges}>
             <CatalogStatusBadge active={active} label={statusLabel} />
           </div>
         </div>
@@ -91,18 +90,18 @@ export function CatalogNameForm({
       onSubmit={onSubmit}
       aria-labelledby={headingId}
       aria-busy={loading}
-      className={`${sharedStyles.formPanel} ${styles.compact}`}
+      className={`${sharedStyles.form} ${styles.formPanel}`}
     >
-      <header className={sharedStyles.formHeader}>
+      <header className={styles.formHeader}>
         <div className={sharedStyles.heading}>
           <span className={sharedStyles.headingIcon} aria-hidden="true">{icon}</span>
           <h1 id={headingId}>{title}</h1>
         </div>
       </header>
 
-      <div className={sharedStyles.formFields}>
+      <div className={styles.formFields}>
         <TextField
-          className={sharedStyles.fullWidth}
+          className={styles.fullWidth}
           label={nameLabel}
           name="name"
           value={name}
@@ -115,7 +114,7 @@ export function CatalogNameForm({
       </div>
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-      <div className={sharedStyles.formActions}>
+      <div className={styles.formActions}>
         <Button
           type="button"
           variant="outlined"
@@ -156,7 +155,8 @@ export function CatalogStatusDialog({
   open, active, title, message, errorMessage, saving, cancelLabel, confirmLabel, onClose, onConfirm,
 }: CatalogStatusDialogProps) {
   return (
-    <TicketDialog
+    <PanelDialog
+      className={sharedStyles.dialog}
       open={open}
       onClose={onClose}
       title={title}
@@ -189,6 +189,6 @@ export function CatalogStatusDialog({
         {message && <p>{message}</p>}
         {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
       </div>
-    </TicketDialog>
+    </PanelDialog>
   );
 }

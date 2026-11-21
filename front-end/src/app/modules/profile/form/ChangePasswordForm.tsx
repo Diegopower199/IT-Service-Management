@@ -10,8 +10,7 @@ import { changePassword } from "@/app/modules/users/services/userService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
-import detailStyles from "@/app/modules/tickets/styles/ticketDetails.module.css";
+import styles from "../styles/profile.module.css";
 
 interface ChangePasswordFormData {
   currentPassword: string;
@@ -129,16 +128,16 @@ export default function ChangePasswordForm() {
       onSubmit={handleSubmit}
       aria-labelledby="change-password-heading"
       aria-busy={loading}
-      className={detailStyles.panel}
+      className={styles.panel}
     >
-      <h2 id="change-password-heading" className={detailStyles.panelTitle}>
+      <h2 id="change-password-heading" className={styles.panelTitle}>
         <LockOutlined aria-hidden="true" />
         {t("title")}
       </h2>
 
-      <div className={sharedStyles.formFields}>
+      <div className={styles.formFields}>
         <TextField
-          className={sharedStyles.fullWidth}
+          className={styles.fullWidth}
           label={t("currentPassword")}
           name="currentPassword"
           type="password"
@@ -151,7 +150,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
-          className={sharedStyles.fullWidth}
+          className={styles.fullWidth}
           label={t("newPassword")}
           name="newPassword"
           type="password"
@@ -164,7 +163,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
-          className={sharedStyles.fullWidth}
+          className={styles.fullWidth}
           label={t("confirmPassword")}
           name="confirmPassword"
           type="password"
@@ -181,13 +180,13 @@ export default function ChangePasswordForm() {
 
       {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
-      <div className={sharedStyles.formActions}>
+      <div className={styles.formActions}>
         <Button
           type="submit"
           variant="contained"
           disableElevation
           disabled={loading}
-          className={sharedStyles.primaryButton}
+          className={styles.primaryButton}
         >
           {loading ? t("saving") : t("submit")}
         </Button>

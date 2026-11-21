@@ -41,8 +41,9 @@ import { getAllUsers } from "../../services/userService";
 import UserForm from "../form/UserForm";
 
 import PageLoading from "@/components/ui/PageLoading";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
-import styles from "../../styles/users.module.css";
+import sharedStyles from "../../styles/users.module.css";
+
+import styles from "./UsersContent.module.css";
 
 const getUserRowHeight = () => "auto" as const;
 
@@ -170,14 +171,14 @@ export default function UsersContent() {
       headerName: t("username"),
       flex: 1,
       minWidth: 126,
-      cellClassName: sharedStyles.ticketTitle,
+      cellClassName: styles.username,
     },
     {
       field: "name",
       headerName: t("name"),
       flex: 1.15,
       minWidth: 156,
-      cellClassName: sharedStyles.wrapCell,
+      cellClassName: styles.wrapCell,
       valueGetter: (_, row) => `${row.firstName} ${row.lastName}`,
     },
     {
@@ -185,7 +186,7 @@ export default function UsersContent() {
       headerName: t("email"),
       flex: 1.5,
       minWidth: 210,
-      cellClassName: sharedStyles.wrapCell,
+      cellClassName: styles.wrapCell,
     },
     {
       field: "role",
@@ -201,7 +202,7 @@ export default function UsersContent() {
           }
           size="small"
           color={getRoleBadgeColor(params.row.role.name)}
-          className={sharedStyles.ticketBadge}
+          className={sharedStyles.badge}
         />
       ),
     },
@@ -210,7 +211,7 @@ export default function UsersContent() {
       headerName: t("department"),
       flex: 0.85,
       minWidth: 142,
-      cellClassName: sharedStyles.wrapCell,
+      cellClassName: styles.wrapCell,
       valueGetter: (_, row) => row.department?.name ?? "",
       renderCell: (params) => params.row.department?.name ?? "-",
     },
@@ -224,7 +225,7 @@ export default function UsersContent() {
           color={params.row.enabled ? "success" : "default"}
           size="small"
           icon={params.row.enabled ? <CheckCircleOutlineRounded /> : <RemoveCircleOutlineRounded />}
-          className={`${sharedStyles.ticketBadge} ${styles.statusBadge}`}
+          className={`${sharedStyles.badge} ${sharedStyles.statusBadge}`}
         />
       ),
     },
@@ -239,7 +240,7 @@ export default function UsersContent() {
           icon={<VisibilityOutlined />}
           label={t("view")}
           title={t("view")}
-          className={sharedStyles.viewAction}
+          className={styles.viewAction}
           onClick={() => handleViewUser(row)}
         />,
         <GridActionsCellItem
@@ -247,7 +248,7 @@ export default function UsersContent() {
           icon={<EditOutlined />}
           label={t("edit")}
           title={t("edit")}
-          className={sharedStyles.editAction}
+          className={styles.editAction}
           onClick={() => handleEditUser(row)}
         />,
       ],
@@ -275,7 +276,7 @@ export default function UsersContent() {
 
   return (
     <div className={sharedStyles.page}>
-      <header className={sharedStyles.listHeader}>
+      <header className={styles.listHeader}>
         <div className={sharedStyles.heading}>
           <span className={sharedStyles.headingIcon} aria-hidden="true">
             <PeopleOutlineRounded />
@@ -295,9 +296,9 @@ export default function UsersContent() {
 
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-      <div className={sharedStyles.gridPanel}>
+      <div className={styles.gridPanel}>
         <DataGrid
-          className={`${sharedStyles.grid} ${styles.usersGrid}`}
+          className={styles.grid}
           aria-labelledby="users-heading"
           rows={users}
           columns={columns}

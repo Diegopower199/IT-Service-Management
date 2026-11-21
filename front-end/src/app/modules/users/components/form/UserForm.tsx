@@ -28,8 +28,9 @@ import { createUser, updateUser } from "../../services/userService";
 import { getAllActiveDepartments } from "@/app/modules/departments/services/departmentService";
 import { getAllRoles } from "@/app/modules/roles/services/rolesService";
 import UserDetails from "../details/UserDetails";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
-import styles from "../../styles/users.module.css";
+import sharedStyles from "../../styles/users.module.css";
+
+import styles from "./UserForm.module.css";
 
 interface UserFormProps {
   formMode: FormMode;
@@ -459,12 +460,12 @@ function UserEditor({
   return (
     <Box
       component="form"
-      className={sharedStyles.formPanel}
+      className={`${sharedStyles.form} ${styles.formPanel}`}
       aria-labelledby={headingId}
       aria-busy={loading}
       onSubmit={handleSubmit}
     >
-      <header className={sharedStyles.formHeader}>
+      <header className={styles.formHeader}>
         <div className={sharedStyles.heading}>
           <span className={sharedStyles.headingIcon} aria-hidden="true">
             {isCreate ? <PersonAddAltOutlined /> : <EditOutlined />}
@@ -473,10 +474,10 @@ function UserEditor({
         </div>
       </header>
 
-      <div className={sharedStyles.formFields}>{fields}</div>
+      <div className={styles.formFields}>{fields}</div>
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-      <div className={sharedStyles.formActions}>
+      <div className={styles.formActions}>
         <Button
           type="button"
           variant="outlined"

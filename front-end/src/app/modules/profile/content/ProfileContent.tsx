@@ -20,7 +20,6 @@ import PageLoading from "@/components/ui/PageLoading";
 
 import ChangePasswordForm from "../form/ChangePasswordForm";
 import ProfileInformation from "../information/ProfileInformation";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
 import styles from "../styles/profile.module.css";
 
 export default function ProfileContent() {
@@ -85,9 +84,9 @@ export default function ProfileContent() {
   }
 
   return (
-    <div className={`${sharedStyles.page} ${styles.profile}`}>
-      <header className={sharedStyles.heading}>
-        <span className={sharedStyles.headingIcon} aria-hidden="true">
+    <div className={`${styles.page} ${styles.profile}`}>
+      <header className={styles.heading}>
+        <span className={styles.headingIcon} aria-hidden="true">
           <PersonOutlineRounded />
         </span>
         <h1>{t("title")}</h1>

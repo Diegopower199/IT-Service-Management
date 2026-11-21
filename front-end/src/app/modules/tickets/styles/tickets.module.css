@@ -45,8 +45,7 @@
 }
 
 .page .filterPanel,
-.gridPanel,
-.formPanel {
+.gridPanel {
   border: 1px solid var(--app-border);
   border-radius: 14px;
   background: var(--app-surface);
@@ -82,18 +81,15 @@
   min-width: 0;
 }
 
-.filterFields,
-.formFields {
+.filterFields {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.filterFields > *,
-.formFields > * {
+.filterFields > * {
   min-width: 0;
 }
 
-.filterActions,
-.formActions {
+.filterActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -133,19 +129,6 @@
 :is(.page, .formPanel, .dialog) :is(.primaryButton, .secondaryButton, .clearButton):focus-visible {
   outline: 2px solid var(--app-accent);
   outline-offset: 3px;
-}
-
-.dialog {
-  /* MUI renders its dialogs in a portal outside AppLayout. */
-  --app-ink: #102044;
-  --app-muted: #52627d;
-  --app-accent: #2452cb;
-  --app-accent-hover: #1b42ad;
-  --app-accent-soft: #eaf0ff;
-  --app-border: #dee6f1;
-  --app-surface: #fff;
-
-  font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 .gridPanel {
@@ -306,50 +289,17 @@
   outline-offset: 1px;
 }
 
-.formPanel {
-  display: grid;
-  gap: 20px;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 780px;
-  margin-inline: auto;
-  padding: clamp(16px, 3vw, 28px);
-}
-
-.formHeader {
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--app-border);
-}
-
-.formActions {
-  padding-top: 16px;
-  border-top: 1px solid var(--app-border);
-}
-
-.formFields {
-  display: grid;
-  gap: 16px;
-}
-
-.fullWidth {
-  grid-column: 1 / -1;
-}
-
-:is(.filterFields, .formFields) :global(.MuiOutlinedInput-root) {
+.filterFields :global(.MuiOutlinedInput-root) {
   border-radius: 9px;
   background: #f8faff;
 }
 
-:is(.filterFields, .formFields) :global(.MuiOutlinedInput-root.Mui-focused) {
+.filterFields :global(.MuiOutlinedInput-root.Mui-focused) {
   background: #fff;
 }
 
-:is(.filterFields, .formFields) :global(.MuiOutlinedInput-root.Mui-focused:not(.Mui-error) .MuiOutlinedInput-notchedOutline) {
+.filterFields :global(.MuiOutlinedInput-root.Mui-focused:not(.Mui-error) .MuiOutlinedInput-notchedOutline) {
   border-color: var(--app-accent);
-}
-
-.formFields :global(.MuiFormHelperText-root) {
-  margin-inline: 2px;
 }
 
 @container (min-width: 330px) {
@@ -371,12 +321,6 @@
   }
 }
 
-@media (min-width: 680px) {
-  .formFields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 430px) {
   .listHeader .primaryButton {
     width: 100%;
@@ -393,9 +337,5 @@
 
   .grid :global(.MuiTablePagination-actions) {
     margin-inline-start: 2px;
-  }
-
-  .formActions > * {
-    flex: 1;
   }
 }

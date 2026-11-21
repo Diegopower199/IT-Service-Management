@@ -17,7 +17,6 @@ import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
 import { CatalogList } from "@/app/modules/adminCatalog/CatalogList";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
 
 import { getAllRoles } from "../services/rolesService";
 
@@ -83,14 +82,12 @@ export default function RolesContent() {
       field: "idRole",
       headerName: t("id"),
       width: 80,
-      cellClassName: sharedStyles.ticketId,
     },
     {
       field: "name",
       headerName: t("name"),
       flex: 1,
       minWidth: 160,
-      cellClassName: sharedStyles.ticketTitle,
       renderCell: (params) => tRoles(params.row.name),
     },
   ];

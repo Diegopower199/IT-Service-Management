@@ -24,7 +24,6 @@ import { logger } from "@/utils/logger";
 import PageLoading from "@/components/ui/PageLoading";
 import { CatalogList, catalogRowActions, CatalogName } from "@/app/modules/adminCatalog/CatalogList";
 import { CatalogStatusBadge, CatalogStatusDialog } from "@/app/modules/adminCatalog/CatalogEntityView";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
 
 import {
   activatePriority,
@@ -208,14 +207,12 @@ export default function PrioritiesContent() {
       field: "idPriority",
       headerName: t("id"),
       width: 80,
-      cellClassName: sharedStyles.ticketId,
     },
     {
       field: "name",
       headerName: t("name"),
       flex: 1,
       minWidth: 156,
-      cellClassName: sharedStyles.ticketTitle,
       renderCell: ({ row }) => (
         <CatalogName name={getPriorityDisplayName(row.name)} protectedItem={isProtectedPriority(row.name)} />
       ),

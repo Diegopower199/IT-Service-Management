@@ -18,9 +18,9 @@ import { logger } from "@/utils/logger";
 
 import ProfileForm from "../form/ProfileForm";
 import UserAvatar from "@/app/modules/users/components/avatar/UserAvatar";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
-import detailStyles from "@/app/modules/tickets/styles/ticketDetails.module.css";
-import styles from "../styles/profile.module.css";
+import sharedStyles from "../styles/profile.module.css";
+
+import styles from "./ProfileInformation.module.css";
 
 import {
   deleteUserAvatar,
@@ -168,9 +168,9 @@ export default function ProfileInformation({
       component="section"
       variant="outlined"
       aria-labelledby="profile-account-heading"
-      className={detailStyles.panel}
+      className={sharedStyles.panel}
     >
-      <h2 id="profile-account-heading" className={detailStyles.panelTitle}>
+      <h2 id="profile-account-heading" className={sharedStyles.panelTitle}>
         <BadgeOutlined aria-hidden="true" />
         {t("title")}
       </h2>
@@ -191,7 +191,7 @@ export default function ProfileInformation({
             size="small"
             color="primary"
             label={tRoles(profile.role.name)}
-            className={sharedStyles.ticketBadge}
+            className={styles.badge}
           />
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function ProfileInformation({
 
       {avatarError && <Alert severity="error">{avatarError}</Alert>}
       {avatarSuccess && <Alert severity="success" role="status">{avatarSuccess}</Alert>}
-      <dl className={`${detailStyles.metadata} ${styles.metadata}`}>
+      <dl className={styles.metadata}>
         <ProfileRow label={t("firstName")} value={profile.firstName} />
         <ProfileRow label={t("lastName")} value={profile.lastName} />
         <ProfileRow label={t("email")} value={profile.email} />
@@ -266,7 +266,7 @@ interface ProfileRowProps {
 
 function ProfileRow({ label, value }: ProfileRowProps) {
   return (
-    <div className={detailStyles.metadataItem}>
+    <div className={styles.metadataItem}>
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>

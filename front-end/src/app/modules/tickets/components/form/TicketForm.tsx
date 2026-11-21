@@ -32,7 +32,9 @@ import { getAllCategories } from "../../../categories/services/categoryService";
 import { createTicket, updateTicket } from "../../services/ticketService";
 import { getUserOptions } from "../../../users/services/userService";
 
-import styles from "../../styles/tickets.module.css";
+import sharedStyles from "../../styles/tickets.module.css";
+
+import styles from "./TicketForm.module.css";
 
 interface TicketFormProps {
   formMode: FormMode;
@@ -367,13 +369,13 @@ export default function TicketForm({
   return (
     <Box
       component="form"
-      className={styles.formPanel}
+      className={`${sharedStyles.formPanel} ${styles.formPanel}`}
       aria-labelledby="ticket-form-heading"
       onSubmit={handleSubmit}
     >
       <header className={styles.formHeader}>
-        <div className={styles.heading}>
-          <span className={styles.headingIcon}>
+        <div className={sharedStyles.heading}>
+          <span className={sharedStyles.headingIcon}>
             {formMode === FORM_MODES.CREATE ? (
               <AddRounded aria-hidden="true" />
             ) : (
@@ -522,7 +524,7 @@ export default function TicketForm({
           variant="outlined"
           onClick={onCancel}
           disabled={loading}
-          className={styles.secondaryButton}
+          className={sharedStyles.secondaryButton}
         >
           {t("cancel")}
         </Button>
@@ -532,7 +534,7 @@ export default function TicketForm({
           variant="contained"
           disableElevation
           disabled={loading}
-          className={styles.primaryButton}
+          className={sharedStyles.primaryButton}
         >
           {loading
             ? t("saving")

@@ -12,8 +12,6 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import { updateCurrentUser } from "../../users/services/userService";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
-import detailStyles from "@/app/modules/tickets/styles/ticketDetails.module.css";
 import styles from "../styles/profile.module.css";
 
 interface ProfileFormProps {
@@ -139,14 +137,14 @@ export default function ProfileForm({
       onSubmit={handleSubmit}
       aria-labelledby="edit-profile-heading"
       aria-busy={loading}
-      className={detailStyles.panel}
+      className={styles.panel}
     >
-      <h2 id="edit-profile-heading" className={detailStyles.panelTitle}>
+      <h2 id="edit-profile-heading" className={styles.panelTitle}>
         <EditOutlined aria-hidden="true" />
         {t("title")}
       </h2>
 
-      <div className={`${sharedStyles.formFields} ${styles.editFields}`}>
+      <div className={`${styles.formFields} ${styles.editFields}`}>
         <TextField
           label={t("firstName")}
           name="firstName"
@@ -170,7 +168,7 @@ export default function ProfileForm({
         />
 
         <TextField
-          className={sharedStyles.fullWidth}
+          className={styles.fullWidth}
           label={t("email")}
           name="email"
           type="email"
@@ -185,13 +183,13 @@ export default function ProfileForm({
 
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-      <div className={sharedStyles.formActions}>
+      <div className={styles.formActions}>
         <Button
           type="button"
           variant="outlined"
           onClick={onClose}
           disabled={loading}
-          className={sharedStyles.secondaryButton}
+          className={styles.secondaryButton}
         >
           {t("cancel")}
         </Button>
@@ -201,7 +199,7 @@ export default function ProfileForm({
           variant="contained"
           disableElevation
           disabled={loading}
-          className={sharedStyles.primaryButton}
+          className={styles.primaryButton}
         >
           {loading ? t("saving") : t("saveChanges")}
         </Button>

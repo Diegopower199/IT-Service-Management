@@ -3,21 +3,13 @@
 }
 
 .app {
-  --app-ink: #102044;
-  --app-muted: #52627d;
-  --app-accent: #2452cb;
-  --app-accent-hover: #1b42ad;
-  --app-accent-soft: #eaf0ff;
-  --app-border: #dee6f1;
-  --app-surface: #fff;
-
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--app-ink);
   background: #f5f7fc;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: var(--app-font);
 }
 
 .body {

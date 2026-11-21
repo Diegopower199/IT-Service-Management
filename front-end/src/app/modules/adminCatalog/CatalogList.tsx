@@ -18,8 +18,8 @@ import {
 import { esES } from "@mui/x-data-grid/locales";
 
 import { DATA_GRID_LOCALE_TEXT, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/utils/constans";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
-import styles from "./catalog.module.css";
+import sharedStyles from "./catalog.module.css";
+import styles from "./CatalogList.module.css";
 
 interface CatalogListProps<Row extends GridValidRowModel> {
   title: string;
@@ -48,7 +48,7 @@ export function CatalogList<Row extends GridValidRowModel>({
 
   return (
     <div className={sharedStyles.page}>
-      <header className={sharedStyles.listHeader}>
+      <header className={styles.listHeader}>
         <div className={sharedStyles.heading}>
           <span className={sharedStyles.headingIcon} aria-hidden="true">{icon}</span>
           <h1 id={headingId}>{title}</h1>
@@ -68,9 +68,9 @@ export function CatalogList<Row extends GridValidRowModel>({
 
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-      <div className={sharedStyles.gridPanel}>
+      <div className={styles.gridPanel}>
         <DataGrid
-          className={`${sharedStyles.grid} ${styles.grid}`}
+          className={styles.grid}
           aria-labelledby={headingId}
           rows={rows}
           columns={columns}
@@ -96,7 +96,7 @@ export function CatalogName({ name, protectedItem }: { name: string; protectedIt
   return (
     <div className={styles.name}>
       <span>{name}</span>
-      {protectedItem && <Chip size="small" label={t("protected")} className={sharedStyles.ticketBadge} />}
+      {protectedItem && <Chip size="small" label={t("protected")} className={sharedStyles.badge} />}
     </div>
   );
 }
@@ -124,7 +124,7 @@ export function catalogRowActions({
       label={view}
       title={view}
       onClick={onView}
-      className={sharedStyles.viewAction}
+      className={styles.viewAction}
     />,
     <GridActionsCellItem
       key="edit"
@@ -133,7 +133,7 @@ export function catalogRowActions({
       title={disabledEdit ? protectedHint : edit}
       onClick={onEdit}
       disabled={disabledEdit}
-      className={`${sharedStyles.editAction} ${styles.action}`}
+      className={`${styles.editAction} ${styles.action}`}
     />,
     <GridActionsCellItem
       key="status"
@@ -142,7 +142,7 @@ export function catalogRowActions({
       title={disabledToggle ? protectedHint : toggle}
       onClick={onToggle}
       disabled={disabledToggle}
-      className={`${sharedStyles.editAction} ${styles.action}`}
+      className={`${styles.editAction} ${styles.action}`}
     />,
   ];
 }

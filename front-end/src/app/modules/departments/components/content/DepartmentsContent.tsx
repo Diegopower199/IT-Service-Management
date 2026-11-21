@@ -20,7 +20,6 @@ import { logger } from "@/utils/logger";
 import PageLoading from "@/components/ui/PageLoading";
 import { CatalogList, catalogRowActions } from "@/app/modules/adminCatalog/CatalogList";
 import { CatalogStatusBadge, CatalogStatusDialog } from "@/app/modules/adminCatalog/CatalogEntityView";
-import sharedStyles from "@/app/modules/tickets/styles/tickets.module.css";
 
 import {
   activateDepartment,
@@ -179,14 +178,12 @@ export default function DepartmentsContent() {
       field: "idDepartment",
       headerName: t("id"),
       width: 80,
-      cellClassName: sharedStyles.ticketId,
     },
     {
       field: "name",
       headerName: t("name"),
       flex: 1,
       minWidth: 156,
-      cellClassName: sharedStyles.ticketTitle,
     },
     {
       field: "active",

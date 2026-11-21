@@ -1,0 +1,76 @@
+.dialog {
+  /* The MUI portal sits outside the app shell. */
+  font-family: var(--app-font);
+}
+
+.headingIcon {
+  display: grid;
+  flex: 0 0 44px;
+  place-items: center;
+  height: 44px;
+  border-radius: 11px;
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+
+.dialogPaper:global(.MuiDialog-paper) {
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  font-family: inherit;
+}
+
+.dialogPaper .dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--app-border);
+  background: #f8faff;
+}
+
+.dialogHeader > div {
+  min-width: 0;
+}
+
+.dialogHeader h2 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: clamp(1.125rem, 3vw, 1.375rem);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.dialogHeader p {
+  margin: 5px 0 0;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.dialogPaper .dialogContent:global(.MuiDialogContent-root) {
+  padding: 18px 20px;
+}
+
+.dialogPaper .dialogFooter {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--app-border);
+  background: #f8faff;
+}
+
+@media (max-width: 480px) {
+  .dialogPaper:global(.MuiDialog-paper) {
+    width: calc(100% - 24px);
+    max-height: calc(100% - 24px);
+    margin: 12px;
+  }
+
+  .dialogPaper .dialogHeader,
+.dialogPaper .dialogContent:global(.MuiDialogContent-root),
+.dialogPaper .dialogFooter {
+    padding-inline: 14px;
+  }
+}
