@@ -13,6 +13,7 @@ import { type StatusResponse } from "@/types/statusTypes";
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import { createStatus, updateStatus } from "../../services/statusService";
 
@@ -69,14 +70,6 @@ export default function StatusForm({
   const [errorMessage, setErrorMessage] = useState("");
 
   const isViewMode = formMode === FORM_MODES.VIEW;
-
-  const getStatusDisplayName = (statusName: string) => {
-    if (tStatuses.has(statusName)) {
-      return tStatuses(statusName);
-    }
-
-    return statusName;
-  };
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -183,7 +176,7 @@ export default function StatusForm({
       <CatalogEntityDetails
         title={t("viewTitle")}
         icon={<RuleOutlined />}
-        name={getStatusDisplayName(formData.name)}
+        name={getClassificationLabel(formData.name, tStatuses)}
         active={selectedStatus.active}
         statusLabel={t(selectedStatus.active ? "active" : "inactive")}
         backLabel={t("back")}

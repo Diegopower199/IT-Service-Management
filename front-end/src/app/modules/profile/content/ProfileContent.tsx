@@ -14,6 +14,7 @@ import type { UserResponse } from "@/types/userTypes";
 import { getCurrentUser } from "../../users/services/userService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { isDemoAccount } from "@/utils/demoAccountAccess";
 import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
@@ -83,6 +84,8 @@ export default function ProfileContent() {
     return <PageLoading />;
   }
 
+  const readOnly = isDemoAccount(user.username);
+
   return (
     <div className={`${styles.page} ${styles.profile}`}>
       <header className={styles.heading}>
@@ -98,10 +101,11 @@ export default function ProfileContent() {
         <div className={styles.layout}>
           <ProfileInformation
             profile={profile}
+            readOnly={readOnly}
             onSubmitSuccess={handleProfileUpdated}
           />
 
-          <ChangePasswordForm />
+          <ChangePasswordForm readOnly={readOnly} />
         </div>
       ) : loading && <PageLoading />}
     </div>

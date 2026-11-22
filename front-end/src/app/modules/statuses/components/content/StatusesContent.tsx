@@ -17,6 +17,7 @@ import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import PageLoading from "@/components/ui/PageLoading";
 import { CatalogList, catalogRowActions, CatalogName } from "@/app/modules/adminCatalog/CatalogList";
@@ -103,14 +104,6 @@ export default function StatusesContent() {
 
     loadStatuses();
   }, [isAuthReady, user, router, statusesUpdated, fetchStatuses]);
-
-  const getStatusDisplayName = (statusName: string) => {
-    if (tStatuses.has(statusName)) {
-      return tStatuses(statusName);
-    }
-
-    return statusName;
-  };
 
   const handleCreateStatus = () => {
     setSelectedStatus(null);
@@ -210,7 +203,7 @@ export default function StatusesContent() {
       flex: 1,
       minWidth: 156,
       renderCell: ({ row }) => (
-        <CatalogName name={getStatusDisplayName(row.name)} protectedItem={isProtectedStatus(row.name)} />
+        <CatalogName name={getClassificationLabel(row.name, tStatuses)} protectedItem={isProtectedStatus(row.name)} />
       ),
     },
     {
@@ -279,7 +272,9 @@ export default function StatusesContent() {
         open={Boolean(statusToChange)}
         active={deactivating}
         title={t(deactivating ? "deactivateTitle" : "activateTitle")}
-        message={statusToChange ? t(deactivating ? "deactivateConfirmation" : "activateConfirmation", { name: statusToChange.name }) : undefined}
+        message={statusToChange ? t(deactivating ? "deactivateConfirmation" : "activateConfirmation", {
+          name: getClassificationLabel(statusToChange.name, tStatuses),
+        }) : undefined}
         errorMessage={statusErrorMessage}
         saving={changingStatus}
         cancelLabel={t("cancel")}

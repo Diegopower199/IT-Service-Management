@@ -16,6 +16,7 @@ import {
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import { getHistoryValueLabel } from "@/utils/ticketUiUtils";
 
 import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 
@@ -36,6 +37,8 @@ export default function TicketHistoryContent({
   ticketId,
 }: TicketHistoryContentProps) {
   const t = useTranslations("Tickets.HistoryContent");
+  const tStatuses = useTranslations("Common.Statuses");
+  const tPriorities = useTranslations("Common.Priorities");
   const locale = useLocale();
   const localeText =
     locale === "es"
@@ -122,7 +125,7 @@ export default function TicketHistoryContent({
       flex: 1.35,
       minWidth: 172,
       cellClassName: `${sharedStyles.wrapCell} ${styles.historyPrevious}`,
-      valueFormatter: (value) => value ?? "-",
+      valueFormatter: (value, row) => getHistoryValueLabel(row.action, value, tStatuses, tPriorities),
     },
     {
       field: "newValue",
@@ -130,7 +133,7 @@ export default function TicketHistoryContent({
       flex: 1.35,
       minWidth: 172,
       cellClassName: sharedStyles.wrapCell,
-      valueFormatter: (value) => value ?? "-",
+      valueFormatter: (value, row) => getHistoryValueLabel(row.action, value, tStatuses, tPriorities),
     },
     {
       field: "user",

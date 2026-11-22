@@ -29,6 +29,7 @@ import {
 
 interface ProfileInformationProps {
   profile: UserResponse;
+  readOnly: boolean;
   onSubmitSuccess: () => void;
 }
 
@@ -38,6 +39,7 @@ const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png"];
 
 export default function ProfileInformation({
   profile,
+  readOnly,
   onSubmitSuccess,
 }: ProfileInformationProps) {
   const t = useTranslations("Profile.Information");
@@ -58,7 +60,7 @@ export default function ProfileInformation({
   const avatarBusy = uploadingAvatar || deletingAvatar;
 
   const handleEditProfile = () => {
-    setEditing(true);
+    if (!readOnly) setEditing(true);
   };
 
   const handleCloseEdit = () => {
@@ -78,7 +80,7 @@ export default function ProfileInformation({
 
     event.target.value = "";
 
-    if (!file) {
+    if (readOnly || !file) {
       return;
     }
 
@@ -125,6 +127,8 @@ export default function ProfileInformation({
    * Deletes the authenticated user's avatar.
    */
   const handleDeleteAvatar = async () => {
+    if (readOnly) return;
+
     try {
       setDeletingAvatar(true);
       setAvatarError("");
@@ -153,7 +157,7 @@ export default function ProfileInformation({
     }
   };
 
-  if (editing) {
+  if (editing && !readOnly) {
     return (
       <ProfileForm
         profile={profile}
@@ -203,14 +207,14 @@ export default function ProfileInformation({
           hidden
           accept=".jpg,.jpeg,.png"
           onChange={handleAvatarChange}
-          disabled={avatarBusy}
+          disabled={avatarBusy || readOnly}
         />
         <Button
           type="button"
           variant="outlined"
           startIcon={uploadingAvatar ? <CircularProgress size={16} color="inherit" /> : <UploadFileOutlined />}
           onClick={() => photoInput.current?.click()}
-          disabled={avatarBusy}
+          disabled={avatarBusy || readOnly}
           className={sharedStyles.secondaryButton}
         >
           {uploadingAvatar ? t("uploadingAvatar") : hasAvatar ? t("changeAvatar") : t("uploadAvatar")}
@@ -223,7 +227,7 @@ export default function ProfileInformation({
             color="error"
             startIcon={deletingAvatar ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineRounded />}
             onClick={handleDeleteAvatar}
-            disabled={avatarBusy}
+            disabled={avatarBusy || readOnly}
             className={`${sharedStyles.secondaryButton} ${styles.deletePhoto}`}
           >
             {deletingAvatar ? t("deletingAvatar") : t("deleteAvatar")}
@@ -250,6 +254,7 @@ export default function ProfileInformation({
           disableElevation
           startIcon={<EditOutlined />}
           onClick={handleEditProfile}
+          disabled={readOnly}
           className={sharedStyles.primaryButton}
         >
           {t("editProfile")}

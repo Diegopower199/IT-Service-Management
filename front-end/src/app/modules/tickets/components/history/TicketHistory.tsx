@@ -15,6 +15,7 @@ import type { TicketHistoryResponse } from "@/types/ticketHistoryTypes";
 import { DEFAULT_TICKET_HISTORY_SORT } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import { getHistoryValueLabel } from "@/utils/ticketUiUtils";
 
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
 
@@ -33,6 +34,8 @@ export default function TicketHistory({
   historyUpdated,
 }: TicketHistoryProps) {
   const t = useTranslations("Tickets.HistoryPanel");
+  const tStatuses = useTranslations("Common.Statuses");
+  const tPriorities = useTranslations("Common.Priorities");
 
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
     [],
@@ -111,9 +114,9 @@ export default function TicketHistory({
 
               {(history.oldValue || history.newValue) && (
                 <div className={styles.historyValues}>
-                  <span>{history.oldValue ?? "-"}</span>
+                  <span>{getHistoryValueLabel(history.action, history.oldValue, tStatuses, tPriorities)}</span>
                   <span aria-hidden="true">→</span>
-                  <span>{history.newValue ?? "-"}</span>
+                  <span>{getHistoryValueLabel(history.action, history.newValue, tStatuses, tPriorities)}</span>
                 </div>
               )}
             </article>

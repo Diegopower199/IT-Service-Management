@@ -87,10 +87,10 @@ describe("TicketFiltersBar", () => {
     const [statusSelect, prioritySelect] = screen.getAllByRole("combobox");
 
     await user.click(statusSelect);
-    await user.click(await screen.findByRole("option", { name: "OPEN" }));
+    await user.click(await screen.findByRole("option", { name: "Open" }));
 
     await user.click(prioritySelect);
-    await user.click(await screen.findByRole("option", { name: "HIGH" }));
+    await user.click(await screen.findByRole("option", { name: "High" }));
 
     await user.click(screen.getByRole("button", { name: "Apply Filters" }));
 

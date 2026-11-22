@@ -13,6 +13,7 @@ import { type PriorityResponse } from "@/types/priorityTypes";
 import { FORM_MODES, type FormMode } from "@/utils/constans";
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import { createPriority, updatePriority } from "../../services/priorityService";
 
@@ -69,14 +70,6 @@ export default function PriorityForm({
   const [errorMessage, setErrorMessage] = useState("");
 
   const isViewMode = formMode === FORM_MODES.VIEW;
-
-  const getPriorityDisplayName = (priorityName: string) => {
-    if (tPriorities.has(priorityName)) {
-      return tPriorities(priorityName);
-    }
-
-    return priorityName;
-  };
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -183,7 +176,7 @@ export default function PriorityForm({
       <CatalogEntityDetails
         title={t("viewTitle")}
         icon={<FlagOutlined />}
-        name={getPriorityDisplayName(formData.name)}
+        name={getClassificationLabel(formData.name, tPriorities)}
         active={selectedPriority.active}
         statusLabel={t(selectedPriority.active ? "active" : "inactive")}
         backLabel={t("back")}

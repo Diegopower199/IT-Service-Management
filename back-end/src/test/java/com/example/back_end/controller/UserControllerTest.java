@@ -123,11 +123,12 @@ class UserControllerTest {
 
     @Test
     void createUserShouldReturnCreatedUser() {
+        when(authentication.getName()).thenReturn("admin");
 
-        when(userService.createUser(createUserRequest))
+        when(userService.createUser("admin", createUserRequest))
                 .thenReturn(userResponse);
 
-        ResponseEntity<UserResponse> response = userController.createUser(createUserRequest);
+        ResponseEntity<UserResponse> response = userController.createUser(authentication, createUserRequest);
 
         assertThat(response.getStatusCode())
                 .isEqualTo(HttpStatus.CREATED);
@@ -135,20 +136,23 @@ class UserControllerTest {
         assertThat(response.getBody())
                 .isSameAs(userResponse);
 
-        verify(userService).createUser(createUserRequest);
+        verify(userService).createUser("admin", createUserRequest);
     }
 
     @Test
     void updateUserShouldReturnUpdatedUser() {
+        when(authentication.getName()).thenReturn("admin");
 
         Long userId = 1L;
 
         when(userService.updateUser(
+                "admin",
                 updateUserRequest,
                 userId))
                 .thenReturn(userResponse);
 
         ResponseEntity<UserResponse> response = userController.updateUser(
+                authentication,
                 userId,
                 updateUserRequest);
 
@@ -159,6 +163,7 @@ class UserControllerTest {
                 .isSameAs(userResponse);
 
         verify(userService).updateUser(
+                "admin",
                 updateUserRequest,
                 userId);
     }

@@ -1,10 +1,9 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { Chip } from "@mui/material";
 
 import type { TicketResponse } from "@/types/ticketTypes";
-import { getPriorityColor, getStatusColor } from "@/utils/ticketUiUtils";
+import TicketClassificationChip from "@/components/ui/TicketClassificationChip";
 
 import styles from "../styles/dashboard.module.css";
 
@@ -19,25 +18,6 @@ export default function DashboardRecentTickets({
   const locale = useLocale();
   const dateFormatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
   const timeFormatter = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
-
-  const tStatuses = useTranslations("Common.Statuses");
-  const tPriorities = useTranslations("Common.Priorities");
-
-  const getStatusDisplayName = (statusName: string) => {
-    if (tStatuses.has(statusName)) {
-      return tStatuses(statusName);
-    }
-
-    return statusName;
-  };
-
-  const getPriorityDisplayName = (priorityName: string) => {
-    if (tPriorities.has(priorityName)) {
-      return tPriorities(priorityName);
-    }
-
-    return priorityName;
-  };
 
   return (
     <section className={styles.recentTickets}>
@@ -73,20 +53,10 @@ export default function DashboardRecentTickets({
                   <td className={styles.ticketId}>#{ticket.idTicket}</td>
                   <td className={styles.ticketTitle}>{ticket.title}</td>
                   <td>
-                    <Chip
-                      className={styles.ticketBadge}
-                      size="small"
-                      color={getStatusColor(ticket.status.name)}
-                      label={getStatusDisplayName(ticket.status.name)}
-                    />
+                    <TicketClassificationChip kind="status" name={ticket.status.name} className={styles.ticketBadge} />
                   </td>
                   <td>
-                    <Chip
-                      className={styles.ticketBadge}
-                      size="small"
-                      color={getPriorityColor(ticket.priority.name)}
-                      label={getPriorityDisplayName(ticket.priority.name)}
-                    />
+                    <TicketClassificationChip kind="priority" name={ticket.priority.name} className={styles.ticketBadge} />
                   </td>
                   <td>{ticket.assignedTo?.username ?? "-"}</td>
                   <td>

@@ -54,12 +54,9 @@ SET @priority_very_low = (SELECT id_priority FROM priorities WHERE name = 'VERY_
 SET @priority_urgent = (SELECT id_priority FROM priorities WHERE name = 'URGENT');
 SET @status_open = (SELECT id_status FROM statuses WHERE name = 'OPEN');
 SET @status_in_progress = (SELECT id_status FROM statuses WHERE name = 'IN_PROGRESS');
-SET @status_waiting = (SELECT id_status FROM statuses WHERE name = 'WAITING');
+SET @status_blocked = (SELECT id_status FROM statuses WHERE name = 'BLOCKED');
 SET @status_resolved = (SELECT id_status FROM statuses WHERE name = 'RESOLVED');
 SET @status_closed = (SELECT id_status FROM statuses WHERE name = 'CLOSED');
-SET @status_pending_customer = (SELECT id_status FROM statuses WHERE name = 'PENDING_CUSTOMER');
-SET @status_pending_vendor = (SELECT id_status FROM statuses WHERE name = 'PENDING_VENDOR');
-SET @status_cancelled = (SELECT id_status FROM statuses WHERE name = 'CANCELLED');
 
 -- ------------------------------------------------------------
 -- 2. USERS (individual BCrypt password hashes)
@@ -71,21 +68,21 @@ SET @status_cancelled = (SELECT id_status FROM statuses WHERE name = 'CANCELLED'
 INSERT INTO users
     (username, email, password, first_name, last_name, enabled, id_role, id_department)
 VALUES
-    ('admin_demo', 'admin_demo@company.test', '$2y$12$zrsxcpFOjgmwb9bfUOnH4.ZulNLousHfZo5h/42qRPf.tM2ZVXVo6', 'Demo', 'Administrator', TRUE, @role_admin, @department_it),
-    ('technician_demo', 'technician_demo@company.test', '$2y$12$m6xCBTsH/E91zJil0yPH.OdRUceJHHQiMxCB2fmFyhL7TDfcXu2mK', 'Demo', 'Technician', TRUE, @role_technician, @department_it),
-    ('user_demo', 'user_demo@company.test', '$2y$12$CvDyvmpPuTFj5vNtXm3L.uu7QkwD1qcGzwMiftuvEgv4FDhC27XDK', 'Demo', 'User', TRUE, @role_user, @department_finance),
-    ('tech.sofia', 'tech.sofia@company.test', '$2y$12$ipytrwegy34Xdw7pm4fxHuqQ3xNAEsszMFpq6zFfwctVy/oRPb0bu', 'Sofia', 'Lopez', TRUE, @role_technician, @department_it),
-    ('tech.mario', 'tech.mario@company.test', '$2y$12$a15Cvb3a8jQok6G7Ye3.tOHABYM66DlsdONaj5UexmHuN5Vxfj3Y2', 'Mario', 'Ruiz', TRUE, @role_technician, @department_security),
-    ('user.pablo', 'user.pablo@company.test', '$2y$12$jnkc0mPrp4o5jRO0/TKpMes9RQ55Cr5kS3l7A8feX0RYy7C527sYW', 'Pablo', 'Santos', TRUE, @role_user, @department_sales),
-    ('user.lucia', 'user.lucia@company.test', '$2y$12$2qqXuOYnpvn5/S1m7Ps99OKwwXQgLkZl8RV/blL9Im3iLXtvq5LPG', 'Lucia', 'Martin', TRUE, @role_user, @department_human_resources),
-    ('tech.daniel', 'tech.daniel@company.test', '$2y$12$ELKad2vjgvzO4WDXdUeTOeVVmN8elkd.mYvtfhNawgCp9i.a0dTh.', 'Daniel', 'Moreno', TRUE, @role_technician, @department_it),
-    ('tech.elena', 'tech.elena@company.test', '$2y$12$xGLFpaNeLe2bn8nGkSOS3eUm2Od43YiIRzYKeDa1rNE.DzvP7ddFC', 'Elena', 'Vega', TRUE, @role_technician, @department_security),
-    ('user.marta', 'user.marta@company.test', '$2y$12$kKyuzQPQYO2neqJrv3zXUOngXg8lH9t6JnKKqM1iRfB08qVSI9GUS', 'Marta', 'Navarro', TRUE, @role_user, @department_marketing),
-    ('user.javier', 'user.javier@company.test', '$2y$12$8THuM4lwhmoAIRG8mtjRZeJMJ6BTZZ0qAN7J1oZndrNJAT3lvFtlW', 'Javier', 'Torres', TRUE, @role_user, @department_legal),
-    ('user.sara', 'user.sara@company.test', '$2y$12$/UB2P0RHe.njh8cvrENxs.BRL2KyLou1LBgiwSbYvHKJcPzwXTE0e', 'Sara', 'Romero', TRUE, @role_user, @department_operations),
-    ('user.alberto', 'user.alberto@company.test', '$2y$12$WT24grjFErju96ZMdYQBS.fgjbT2Cd.l9mhTjQTkhlM35AXZQDbLa', 'Alberto', 'Molina', TRUE, @role_user, @department_customer_support),
-    ('user.clara', 'user.clara@company.test', '$2y$12$Kv.CJzPbI0uPiKM1nFL5pOgJG6BTsKM6J.oiThC56pW6nfqDzoH4i', 'Clara', 'Fernandez', TRUE, @role_user, @department_procurement),
-    ('user.david', 'user.david@company.test', '$2y$12$MRg5IAI/k0i3mCGNNlCsOe5bofO/0uaYAfjOQyF2aj7OiQLYIlf3i', 'David', 'Ortega', TRUE, @role_user, @department_product_development);
+    ('admin_demo', 'admin_demo@company.test', '$2a$10$Tz5UHpPQq53AYKhwG3tKBOnPi4W4LKzljxao0WQ2w.HeTstRINcKG', 'Demo', 'Administrator', TRUE, @role_admin, @department_it),
+    ('technician_demo', 'technician_demo@company.test', '$2a$10$eUA5hgYxYDsNyxiA/5e8aOhe2r94/jqxi2uTuhcIATN3jQIBH6cUC', 'Demo', 'Technician', TRUE, @role_technician, @department_it),
+    ('user_demo', 'user_demo@company.test', '$2a$10$GdfbvKUqXd05RswwG2fTLuT/DJDYr5D4DBnTT..yoSwrSjZqTGZXq', 'Demo', 'User', TRUE, @role_user, @department_finance),
+    ('tech.sofia', 'tech.sofia@company.test', '$2a$10$4uOvNKjgEoulF1pyrczz.eqynr0OzABrRNvff0A.o45pfMUOoqht6', 'Sofia', 'Lopez', TRUE, @role_technician, @department_it),
+    ('tech.mario', 'tech.mario@company.test', '$2a$10$pkBTDJmwt8TpXK/HUp3NduoTsxHFY2lRY.kCv.GbzuN8ZIF8Kk3lu', 'Mario', 'Ruiz', TRUE, @role_technician, @department_security),
+    ('user.pablo', 'user.pablo@company.test', '$2a$10$ttslzffTmpvVqNeXSUVZPO/.XYbF8Olrjpl5tU4fuUtmijWnHz5J.', 'Pablo', 'Santos', TRUE, @role_user, @department_sales),
+    ('user.lucia', 'user.lucia@company.test', '$2a$10$P.uQtXSOMFljMRBT3jzQeOi1.wuTMpQxYkaRTlKw.sdLNR8a9472G', 'Lucia', 'Martin', TRUE, @role_user, @department_human_resources),
+    ('tech.daniel', 'tech.daniel@company.test', '$2a$10$8oF1c77R1r9CJDoPL/hjcecFsMTbS0OI5ddw4ezGNhnA0bDBjd/8S', 'Daniel', 'Moreno', TRUE, @role_technician, @department_it),
+    ('tech.elena', 'tech.elena@company.test', '$2a$10$G/gskkSEZV6KNqEwNC9pp.TxJ/cPi6JheWq6mRdUGYGrYC1.ntdp6', 'Elena', 'Vega', TRUE, @role_technician, @department_security),
+    ('user.marta', 'user.marta@company.test', '$2a$10$jqcyywpL/r0tYEijzgWM1OvzP9JjDjKS8kdgi8C2LQMkrjGVk0Mf6', 'Marta', 'Navarro', TRUE, @role_user, @department_marketing),
+    ('user.javier', 'user.javier@company.test', '$2a$10$oYgwuQBus51RWj1rDpY0DetFxldxjBKWzUwD8ISd1UxMDUPBucpoO', 'Javier', 'Torres', TRUE, @role_user, @department_legal),
+    ('user.sara', 'user.sara@company.test', '$2a$10$v42Pa5ozDSiTSfqwfhu8Weer.Iq2EUKxQyB6lpLoJLXoPGlEnl4AG', 'Sara', 'Romero', TRUE, @role_user, @department_operations),
+    ('user.alberto', 'user.alberto@company.test', '$2a$10$mECSbDvsKMvDT6fBPTz1QObTwqkN6eopOcco.xjpGj3Zg4Uy5PWxi', 'Alberto', 'Molina', TRUE, @role_user, @department_customer_support),
+    ('user.clara', 'user.clara@company.test', '$2a$10$zTodkxA1KP5AWWNmZfv93OIRiWMGLNWN6vm5Yj7CmH1Y1VQWeWXpe', 'Clara', 'Fernandez', TRUE, @role_user, @department_procurement),
+    ('user.david', 'user.david@company.test', '$2a$10$b/44RU838swtCs6c3U36S.3Sn92s7S48sidg4uX4Znxi9QhXPNP4G', 'David', 'Ortega', TRUE, @role_user, @department_product_development);
 
 SET @admin_demo = (SELECT id_user FROM users WHERE username = 'admin_demo');
 SET @technician_demo = (SELECT id_user FROM users WHERE username = 'technician_demo');
@@ -117,17 +114,17 @@ INSERT INTO tickets
 VALUES
     (1, 'Critical access to administration portal', 'The administrator cannot access the corporate administration portal.', DATE_SUB(NOW(), INTERVAL 24 HOUR), DATE_SUB(NOW(), INTERVAL 18 HOUR), @admin_demo, @admin_demo, NULL, @category_access, @priority_critical, @status_open),
     (2, 'Administrative security permissions issue', 'Some administrative permissions are not working correctly.', DATE_SUB(NOW(), INTERVAL 72 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR), @admin_demo, @admin_demo, @technician_demo, @category_security, @priority_high, @status_in_progress),
-    (3, 'Administration software update pending', 'A required administration software update is waiting for approval.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 6 HOUR), @admin_demo, @admin_demo, @sofia, @category_software, @priority_medium, @status_waiting),
+    (3, 'Administration software update pending', 'A required administration software update is waiting for approval.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 6 HOUR), @admin_demo, @admin_demo, @sofia, @category_software, @priority_medium, @status_blocked),
     (4, 'Administrative VPN problem resolved', 'The VPN connection used by the administrator has been restored.', DATE_SUB(NOW(), INTERVAL 168 HOUR), DATE_SUB(NOW(), INTERVAL 48 HOUR), @admin_demo, @admin_demo, @sofia, @category_network, @priority_medium, @status_resolved),
     (5, 'Administrative email configuration', 'A minor email configuration problem was resolved and closed.', DATE_SUB(NOW(), INTERVAL 240 HOUR), DATE_SUB(NOW(), INTERVAL 120 HOUR), @admin_demo, @admin_demo, @technician_demo, @category_email, @priority_low, @status_closed),
     (6, 'Security console unavailable', 'The technician cannot access the corporate security console.', DATE_SUB(NOW(), INTERVAL 24 HOUR), DATE_SUB(NOW(), INTERVAL 16 HOUR), @technician_demo, @technician_demo, NULL, @category_security, @priority_critical, @status_open),
     (7, 'Technician network connectivity problem', 'The technician workstation has intermittent network connectivity.', DATE_SUB(NOW(), INTERVAL 72 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR), @technician_demo, @technician_demo, @technician_demo, @category_network, @priority_high, @status_in_progress),
-    (8, 'Support software license pending', 'The technician is waiting for approval of a support software license.', DATE_SUB(NOW(), INTERVAL 120 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR), @technician_demo, @technician_demo, @sofia, @category_software, @priority_medium, @status_waiting),
+    (8, 'Support software license pending', 'The technician is waiting for approval of a support software license.', DATE_SUB(NOW(), INTERVAL 120 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR), @technician_demo, @technician_demo, @sofia, @category_software, @priority_medium, @status_blocked),
     (9, 'Technician email synchronization resolved', 'The email synchronization problem has been resolved.', DATE_SUB(NOW(), INTERVAL 168 HOUR), DATE_SUB(NOW(), INTERVAL 48 HOUR), @technician_demo, @technician_demo, @technician_demo, @category_email, @priority_medium, @status_resolved),
     (10, 'Technician monitor configuration', 'The secondary monitor configuration was corrected and the ticket was closed.', DATE_SUB(NOW(), INTERVAL 240 HOUR), DATE_SUB(NOW(), INTERVAL 96 HOUR), @technician_demo, @technician_demo, @mario, @category_hardware, @priority_low, @status_closed),
     (11, 'Suspicious login detected', 'The user received a login notification from an unknown location.', DATE_SUB(NOW(), INTERVAL 24 HOUR), DATE_SUB(NOW(), INTERVAL 18 HOUR), @user_demo, @user_demo, NULL, @category_security, @priority_critical, @status_open),
     (12, 'Corporate VPN connection failure', 'The user cannot connect to the corporate VPN while working remotely.', DATE_SUB(NOW(), INTERVAL 72 HOUR), DATE_SUB(NOW(), INTERVAL 4 HOUR), @user_demo, @user_demo, @technician_demo, @category_network, @priority_high, @status_in_progress),
-    (13, 'Excel report application error', 'Excel closes unexpectedly when opening a specific report.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 24 HOUR), @user_demo, @user_demo, @technician_demo, @category_software, @priority_medium, @status_waiting),
+    (13, 'Excel report application error', 'Excel closes unexpectedly when opening a specific report.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 24 HOUR), @user_demo, @user_demo, @technician_demo, @category_software, @priority_medium, @status_blocked),
     (14, 'Password access problem resolved', 'The user password was reset and access has been restored.', DATE_SUB(NOW(), INTERVAL 144 HOUR), DATE_SUB(NOW(), INTERVAL 48 HOUR), @user_demo, @user_demo, @sofia, @category_access, @priority_medium, @status_resolved),
     (15, 'Keyboard replacement completed', 'The defective keyboard was replaced and the incident was closed.', DATE_SUB(NOW(), INTERVAL 216 HOUR), DATE_SUB(NOW(), INTERVAL 96 HOUR), @user_demo, @user_demo, @technician_demo, @category_hardware, @priority_low, @status_closed),
     (16, 'Sales laptop running slowly', 'The laptop used by the sales team is very slow when opening CRM reports.', DATE_SUB(NOW(), INTERVAL 48 HOUR), DATE_SUB(NOW(), INTERVAL 36 HOUR), @pablo, @pablo, NULL, @category_hardware, @priority_medium, @status_open),
@@ -135,43 +132,43 @@ VALUES
     (18, 'Human Resources mailbox restored', 'The Human Resources shared mailbox can send and receive messages again.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 48 HOUR), @lucia, @lucia, @sofia, @category_email, @priority_medium, @status_resolved),
     (19, 'SSO login failure for cloud administration', 'Several administrators receive a sign-in error when opening the cloud management console.', DATE_SUB(NOW(), INTERVAL 72 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR), @admin_demo, @admin_demo, @elena, @category_cloud_services, @priority_critical, @status_in_progress),
     (20, 'Nightly backup report missing', 'The latest infrastructure backup report has not reached the administrators mailbox.', DATE_SUB(NOW(), INTERVAL 18 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR), @admin_demo, @admin_demo, NULL, @category_backup_recovery, @priority_high, @status_open),
-    (21, 'Database maintenance requires approval', 'The planned database index maintenance cannot proceed until the change window is approved.', DATE_SUB(NOW(), INTERVAL 144 HOUR), DATE_SUB(NOW(), INTERVAL 11 HOUR), @admin_demo, @admin_demo, @daniel, @category_databases, @priority_medium, @status_waiting),
+    (21, 'Database maintenance requires approval', 'The planned database index maintenance cannot proceed until the change window is approved.', DATE_SUB(NOW(), INTERVAL 144 HOUR), DATE_SUB(NOW(), INTERVAL 11 HOUR), @admin_demo, @admin_demo, @daniel, @category_databases, @priority_medium, @status_blocked),
     (22, 'Teams guest invitation problem', 'External guests were unable to join a project workspace using their invitation links.', DATE_SUB(NOW(), INTERVAL 480 HOUR), DATE_SUB(NOW(), INTERVAL 36 HOUR), @admin_demo, @admin_demo, @sofia, @category_collaboration_tools, @priority_low, @status_closed),
-    (23, 'Endpoint protection console alerts delayed', 'Critical endpoint security alerts appear several hours late in the management console.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 7 HOUR), @admin_demo, @admin_demo, @mario, @category_security, @priority_urgent, @status_pending_vendor),
+    (23, 'Endpoint protection console alerts delayed', 'Critical endpoint security alerts appear several hours late in the management console.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 7 HOUR), @admin_demo, @admin_demo, @mario, @category_security, @priority_urgent, @status_blocked),
     (24, 'Office DNS lookup failures', 'Several workstations intermittently failed to resolve internal application hostnames.', DATE_SUB(NOW(), INTERVAL 240 HOUR), DATE_SUB(NOW(), INTERVAL 18 HOUR), @admin_demo, @admin_demo, @technician_demo, @category_network, @priority_high, @status_resolved),
     (25, 'IT inventory scanner not detecting laptops', 'The asset inventory scanner is missing recently deployed company laptops.', DATE_SUB(NOW(), INTERVAL 84 HOUR), DATE_SUB(NOW(), INTERVAL 6 HOUR), @admin_demo, @admin_demo, @daniel, @category_hardware, @priority_medium, @status_in_progress),
-    (26, 'Temporary permissions for retired portal', 'A temporary access request was raised for a portal that is being retired.', DATE_SUB(NOW(), INTERVAL 360 HOUR), DATE_SUB(NOW(), INTERVAL 27 HOUR), @admin_demo, @admin_demo, NULL, @category_access, @priority_very_low, @status_cancelled),
+    (26, 'Temporary permissions for retired portal', 'A temporary access request was raised for a portal that is being retired.', DATE_SUB(NOW(), INTERVAL 360 HOUR), DATE_SUB(NOW(), INTERVAL 27 HOUR), @admin_demo, @admin_demo, NULL, @category_access, @priority_very_low, @status_closed),
     (27, 'Unusual firewall events on support subnet', 'The service desk subnet is generating unexpected firewall deny events.', DATE_SUB(NOW(), INTERVAL 60 HOUR), DATE_SUB(NOW(), INTERVAL 4 HOUR), @technician_demo, @technician_demo, @mario, @category_security, @priority_high, @status_in_progress),
-    (28, 'Shared printer driver deployment blocked', 'The print server is rejecting the latest shared printer driver package.', DATE_SUB(NOW(), INTERVAL 110 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR), @technician_demo, @technician_demo, @daniel, @category_printers_scanners, @priority_medium, @status_waiting),
+    (28, 'Shared printer driver deployment blocked', 'The print server is rejecting the latest shared printer driver package.', DATE_SUB(NOW(), INTERVAL 110 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR), @technician_demo, @technician_demo, @daniel, @category_printers_scanners, @priority_medium, @status_blocked),
     (29, 'Monitoring agent disconnected from cloud instance', 'A cloud-hosted support instance stopped sending heartbeat metrics.', DATE_SUB(NOW(), INTERVAL 320 HOUR), DATE_SUB(NOW(), INTERVAL 24 HOUR), @technician_demo, @technician_demo, @sofia, @category_cloud_services, @priority_high, @status_resolved),
     (30, 'Update service desk remote support tool', 'The remote assistance utility required an update to the approved version.', DATE_SUB(NOW(), INTERVAL 420 HOUR), DATE_SUB(NOW(), INTERVAL 32 HOUR), @technician_demo, @technician_demo, @technician_demo, @category_software, @priority_low, @status_closed),
     (31, 'Support phone cannot sync contacts', 'The shared service desk phone stopped synchronizing the corporate address book.', DATE_SUB(NOW(), INTERVAL 12 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR), @technician_demo, @technician_demo, NULL, @category_mobile_devices, @priority_medium, @status_open),
-    (32, 'Restore test requires data owner confirmation', 'A restore test has produced recovered files that need business-owner validation.', DATE_SUB(NOW(), INTERVAL 48 HOUR), DATE_SUB(NOW(), INTERVAL 4 HOUR), @technician_demo, @technician_demo, @elena, @category_backup_recovery, @priority_critical, @status_pending_customer),
+    (32, 'Restore test requires data owner confirmation', 'A restore test has produced recovered files that need business-owner validation.', DATE_SUB(NOW(), INTERVAL 48 HOUR), DATE_SUB(NOW(), INTERVAL 4 HOUR), @technician_demo, @technician_demo, @elena, @category_backup_recovery, @priority_critical, @status_blocked),
     (33, 'Service desk reports timing out', 'Ticket reporting queries are unusually slow during office hours.', DATE_SUB(NOW(), INTERVAL 200 HOUR), DATE_SUB(NOW(), INTERVAL 15 HOUR), @technician_demo, @technician_demo, @daniel, @category_databases, @priority_medium, @status_in_progress),
     (34, 'Remote assistance session fails to connect', 'The remote support application cannot connect to certain employee computers.', DATE_SUB(NOW(), INTERVAL 160 HOUR), DATE_SUB(NOW(), INTERVAL 12 HOUR), @technician_demo, @technician_demo, @sofia, @category_remote_access, @priority_high, @status_resolved),
     (35, 'Finance scanner adds blank pages', 'The document scanner in Finance inserts blank pages into multi-page scans.', DATE_SUB(NOW(), INTERVAL 20 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR), @user_demo, @user_demo, NULL, @category_printers_scanners, @priority_low, @status_open),
     (36, 'Invoice emails not reaching suppliers', 'Several invoice emails sent from Finance are being rejected by external recipients.', DATE_SUB(NOW(), INTERVAL 56 HOUR), DATE_SUB(NOW(), INTERVAL 4 HOUR), @user_demo, @user_demo, @technician_demo, @category_email, @priority_high, @status_in_progress),
-    (37, 'Cannot open shared meeting notes', 'A shared project meeting notebook is inaccessible to some team members.', DATE_SUB(NOW(), INTERVAL 120 HOUR), DATE_SUB(NOW(), INTERVAL 9 HOUR), @user_demo, @user_demo, @sofia, @category_collaboration_tools, @priority_medium, @status_waiting),
+    (37, 'Cannot open shared meeting notes', 'A shared project meeting notebook is inaccessible to some team members.', DATE_SUB(NOW(), INTERVAL 120 HOUR), DATE_SUB(NOW(), INTERVAL 9 HOUR), @user_demo, @user_demo, @sofia, @category_collaboration_tools, @priority_medium, @status_blocked),
     (38, 'Finance laptop battery replacement', 'A finance laptop battery was draining within an hour of use.', DATE_SUB(NOW(), INTERVAL 700 HOUR), DATE_SUB(NOW(), INTERVAL 52 HOUR), @user_demo, @user_demo, @daniel, @category_hardware, @priority_low, @status_closed),
     (39, 'MFA recovery after phone replacement', 'Finance lost access to a business app after the registered authenticator phone was replaced.', DATE_SUB(NOW(), INTERVAL 280 HOUR), DATE_SUB(NOW(), INTERVAL 21 HOUR), @user_demo, @user_demo, @elena, @category_security, @priority_critical, @status_resolved),
-    (40, 'Calendar missing from work phone', 'The corporate calendar is not visible in the managed phone calendar application.', DATE_SUB(NOW(), INTERVAL 64 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR), @user_demo, @user_demo, @technician_demo, @category_mobile_devices, @priority_medium, @status_pending_customer),
+    (40, 'Calendar missing from work phone', 'The corporate calendar is not visible in the managed phone calendar application.', DATE_SUB(NOW(), INTERVAL 64 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR), @user_demo, @user_demo, @technician_demo, @category_mobile_devices, @priority_medium, @status_blocked),
     (41, 'New finance application access denied', 'The finance reporting application denies access despite the users approved role.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 7 HOUR), @user_demo, @user_demo, @mario, @category_access, @priority_high, @status_in_progress),
-    (42, 'Request for unused desk phone extension', 'A telephone extension was requested for a desk that will remain unoccupied.', DATE_SUB(NOW(), INTERVAL 220 HOUR), DATE_SUB(NOW(), INTERVAL 16 HOUR), @user_demo, @user_demo, NULL, @category_telephony, @priority_very_low, @status_cancelled),
+    (42, 'Request for unused desk phone extension', 'A telephone extension was requested for a desk that will remain unoccupied.', DATE_SUB(NOW(), INTERVAL 220 HOUR), DATE_SUB(NOW(), INTERVAL 16 HOUR), @user_demo, @user_demo, NULL, @category_telephony, @priority_very_low, @status_closed),
     (43, 'CRM application freezes when saving deals', 'Sales staff see intermittent freezes when saving new opportunities in the CRM.', DATE_SUB(NOW(), INTERVAL 70 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR), @pablo, @pablo, @daniel, @category_software, @priority_high, @status_in_progress),
     (44, 'Sales softphone drops incoming calls', 'The sales softphone was disconnecting incoming calls after a few seconds.', DATE_SUB(NOW(), INTERVAL 260 HOUR), DATE_SUB(NOW(), INTERVAL 20 HOUR), @pablo, @pablo, @mario, @category_telephony, @priority_medium, @status_resolved),
-    (45, 'HR onboarding accounts missing permissions', 'New starters can sign in but cannot access the employee onboarding portal.', DATE_SUB(NOW(), INTERVAL 168 HOUR), DATE_SUB(NOW(), INTERVAL 13 HOUR), @lucia, @lucia, @sofia, @category_access, @priority_high, @status_waiting),
+    (45, 'HR onboarding accounts missing permissions', 'New starters can sign in but cannot access the employee onboarding portal.', DATE_SUB(NOW(), INTERVAL 168 HOUR), DATE_SUB(NOW(), INTERVAL 13 HOUR), @lucia, @lucia, @sofia, @category_access, @priority_high, @status_blocked),
     (46, 'Shared HR mailbox search not working', 'Searches in the shared HR mailbox returned incomplete results.', DATE_SUB(NOW(), INTERVAL 430 HOUR), DATE_SUB(NOW(), INTERVAL 32 HOUR), @lucia, @lucia, @elena, @category_email, @priority_medium, @status_closed),
     (47, 'Marketing presentation permissions mismatch', 'The marketing team cannot edit shared presentation files in the campaign workspace.', DATE_SUB(NOW(), INTERVAL 108 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR), @marta, @marta, @daniel, @category_collaboration_tools, @priority_medium, @status_in_progress),
     (48, 'Campaign analytics export fails', 'The marketing analytics portal fails when exporting a weekly campaign report.', DATE_SUB(NOW(), INTERVAL 300 HOUR), DATE_SUB(NOW(), INTERVAL 22 HOUR), @marta, @marta, @sofia, @category_cloud_services, @priority_low, @status_resolved),
     (49, 'Confidential document access alert', 'The Legal team received an alert about attempted access to a restricted document.', DATE_SUB(NOW(), INTERVAL 36 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR), @javier, @javier, @elena, @category_security, @priority_critical, @status_in_progress),
     (50, 'Legal department printer produces faded text', 'Printed contracts have faint text even after changing the toner cartridge.', DATE_SUB(NOW(), INTERVAL 14 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR), @javier, @javier, NULL, @category_printers_scanners, @priority_low, @status_open),
-    (51, 'Warehouse Wi-Fi access points rebooting', 'Operations reports repeated Wi-Fi interruptions near the warehouse dispatch area.', DATE_SUB(NOW(), INTERVAL 150 HOUR), DATE_SUB(NOW(), INTERVAL 11 HOUR), @sara, @sara, @mario, @category_network, @priority_high, @status_pending_vendor),
+    (51, 'Warehouse Wi-Fi access points rebooting', 'Operations reports repeated Wi-Fi interruptions near the warehouse dispatch area.', DATE_SUB(NOW(), INTERVAL 150 HOUR), DATE_SUB(NOW(), INTERVAL 11 HOUR), @sara, @sara, @mario, @category_network, @priority_high, @status_blocked),
     (52, 'Operations report accidentally deleted', 'An operations performance report was removed from a shared folder.', DATE_SUB(NOW(), INTERVAL 360 HOUR), DATE_SUB(NOW(), INTERVAL 27 HOUR), @sara, @sara, @daniel, @category_backup_recovery, @priority_medium, @status_resolved),
     (53, 'Customer support VPN drops active calls', 'The VPN connection disconnects while customer support staff use the calling application.', DATE_SUB(NOW(), INTERVAL 44 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR), @alberto, @alberto, @technician_demo, @category_remote_access, @priority_high, @status_in_progress),
-    (54, 'Call queue greeting not updating', 'Customer support updated the greeting, but callers still hear the previous message.', DATE_SUB(NOW(), INTERVAL 180 HOUR), DATE_SUB(NOW(), INTERVAL 14 HOUR), @alberto, @alberto, @sofia, @category_telephony, @priority_medium, @status_waiting),
+    (54, 'Call queue greeting not updating', 'Customer support updated the greeting, but callers still hear the previous message.', DATE_SUB(NOW(), INTERVAL 180 HOUR), DATE_SUB(NOW(), INTERVAL 14 HOUR), @alberto, @alberto, @sofia, @category_telephony, @priority_medium, @status_blocked),
     (55, 'Procurement vendor portal access', 'Procurement was unable to access the supplier onboarding portal.', DATE_SUB(NOW(), INTERVAL 540 HOUR), DATE_SUB(NOW(), INTERVAL 40 HOUR), @clara, @clara, @mario, @category_access, @priority_medium, @status_closed),
     (56, 'Purchase order barcode reader not detected', 'The USB barcode reader in Procurement was not recognised after a restart.', DATE_SUB(NOW(), INTERVAL 260 HOUR), DATE_SUB(NOW(), INTERVAL 20 HOUR), @clara, @clara, @daniel, @category_hardware, @priority_low, @status_resolved),
-    (57, 'Development database access request', 'The product team requires read-only access to a non-production database.', DATE_SUB(NOW(), INTERVAL 112 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR), @david, @david, @sofia, @category_databases, @priority_high, @status_pending_customer),
+    (57, 'Development database access request', 'The product team requires read-only access to a non-production database.', DATE_SUB(NOW(), INTERVAL 112 HOUR), DATE_SUB(NOW(), INTERVAL 8 HOUR), @david, @david, @sofia, @category_databases, @priority_high, @status_blocked),
     (58, 'Staging deployment pipeline failing', 'A product release staging job repeatedly fails to deploy a build artifact.', DATE_SUB(NOW(), INTERVAL 50 HOUR), DATE_SUB(NOW(), INTERVAL 4 HOUR), @david, @david, @elena, @category_cloud_services, @priority_critical, @status_in_progress),
     (59, 'Office network switch port errors', 'Repeated port errors caused sporadic connectivity for two IT workstations.', DATE_SUB(NOW(), INTERVAL 310 HOUR), DATE_SUB(NOW(), INTERVAL 23 HOUR), @daniel, @daniel, @mario, @category_network, @priority_medium, @status_resolved),
     (60, 'Remove deprecated antivirus management rule', 'An unused antivirus policy remained assigned to a retired endpoint group.', DATE_SUB(NOW(), INTERVAL 580 HOUR), DATE_SUB(NOW(), INTERVAL 44 HOUR), @elena, @elena, @technician_demo, @category_security, @priority_low, @status_closed);
@@ -313,7 +310,7 @@ INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) 
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
     (23, @admin_demo, 'This issue is affecting our usual workflow. Critical endpoint security alerts appear several hours late in the management console.', FALSE, DATE_SUB(NOW(), INTERVAL 85 HOUR)),
     (23, @mario, 'Alert ingestion is delayed although devices are reporting successfully.', TRUE, DATE_SUB(NOW(), INTERVAL 47 HOUR)),
-    (23, @mario, 'Vendor support is investigating the delayed alert processing.', FALSE, DATE_SUB(NOW(), INTERVAL 16 HOUR));
+    (23, @mario, 'The internal security team is investigating the delayed alert processing.', FALSE, DATE_SUB(NOW(), INTERVAL 16 HOUR));
 
 -- Ticket #24: Office DNS lookup failures
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
@@ -331,7 +328,7 @@ INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) 
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
     (26, @admin_demo, 'Providing additional context about the problem. A temporary access request was raised for a portal that is being retired.', FALSE, DATE_SUB(NOW(), INTERVAL 320 HOUR)),
     (26, @admin_demo, 'The portal owner confirmed that the service was decommissioned.', TRUE, DATE_SUB(NOW(), INTERVAL 177 HOUR)),
-    (26, @admin_demo, 'The request was cancelled because the portal is no longer available.', FALSE, DATE_SUB(NOW(), INTERVAL 60 HOUR));
+    (26, @admin_demo, 'The ticket was closed because the portal is no longer available.', FALSE, DATE_SUB(NOW(), INTERVAL 60 HOUR));
 
 -- Ticket #27: Unusual firewall events on support subnet
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
@@ -427,7 +424,7 @@ INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) 
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
     (42, @user_demo, 'Providing additional context about the problem. A telephone extension was requested for a desk that will remain unoccupied.', FALSE, DATE_SUB(NOW(), INTERVAL 196 HOUR)),
     (42, @admin_demo, 'Facilities confirmed that the desk is no longer assigned.', TRUE, DATE_SUB(NOW(), INTERVAL 108 HOUR)),
-    (42, @user_demo, 'The requester cancelled the extension request.', FALSE, DATE_SUB(NOW(), INTERVAL 36 HOUR));
+    (42, @user_demo, 'The ticket was closed after the requester confirmed the extension was no longer needed.', FALSE, DATE_SUB(NOW(), INTERVAL 36 HOUR));
 
 -- Ticket #43: CRM application freezes when saving deals
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
@@ -481,7 +478,7 @@ INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) 
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
     (51, @sara, 'Could someone investigate this issue? Operations reports repeated Wi-Fi interruptions near the warehouse dispatch area.', FALSE, DATE_SUB(NOW(), INTERVAL 133 HOUR)),
     (51, @mario, 'Access points reboot unexpectedly during peak device usage.', TRUE, DATE_SUB(NOW(), INTERVAL 74 HOUR)),
-    (51, @mario, 'The hardware vendor is reviewing diagnostics and firmware logs.', FALSE, DATE_SUB(NOW(), INTERVAL 25 HOUR));
+    (51, @mario, 'The network team is reviewing diagnostics and firmware logs.', FALSE, DATE_SUB(NOW(), INTERVAL 25 HOUR));
 
 -- Ticket #52: Operations report accidentally deleted
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
@@ -561,7 +558,7 @@ VALUES
     (3, @admin_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 96 HOUR)),
     (3, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.sofia', DATE_SUB(NOW(), INTERVAL 78 HOUR)),
     (3, @sofia, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 51 HOUR)),
-    (3, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 6 HOUR));
+    (3, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 6 HOUR));
 
 -- Ticket #4: Administrative VPN problem resolved
 INSERT INTO ticket_history
@@ -603,7 +600,7 @@ VALUES
     (8, @technician_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 120 HOUR)),
     (8, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.sofia', DATE_SUB(NOW(), INTERVAL 98 HOUR)),
     (8, @sofia, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 64 HOUR)),
-    (8, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 8 HOUR));
+    (8, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 8 HOUR));
 
 -- Ticket #9: Technician email synchronization resolved
 INSERT INTO ticket_history
@@ -650,7 +647,7 @@ VALUES
     (13, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'technician_demo', DATE_SUB(NOW(), INTERVAL 82 HOUR)),
     (13, @user_demo, 'DESCRIPTION_CHANGED', 'description', 'Excel does not work correctly.', 'Excel closes unexpectedly when opening a specific report.', DATE_SUB(NOW(), INTERVAL 74 HOUR)),
     (13, @technician_demo, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 60 HOUR)),
-    (13, @technician_demo, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 24 HOUR));
+    (13, @technician_demo, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 24 HOUR));
 
 -- Ticket #14: Password access problem resolved
 INSERT INTO ticket_history
@@ -721,7 +718,7 @@ VALUES
     (21, @admin_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 144 HOUR)),
     (21, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.daniel', DATE_SUB(NOW(), INTERVAL 108 HOUR)),
     (21, @daniel, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 88 HOUR)),
-    (21, @daniel, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 39 HOUR));
+    (21, @daniel, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 39 HOUR));
 
 -- Ticket #22: Teams guest invitation problem
 INSERT INTO ticket_history
@@ -740,7 +737,7 @@ VALUES
     (23, @admin_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 96 HOUR)),
     (23, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.mario', DATE_SUB(NOW(), INTERVAL 72 HOUR)),
     (23, @mario, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 59 HOUR)),
-    (23, @mario, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'PENDING_VENDOR', DATE_SUB(NOW(), INTERVAL 26 HOUR));
+    (23, @mario, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 26 HOUR));
 
 -- Ticket #24: Office DNS lookup failures
 INSERT INTO ticket_history
@@ -764,7 +761,7 @@ INSERT INTO ticket_history
     (id_ticket, id_user, action, field_name, old_value, new_value, created_at)
 VALUES
     (26, @admin_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 360 HOUR)),
-    (26, @admin_demo, 'STATUS_CHANGED', 'status', 'OPEN', 'CANCELLED', DATE_SUB(NOW(), INTERVAL 97 HOUR));
+    (26, @admin_demo, 'STATUS_CHANGED', 'status', 'OPEN', 'CLOSED', DATE_SUB(NOW(), INTERVAL 97 HOUR));
 
 -- Ticket #27: Unusual firewall events on support subnet
 INSERT INTO ticket_history
@@ -782,7 +779,7 @@ VALUES
     (28, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.daniel', DATE_SUB(NOW(), INTERVAL 82 HOUR)),
     (28, @admin_demo, 'PRIORITY_CHANGED', 'priority', 'LOW', 'MEDIUM', DATE_SUB(NOW(), INTERVAL 67 HOUR)),
     (28, @daniel, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 67 HOUR)),
-    (28, @daniel, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 29 HOUR));
+    (28, @daniel, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 29 HOUR));
 
 -- Ticket #29: Monitoring agent disconnected from cloud instance
 INSERT INTO ticket_history
@@ -816,7 +813,7 @@ VALUES
     (32, @technician_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 48 HOUR)),
     (32, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.elena', DATE_SUB(NOW(), INTERVAL 36 HOUR)),
     (32, @elena, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 30 HOUR)),
-    (32, @elena, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'PENDING_CUSTOMER', DATE_SUB(NOW(), INTERVAL 13 HOUR));
+    (32, @elena, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 13 HOUR));
 
 -- Ticket #33: Service desk reports timing out
 INSERT INTO ticket_history
@@ -856,7 +853,7 @@ VALUES
     (37, @user_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 120 HOUR)),
     (37, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.sofia', DATE_SUB(NOW(), INTERVAL 90 HOUR)),
     (37, @sofia, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 73 HOUR)),
-    (37, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 32 HOUR));
+    (37, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 32 HOUR));
 
 -- Ticket #38: Finance laptop battery replacement
 INSERT INTO ticket_history
@@ -884,7 +881,7 @@ VALUES
     (40, @user_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 64 HOUR)),
     (40, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'technician_demo', DATE_SUB(NOW(), INTERVAL 48 HOUR)),
     (40, @technician_demo, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 39 HOUR)),
-    (40, @technician_demo, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'PENDING_CUSTOMER', DATE_SUB(NOW(), INTERVAL 17 HOUR));
+    (40, @technician_demo, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 17 HOUR));
 
 -- Ticket #41: New finance application access denied
 INSERT INTO ticket_history
@@ -899,7 +896,7 @@ INSERT INTO ticket_history
     (id_ticket, id_user, action, field_name, old_value, new_value, created_at)
 VALUES
     (42, @user_demo, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 220 HOUR)),
-    (42, @user_demo, 'STATUS_CHANGED', 'status', 'OPEN', 'CANCELLED', DATE_SUB(NOW(), INTERVAL 59 HOUR));
+    (42, @user_demo, 'STATUS_CHANGED', 'status', 'OPEN', 'CLOSED', DATE_SUB(NOW(), INTERVAL 59 HOUR));
 
 -- Ticket #43: CRM application freezes when saving deals
 INSERT INTO ticket_history
@@ -926,7 +923,7 @@ VALUES
     (45, @lucia, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 168 HOUR)),
     (45, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.sofia', DATE_SUB(NOW(), INTERVAL 126 HOUR)),
     (45, @sofia, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 103 HOUR)),
-    (45, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 46 HOUR));
+    (45, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 46 HOUR));
 
 -- Ticket #46: Shared HR mailbox search not working
 INSERT INTO ticket_history
@@ -977,7 +974,7 @@ VALUES
     (51, @sara, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 150 HOUR)),
     (51, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.mario', DATE_SUB(NOW(), INTERVAL 112 HOUR)),
     (51, @mario, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 92 HOUR)),
-    (51, @mario, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'PENDING_VENDOR', DATE_SUB(NOW(), INTERVAL 40 HOUR));
+    (51, @mario, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 40 HOUR));
 
 -- Ticket #52: Operations report accidentally deleted
 INSERT INTO ticket_history
@@ -1003,7 +1000,7 @@ VALUES
     (54, @alberto, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 180 HOUR)),
     (54, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.sofia', DATE_SUB(NOW(), INTERVAL 135 HOUR)),
     (54, @sofia, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 110 HOUR)),
-    (54, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'WAITING', DATE_SUB(NOW(), INTERVAL 49 HOUR));
+    (54, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 49 HOUR));
 
 -- Ticket #55: Procurement vendor portal access
 INSERT INTO ticket_history
@@ -1031,7 +1028,7 @@ VALUES
     (57, @david, 'TICKET_CREATED', NULL, NULL, NULL, DATE_SUB(NOW(), INTERVAL 112 HOUR)),
     (57, @admin_demo, 'ASSIGNED', 'assignedTo', NULL, 'tech.sofia', DATE_SUB(NOW(), INTERVAL 84 HOUR)),
     (57, @sofia, 'STATUS_CHANGED', 'status', 'OPEN', 'IN_PROGRESS', DATE_SUB(NOW(), INTERVAL 68 HOUR)),
-    (57, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'PENDING_CUSTOMER', DATE_SUB(NOW(), INTERVAL 30 HOUR));
+    (57, @sofia, 'STATUS_CHANGED', 'status', 'IN_PROGRESS', 'BLOCKED', DATE_SUB(NOW(), INTERVAL 30 HOUR));
 
 -- Ticket #58: Staging deployment pipeline failing
 INSERT INTO ticket_history

@@ -1,46 +1,43 @@
-import type { ChipProps } from "@mui/material";
+import type { TicketHistoryAction } from "@/types/ticketHistoryTypes";
 
-export const formatEnumName = (value: string) => {
-  return value.replace(/_/g, " ");
+type ClassificationTranslator = ((key: string) => string) & {
+  has(key: string): boolean;
 };
 
-export const getStatusColor = (statusName: string): ChipProps["color"] => {
-  switch (statusName) {
-    case "OPEN":
-      return "info";
+const legacyHistoryStatuses: Record<string, string> = {
+  WAITING: "BLOCKED",
+  PENDING_CUSTOMER: "BLOCKED",
+  PENDING_VENDOR: "BLOCKED",
+  CANCELLED: "CLOSED",
+};
 
-    case "IN_PROGRESS":
-      return "warning";
+function splitClassificationName(name: string): string {
+  return name.replace(/[\s_-]+/g, " ").trim();
+}
 
-    case "WAITING":
-      return "secondary";
+export function getClassificationKey(name: string): string {
+  return splitClassificationName(name).replaceAll(" ", "_").toUpperCase();
+}
 
-    case "RESOLVED":
-      return "success";
+export function getClassificationLabel(name: string, translate: ClassificationTranslator): string {
+  const key = getClassificationKey(name);
+  if (key && translate.has(key)) return translate(key);
 
-    case "CLOSED":
-      return "default";
+  const label = splitClassificationName(name).toLowerCase();
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
 
-    default:
-      return "default";
+export function getHistoryValueLabel(
+  action: TicketHistoryAction,
+  value: string | null | undefined,
+  translateStatus: ClassificationTranslator,
+  translatePriority: ClassificationTranslator,
+): string {
+  if (value == null) return "-";
+  if (action === "STATUS_CHANGED") {
+    const currentName = legacyHistoryStatuses[getClassificationKey(value)] ?? value;
+    return getClassificationLabel(currentName, translateStatus);
   }
-};
-
-export const getPriorityColor = (priorityName: string): ChipProps["color"] => {
-  switch (priorityName) {
-    case "LOW":
-      return "success";
-
-    case "MEDIUM":
-      return "info";
-
-    case "HIGH":
-      return "warning";
-
-    case "CRITICAL":
-      return "error";
-
-    default:
-      return "default";
-  }
-};
+  if (action === "PRIORITY_CHANGED") return getClassificationLabel(value, translatePriority);
+  return value;
+}

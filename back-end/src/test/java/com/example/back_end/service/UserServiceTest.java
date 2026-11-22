@@ -264,7 +264,7 @@ class UserServiceTest {
                     return user;
                 });
 
-        UserResponse result = userService.createUser(createUserRequest);
+        UserResponse result = userService.createUser("admin", createUserRequest);
 
         ArgumentCaptor<UserModel> userCaptor = ArgumentCaptor.forClass(UserModel.class);
 
@@ -317,7 +317,7 @@ class UserServiceTest {
                 .thenReturn(true);
 
         assertThatThrownBy(
-                () -> userService.createUser(createUserRequest))
+                () -> userService.createUser("admin", createUserRequest))
                 .isInstanceOf(ResourceAlreadyExistsException.class)
                 .hasMessage(
                         "Username 'john' already exists");
@@ -342,7 +342,7 @@ class UserServiceTest {
                 .thenReturn(true);
 
         assertThatThrownBy(
-                () -> userService.createUser(createUserRequest))
+                () -> userService.createUser("admin", createUserRequest))
                 .isInstanceOf(ResourceAlreadyExistsException.class)
                 .hasMessage(
                         "Email 'john@example.com' already exists");
@@ -373,7 +373,7 @@ class UserServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(
-                () -> userService.createUser(createUserRequest))
+                () -> userService.createUser("admin", createUserRequest))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(
                         "Role with id 5 not found");
@@ -412,7 +412,7 @@ class UserServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(
-                () -> userService.createUser(createUserRequest))
+                () -> userService.createUser("admin", createUserRequest))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(
                         "Department with id 5 not found");
@@ -480,6 +480,7 @@ class UserServiceTest {
                 .thenReturn(existingUser);
 
         UserResponse result = userService.updateUser(
+                "admin",
                 updateUserRequest,
                 userId);
 
@@ -558,6 +559,7 @@ class UserServiceTest {
                 .thenReturn(existingUser);
 
         userService.updateUser(
+                "admin",
                 updateUserRequest,
                 userId);
 
@@ -594,6 +596,7 @@ class UserServiceTest {
 
         assertThatThrownBy(
                 () -> userService.updateUser(
+                        "admin",
                         updateUserRequest,
                         userId))
                 .isInstanceOf(ResourceAlreadyExistsException.class)
@@ -633,6 +636,7 @@ class UserServiceTest {
 
         assertThatThrownBy(
                 () -> userService.updateUser(
+                        "admin",
                         updateUserRequest,
                         userId))
                 .isInstanceOf(ResourceAlreadyExistsException.class)
@@ -653,6 +657,7 @@ class UserServiceTest {
 
         assertThatThrownBy(
                 () -> userService.updateUser(
+                        "admin",
                         updateUserRequest,
                         userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -692,6 +697,7 @@ class UserServiceTest {
 
         assertThatThrownBy(
                 () -> userService.updateUser(
+                        "admin",
                         updateUserRequest,
                         userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -739,6 +745,7 @@ class UserServiceTest {
 
         assertThatThrownBy(
                 () -> userService.updateUser(
+                        "admin",
                         updateUserRequest,
                         userId))
                 .isInstanceOf(ResourceNotFoundException.class)

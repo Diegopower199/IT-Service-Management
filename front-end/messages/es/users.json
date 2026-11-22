@@ -14,7 +14,8 @@
         "enabled": "Activo",
         "disabled": "Inactivo",
         "view": "Ver",
-        "edit": "Editar"
+        "edit": "Editar",
+        "demoAccountReadOnly": "Esta cuenta es de solo lectura para el administrador de demostración."
     },
     "Details": {
         "accountInformation": "Información de la cuenta",

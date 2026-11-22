@@ -239,7 +239,7 @@ describe("TicketForm", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Priority" }));
 
-    await user.click(await screen.findByRole("option", { name: "HIGH" }));
+    await user.click(await screen.findByRole("option", { name: "High" }));
 
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
@@ -301,7 +301,7 @@ describe("TicketForm", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Priority" }));
 
-    await user.click(await screen.findByRole("option", { name: "HIGH" }));
+    await user.click(await screen.findByRole("option", { name: "High" }));
 
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 

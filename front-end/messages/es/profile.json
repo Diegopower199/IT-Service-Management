@@ -27,6 +27,7 @@
     },
     "ChangePassword": {
         "title": "Cambiar contraseña",
+        "demoReadOnly": "El perfil y la contraseña de esta cuenta de demostración son de solo lectura.",
         "currentPassword": "Contraseña actual",
         "newPassword": "Nueva contraseña",
         "confirmPassword": "Confirmar nueva contraseña",
