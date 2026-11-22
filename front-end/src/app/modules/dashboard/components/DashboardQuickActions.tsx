@@ -35,7 +35,7 @@ export default function DashboardQuickActions({
       <div className={styles.quickActionsLinks}>
         <Link href="/tickets" className={styles.primaryAction}>
           <AssignmentIndOutlined fontSize="small" aria-hidden="true" />
-          <span>{t(isAdmin ? "assign" : "assignToMe")}</span>
+          <span>{t(isAdmin ? "assign" : "viewAssigned")}</span>
         </Link>
         <Link href="/tickets" className={styles.secondaryAction}>
           <SecondaryIcon fontSize="small" aria-hidden="true" />
