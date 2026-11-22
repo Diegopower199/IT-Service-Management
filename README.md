@@ -10,9 +10,9 @@ Built with **Java, Spring Boot, Next.js, TypeScript, MySQL, and MongoDB**, the p
 - **Ticket management:** Create, update, assign, prioritize, and track support requests throughout their lifecycle.
 - **Search and filtering:** Server-side pagination, sorting, and dynamic filters.
 - **Comments and activity history:** Public and internal comments, with chronological tracking of ticket changes.
-- **File attachments:** Upload, download, and preview PDF and image files associated with tickets or ticket comments.
-- **User profiles:** Edit personal information, change passwords, and upload, replace, or remove profile pictures. Avatar changes are reflected in the application header without reloading the page.
-- **Dashboard:** Role-specific statistics, recent tickets, and shortcuts.
+- **File attachments:** Upload, download, and preview GridFS-backed PDF, JPEG, and PNG attachments on tickets and comments.
+- **User profiles:** Edit personal information, change passwords, and upload, replace, or remove profile pictures according to account permissions. Avatar changes are reflected in the application header without reloading the page. For `admin_demo`, `technician_demo`, and `user_demo`, personal details are read-only, password changes and avatar deletion are disabled, and avatar uploads and replacements are available.
+- **Dashboard:** Role-specific statistics and recent tickets, with quick actions for administrators and technicians.
 - **Administration:** Manage users, departments, categories, priorities, and statuses, and view configured roles.
 - **Internationalization:** English and Spanish interfaces with language selection.
 - **Development and delivery:** Separate Docker Compose environments, automatic development reloads, and multi-stage builds for compiled application images.
@@ -83,13 +83,17 @@ In local Docker, the browser connects directly to the published Spring Boot port
 
 ## User Roles
 
+Roles define the application's general permissions.
+
 | Role           | Main capabilities                                                                                           |
 | -------------- | ----------------------------------------------------------------------------------------------------------- |
 | **ADMIN**      | Manage all tickets, users, and configuration catalogs; access system-wide statistics.                       |
-| **TECHNICIAN** | Work with assigned tickets, update their workflow, add internal comments, and access technician statistics. |
-| **USER**       | Create and follow support requests, add public comments, and manage their own profile.                      |
+| **TECHNICIAN** | View tickets assigned to them and unassigned tickets, update tickets and add internal comments where permitted, and view statistics for their assignments. |
+| **USER**       | Create support requests, follow tickets they created or that were requested for them, and add public comments. |
 
-Frontend role checks control navigation and available actions. The predefined roles can be viewed but not created or edited through the application.
+Administrators can view the predefined roles as a read-only catalog.
+
+The private `admin` account retains standard `ADMIN` permissions. `admin_demo` can manage unprotected `USER` and `TECHNICIAN` accounts. Spring Boot blocks `admin_demo` from editing the four protected accounts or granting `ADMIN`. See [Demo accounts](#demo-accounts) for the protected usernames and profile restrictions.
 
 ## Getting Started with Docker
 
@@ -397,13 +401,13 @@ IT-Service-Management/
 └── README.md
 ```
 
-- `local/00_setup_local_database.sql` creates and configures the local MySQL database for manual setup.
+- `local/00_setup_local_database.sql` creates the local `helpdesk` database for manual setup.
 - `01_create_tables.sql` creates the tables and their relationships.
 - `02_seed_reference_data.sql` loads the initial configuration, including roles, departments, categories, priorities, and statuses.
 - `03_seed_admin.sql` creates the private administrator. The owner prepares this file locally after cloning, and `database/.gitignore` excludes it from Git.
 - `04_seed_demo_data.sql` adds the demo accounts, sample tickets, comments, and ticket history.
 
-The normal initialization order is `01`, `02`, `03`, and `04`. Docker runs only the SQL scripts directly under `database/` when MySQL first initializes an empty volume. MySQL skips initialization when it reuses an existing volume.
+The initialization order is `01`, `02`, `03` when the private seed is present, then `04`. Docker runs only the SQL scripts directly under `database/` when MySQL first initializes an empty volume. MySQL skips initialization when it reuses an existing volume.
 
 ## Project Documentation
 
