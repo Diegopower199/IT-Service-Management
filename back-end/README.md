@@ -1,5 +1,7 @@
 # Help Desk — Backend
 
+**English** | [Español](./README.es.md)
+
 REST API for a full-stack **IT Service Management (ITSM)** application. It handles authentication, users, ticket management, assignments, comments, audit history, dashboard statistics, attachments, and user avatars.
 
 ## Tech Stack
