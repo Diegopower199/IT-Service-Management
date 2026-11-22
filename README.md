@@ -192,15 +192,23 @@ See [Docker Workflow](./DOCKER-WORKFLOW.md) for development commands, logs, rebu
 
 ### Demo accounts
 
-The included seed data provides accounts for exploring the three application roles.
+The included seed data provides three public demo accounts for exploring the application roles.
 
-| Username     | Password | Role       |
-| ------------ | -------- | ---------- |
-| `admin`      | `123456` | ADMIN      |
-| `technician` | `123456` | TECHNICIAN |
-| `user`       | `123456` | USER       |
+| Username          | Password                  | Role       |
+| ----------------- | ------------------------- | ---------- |
+| `admin_demo`      | `admin_demo12345678`      | ADMIN      |
+| `technician_demo` | `technician_demo12345678` | TECHNICIAN |
+| `user_demo`       | `user_demo12345678`       | USER       |
 
-These credentials are for local demonstrations only. Never use them in a public deployment. Do not commit `.env`, `.env.dev`, or any real credentials. PROD in this repository means a **local production-mode build**, not a hardened public production deployment.
+Spring Boot enforces the account restrictions on the server.
+
+- `admin_demo` can view all users and edit regular users and technicians. The `admin`, `admin_demo`, `technician_demo`, and `user_demo` accounts are read-only for `admin_demo` in the Users module. `admin_demo` cannot grant the `ADMIN` role.
+- `technician_demo` and `user_demo` can use the features available to their respective roles.
+- All three demo accounts have read-only personal details and cannot change their passwords. They can upload or replace their own avatar. Avatar deletion is disabled for these accounts.
+- Visitors can sign in as `admin_demo` to create additional `USER` or `TECHNICIAN` test accounts and try the permitted user management operations.
+- `admin` is the private administrator account.
+
+Do not commit `.env`, `.env.dev`, or any real credentials. PROD in this repository means a **local production-mode build**, not a hardened public production deployment.
 
 ## Manual Setup (without Docker)
 
@@ -259,10 +267,12 @@ IT-Service-Management/
 │   ├── Dockerfile.dev
 │   └── README.md
 ├── database/                 # MySQL schema and demo data
-│   ├── 00_create_database.sql
+│   ├── local/
+│   │   └── 00_setup_local_database.sql
 │   ├── 01_create_tables.sql
-│   ├── 02_seed_data.sql
-│   ├── 03_create_file_storage.sql
+│   ├── 02_seed_reference_data.sql
+│   ├── 03_seed_admin.sql      # Private local file prepared by the owner and ignored by Git
+│   ├── 04_seed_demo_data.sql
 │   └── README.md
 ├── docker-compose.yaml
 ├── docker-compose.dev.yaml
@@ -273,6 +283,14 @@ IT-Service-Management/
 ├── LICENSE
 └── README.md
 ```
+
+- `local/00_setup_local_database.sql` creates and configures the local MySQL database for manual setup.
+- `01_create_tables.sql` creates the tables and their relationships.
+- `02_seed_reference_data.sql` loads the initial configuration, including roles, departments, categories, priorities, and statuses.
+- `03_seed_admin.sql` creates the private administrator. The owner prepares this file locally after cloning, and `database/.gitignore` excludes it from Git.
+- `04_seed_demo_data.sql` adds the demo accounts, sample tickets, comments, and ticket history.
+
+The normal initialization order is `01`, `02`, `03`, and `04`. Docker runs only the SQL scripts directly under `database/` when MySQL first initializes an empty volume. MySQL skips initialization when it reuses an existing volume.
 
 ## Project Documentation
 
