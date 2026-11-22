@@ -17,17 +17,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authorization.method.AuthorizationManagerBeforeMethodInterceptor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -82,8 +91,10 @@ class TicketAuthorizationTest {
         TicketHistoryService history = new TicketHistoryService(historyEntries, tickets, users);
         TicketService ticketService = new TicketService(tickets, users, mock(CategoryRepository.class),
                 mock(PriorityRepository.class), mock(StatusRepository.class), history);
+        ProxyFactory ticketController = new ProxyFactory(new TicketController(ticketService));
+        ticketController.addAdvisor(AuthorizationManagerBeforeMethodInterceptor.preAuthorize());
         mvc = MockMvcBuilders.standaloneSetup(
-                new TicketController(ticketService),
+                ticketController.getProxy(),
                 new TicketCommentController(new TicketCommentService(comments, tickets, users)),
                 new TicketHistoryController(history),
                 new TicketAttachmentController(new TicketAttachmentService(ticketFiles, tickets, users, storage)),
@@ -97,6 +108,37 @@ class TicketAuthorizationTest {
     @AfterEach
     void clearAuthentication() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void technicianCanListTicketsWithNoAssigneeUsingServerPagination() throws Exception {
+        ticket.setAssignedTo(null);
+        PageRequest page = PageRequest.of(1, 10);
+        ArgumentCaptor<Specification<TicketModel>> scope = ArgumentCaptor.captor();
+        when(tickets.findAll(ArgumentMatchers.<Specification<TicketModel>>any(), eq(page)))
+                .thenReturn(new PageImpl<>(List.of(ticket), page, 11));
+
+        mvc.perform(get("/tickets/unassigned").param("page", "1").param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].idTicket").value(12))
+                .andExpect(jsonPath("$.totalElements").value(11));
+
+        verify(tickets).findAll(scope.capture(), eq(page));
+        Root<TicketModel> root = mock();
+        Path<UserModel> assignee = mock();
+        CriteriaBuilder criteria = mock();
+        when(root.<UserModel>get("assignedTo")).thenReturn(assignee);
+        scope.getValue().toPredicate(root, null, criteria);
+        verify(criteria).isNull(assignee);
+    }
+
+    @Test
+    void regularUserCannotListUnassignedTickets() throws Exception {
+        signIn(reporter);
+
+        mvc.perform(get("/tickets/unassigned")).andExpect(status().isForbidden());
+
+        verifyNoInteractions(tickets);
     }
 
     @ParameterizedTest
@@ -193,7 +235,7 @@ class TicketAuthorizationTest {
     private void signIn(UserModel user) {
         when(users.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
         SecurityContextHolder.getContext().setAuthentication(
-                UsernamePasswordAuthenticationToken.authenticated(user.getUsername(), null, List.of()));
+                UsernamePasswordAuthenticationToken.authenticated(user.getUsername(), null, user.getAuthorities()));
     }
 
     private TicketCommentModel comment(boolean internal) {

@@ -2,6 +2,7 @@
     "Content": {
         "allTickets": "All Tickets",
         "assignedTickets": "Assigned Tickets",
+        "unassignedTickets": "Unassigned Tickets",
         "myTickets": "My Tickets",
         "createTicket": "Create Ticket",
         "statusesLoadError": "Error loading statuses.",

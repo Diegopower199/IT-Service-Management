@@ -15,7 +15,7 @@ import { logger } from "@/utils/logger";
 import { getTicketById } from "../../services/ticketService";
 import TicketForm from "../form/TicketForm";
 import TicketRouteError, { getTicketAccessError } from "../shared/TicketRouteError";
-import { restoreTicketListHref } from "../shared/ticketNavigation";
+import { restoreTicketList } from "../shared/ticketNavigation";
 import TicketDetails from "./TicketDetails";
 
 interface TicketDetailsContentProps {
@@ -67,7 +67,7 @@ export default function TicketDetailsContent({ ticketId }: TicketDetailsContentP
   }, [ticketId, t, user]);
 
   const handleClose = () => {
-    router.replace(user ? restoreTicketListHref(user, ticketId) : "/tickets");
+    router.replace(user ? restoreTicketList(user, ticketId) : "/tickets");
   };
 
   const handleTicketUpdated = async () => {

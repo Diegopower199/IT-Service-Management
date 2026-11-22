@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -32,6 +32,7 @@ import {
   getAllTickets,
   getAssignedTickets,
   getOwnTickets,
+  getUnassignedTickets,
 } from "../../services/ticketService";
 
 import {
@@ -50,8 +51,10 @@ import { logger } from "@/utils/logger";
 import TicketForm from "../form/TicketForm";
 import TicketFiltersBar from "./TicketFiltersBar";
 import {
+  isUnassignedTicketList,
   readTicketListPagination,
   rememberTicketList,
+  subscribeToTicketListAssignment,
   ticketDetailsHref,
   ticketListHref,
 } from "../shared/ticketNavigation";
@@ -67,7 +70,28 @@ import styles from "../../styles/tickets.module.css";
 const getTicketRowHeight = () => "auto" as const;
 
 export default function TicketsContent() {
-  const { user, isAuthReady } = useAuth();
+  const auth = useAuth();
+  const showUnassigned = useSyncExternalStore(
+    subscribeToTicketListAssignment,
+    () => isUnassignedTicketList(auth.user),
+    () => false,
+  );
+
+  return (
+    <TicketList
+      key={showUnassigned ? "unassigned" : "default"}
+      auth={auth}
+      showUnassigned={showUnassigned}
+    />
+  );
+}
+
+interface TicketListProps {
+  auth: ReturnType<typeof useAuth>;
+  showUnassigned: boolean;
+}
+
+function TicketList({ auth: { user, isAuthReady }, showUnassigned }: TicketListProps) {
 
   const isTechnician = user?.role === USER_ROLES.TECHNICIAN;
   const isAdmin = user?.role === USER_ROLES.ADMIN;
@@ -75,6 +99,8 @@ export default function TicketsContent() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  const technicianList = showUnassigned ? getUnassignedTickets : getAssignedTickets;
+  const listTickets = isAdmin ? getAllTickets : isTechnician ? technicianList : getOwnTickets;
 
   const t = useTranslations("Tickets.Content");
   const locale = useLocale();
@@ -186,39 +212,15 @@ export default function TicketsContent() {
       setLoading(true);
       setErrorMessage("");
 
-      let response;
-
-      if (isAdmin) {
-        response = await getAllTickets({
-          page,
-          size: pageSize,
-          sort: DEFAULT_TICKET_SORT,
-          title: titleFilter,
-          status: statusFilter,
-          priority: priorityFilter,
-          category: categoryFilter,
-        });
-      } else if (isTechnician) {
-        response = await getAssignedTickets({
-          page,
-          size: pageSize,
-          sort: DEFAULT_TICKET_SORT,
-          title: titleFilter,
-          status: statusFilter,
-          priority: priorityFilter,
-          category: categoryFilter,
-        });
-      } else {
-        response = await getOwnTickets({
-          page,
-          size: pageSize,
-          sort: DEFAULT_TICKET_SORT,
-          title: titleFilter,
-          status: statusFilter,
-          priority: priorityFilter,
-          category: categoryFilter,
-        });
-      }
+      const response = await listTickets({
+        page,
+        size: pageSize,
+        sort: DEFAULT_TICKET_SORT,
+        title: titleFilter,
+        status: statusFilter,
+        priority: priorityFilter,
+        category: categoryFilter,
+      });
 
       setTickets(response.content);
       setTotalElements(response.totalElements);
@@ -235,8 +237,7 @@ export default function TicketsContent() {
       setLoading(false);
     }
   }, [
-    isAdmin,
-    isTechnician,
+    listTickets,
     page,
     pageSize,
     titleFilter,
@@ -322,7 +323,7 @@ export default function TicketsContent() {
   };
 
   const handleClearFilters = () => {
-    router.replace(ticketListHref(new URLSearchParams(), { page: 0, pageSize }));
+    handleApplyFilters({});
   };
 
   const handlePaginationChange = (pagination: GridPaginationModel) => {
@@ -421,24 +422,33 @@ export default function TicketsContent() {
       type: "actions",
       headerName: t("actions"),
       width: 112,
-      getActions: ({ row }) => [
-        <GridActionsCellItem
-          key="view"
-          icon={<VisibilityOutlined />}
-          label={t("view")}
-          title={t("view")}
-          className={styles.viewAction}
-          onClick={() => handleViewTicket(row)}
-        />,
-        <GridActionsCellItem
-          key="edit"
-          icon={<EditOutlined />}
-          label={t("edit")}
-          title={t("edit")}
-          className={styles.editAction}
-          onClick={() => handleEditTicket(row)}
-        />,
-      ],
+      getActions: ({ row }) => {
+        const actions = [
+          <GridActionsCellItem
+            key="view"
+            icon={<VisibilityOutlined />}
+            label={t("view")}
+            title={t("view")}
+            className={styles.viewAction}
+            onClick={() => handleViewTicket(row)}
+          />,
+        ];
+
+        if (!showUnassigned) {
+          actions.push(
+            <GridActionsCellItem
+              key="edit"
+              icon={<EditOutlined />}
+              label={t("edit")}
+              title={t("edit")}
+              className={styles.editAction}
+              onClick={() => handleEditTicket(row)}
+            />,
+          );
+        }
+
+        return actions;
+      },
     },
   ];
 
@@ -468,7 +478,7 @@ export default function TicketsContent() {
             {isAdmin
               ? t("allTickets")
               : isTechnician
-                ? t("assignedTickets")
+                ? t(showUnassigned ? "unassignedTickets" : "assignedTickets")
                 : t("myTickets")}
           </h1>
         </div>

@@ -1,10 +1,10 @@
-import Link from "next/link";
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
 import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
 import ErrorOutlineRounded from "@mui/icons-material/ErrorOutlineRounded";
 import PendingActionsOutlined from "@mui/icons-material/PendingActionsOutlined";
 import RadioButtonUncheckedRounded from "@mui/icons-material/RadioButtonUncheckedRounded";
 
+import TicketListLink from "@/app/modules/tickets/components/shared/TicketListLink";
 import styles from "../styles/dashboard.module.css";
 
 const statisticIcons = {
@@ -30,7 +30,7 @@ export default function DashboardTicketStatisticCard({
   const Icon = statisticIcons[kind];
 
   return (
-    <Link href={href} className={styles.statisticCard}>
+    <TicketListLink href={href} className={styles.statisticCard}>
       <div className={styles.statisticCardTop}>
         <span className={styles.statisticIcon} data-kind={kind}>
           <Icon fontSize="small" aria-hidden="true" />
@@ -43,6 +43,6 @@ export default function DashboardTicketStatisticCard({
       </div>
       <p className={styles.statisticValue}>{value}</p>
       <p className={styles.statisticTitle}>{title}</p>
-    </Link>
+    </TicketListLink>
   );
 }

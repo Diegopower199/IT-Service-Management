@@ -8,7 +8,7 @@ import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 
 import { useAuth } from "@/hooks/useAuth";
 
-import { restoreTicketListHref } from "./ticketNavigation";
+import { restoreTicketList } from "./ticketNavigation";
 import styles from "../../styles/tickets.module.css";
 
 export function getTicketAccessError(error: unknown): "denied" | "notFound" | null {
@@ -36,7 +36,7 @@ export default function TicketRouteError({ kind, message, ticketId }: TicketRout
           variant="outlined"
           startIcon={<ArrowBackRounded />}
           className={styles.secondaryButton}
-          onClick={() => router.replace(user && ticketId ? restoreTicketListHref(user, ticketId) : "/tickets")}
+          onClick={() => router.replace(user && ticketId ? restoreTicketList(user, ticketId) : "/tickets")}
         >
           {t("backToTickets")}
         </Button>

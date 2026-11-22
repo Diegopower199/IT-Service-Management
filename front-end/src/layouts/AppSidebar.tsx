@@ -13,6 +13,7 @@ import GroupsOutlined from "@mui/icons-material/GroupsOutlined";
 import PersonOutlineRounded from "@mui/icons-material/PersonOutlineRounded";
 import RuleOutlined from "@mui/icons-material/RuleOutlined";
 
+import TicketListLink from "@/app/modules/tickets/components/shared/TicketListLink";
 import { useAuth } from "@/hooks/useAuth";
 import { USER_ROLES } from "@/types/roleTypes";
 
@@ -47,16 +48,17 @@ export default function AppSidebar() {
           .map(({ href, label, icon: Icon }) => {
             const isCurrentPage = pathname === href;
             const isChildPage = pathname.startsWith(`${href}/`);
+            const NavigationLink = href === "/tickets" ? TicketListLink : Link;
 
             return (
-              <Link
+              <NavigationLink
                 key={href}
                 href={href}
                 aria-current={isCurrentPage ? "page" : isChildPage ? "location" : undefined}
               >
                 <Icon aria-hidden="true" fontSize="small" />
                 <span>{t(label)}</span>
-              </Link>
+              </NavigationLink>
             );
           })}
       </nav>

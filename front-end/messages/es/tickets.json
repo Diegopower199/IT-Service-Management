@@ -2,6 +2,7 @@
     "Content": {
         "allTickets": "Todos los tickets",
         "assignedTickets": "Tickets asignados",
+        "unassignedTickets": "Tickets sin asignar",
         "myTickets": "Mis tickets",
         "createTicket": "Crear ticket",
         "statusesLoadError": "Error al cargar los estados.",

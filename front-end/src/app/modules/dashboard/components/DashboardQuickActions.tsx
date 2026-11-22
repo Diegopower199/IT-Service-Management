@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import AssignmentIndOutlined from "@mui/icons-material/AssignmentIndOutlined";
 import FilterListRounded from "@mui/icons-material/FilterListRounded";
 import SwapHorizRounded from "@mui/icons-material/SwapHorizRounded";
 
 import { USER_ROLES, type UserRole } from "@/types/roleTypes";
+import TicketListLink from "@/app/modules/tickets/components/shared/TicketListLink";
 
 import styles from "../styles/dashboard.module.css";
 
@@ -33,14 +33,14 @@ export default function DashboardQuickActions({
       </h2>
 
       <div className={styles.quickActionsLinks}>
-        <Link href="/tickets" className={styles.primaryAction}>
+        <TicketListLink href="/tickets" className={styles.primaryAction}>
           <AssignmentIndOutlined fontSize="small" aria-hidden="true" />
           <span>{t(isAdmin ? "assign" : "viewAssigned")}</span>
-        </Link>
-        <Link href="/tickets" className={styles.secondaryAction}>
+        </TicketListLink>
+        <TicketListLink href="/tickets" showUnassigned={!isAdmin} className={styles.secondaryAction}>
           <SecondaryIcon fontSize="small" aria-hidden="true" />
           <span>{t(isAdmin ? "reassign" : "viewUnassigned")}</span>
-        </Link>
+        </TicketListLink>
       </div>
     </section>
   );

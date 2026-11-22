@@ -46,6 +46,14 @@ export const getAssignedTickets = async (
   return response.data;
 };
 
+export const getUnassignedTickets = async (
+  params: TicketQueryParams,
+): Promise<PageResponse<TicketResponse>> => {
+  const response = await api.get<PageResponse<TicketResponse>>("/tickets/unassigned", { params });
+
+  return response.data;
+};
+
 export const getTicketById = async (
   ticketId: number,
 ): Promise<TicketResponse> => {

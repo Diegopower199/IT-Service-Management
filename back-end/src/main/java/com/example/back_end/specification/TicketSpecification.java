@@ -53,6 +53,10 @@ public final class TicketSpecification {
                 user);
     }
 
+    public static Specification<TicketModel> unassigned() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.isNull(root.get("assignedTo"));
+    }
+
     /**
      * Creates a specification that filters tickets whose title contains the
      * provided text.

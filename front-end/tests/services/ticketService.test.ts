@@ -12,6 +12,7 @@ import {
   getOwnTickets,
   getTicketById,
   getTicketStatistics,
+  getUnassignedTickets,
   updateTicket,
   type TicketQueryParams,
 } from "@/app/modules/tickets/services/ticketService";
@@ -184,6 +185,15 @@ describe("ticketService", () => {
 
       expect(result).toEqual(pageResponse);
     });
+  });
+
+  it("loads unassigned tickets with the same filters and pagination", async () => {
+    mockedGet.mockResolvedValue({ data: pageResponse });
+
+    const result = await getUnassignedTickets(queryParams);
+
+    expect(mockedGet).toHaveBeenCalledWith("/tickets/unassigned", { params: queryParams });
+    expect(result).toEqual(pageResponse);
   });
 
   describe("getTicketById", () => {

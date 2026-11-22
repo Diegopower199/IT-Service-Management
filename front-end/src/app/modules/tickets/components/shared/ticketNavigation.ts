@@ -1,4 +1,4 @@
-import type { UserRole } from "@/types/roleTypes";
+import { USER_ROLES, type UserRole } from "@/types/roleTypes";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/utils/constans";
 
 type TicketSearchParams = Pick<URLSearchParams, "get">;
@@ -14,6 +14,54 @@ interface TicketListPagination {
 }
 
 const filterKeys = ["title", "status", "priority", "category"] as const;
+const assignmentKey = "assignment";
+const unassignedValue = "unassigned";
+const ticketListListeners = new Set<() => void>();
+const unassignedAccounts = new Set<number>();
+
+function ticketAssignmentStorageKey(userId: number): string {
+  return `tickets:assignment:${userId}`;
+}
+
+export function subscribeToTicketListAssignment(listener: () => void): () => void {
+  ticketListListeners.add(listener);
+  return () => {
+    ticketListListeners.delete(listener);
+  };
+}
+
+export function isUnassignedTicketList(account: TicketListAccount | null): boolean {
+  if (account?.role !== USER_ROLES.TECHNICIAN) return false;
+
+  try {
+    return sessionStorage.getItem(ticketAssignmentStorageKey(account.userId)) === unassignedValue;
+  } catch {
+    return unassignedAccounts.has(account.userId);
+  }
+}
+
+export function selectTicketList(account: TicketListAccount, showUnassigned: boolean): void {
+  if (account.role !== USER_ROLES.TECHNICIAN) return;
+
+  if (showUnassigned) {
+    unassignedAccounts.add(account.userId);
+  } else {
+    unassignedAccounts.delete(account.userId);
+  }
+
+  try {
+    const key = ticketAssignmentStorageKey(account.userId);
+    if (showUnassigned) {
+      sessionStorage.setItem(key, unassignedValue);
+    } else {
+      sessionStorage.removeItem(key);
+    }
+  } catch {
+    // The selection remains available in memory if storage is disabled.
+  }
+
+  ticketListListeners.forEach((listener) => listener());
+}
 
 export function parseTicketId(value: string | undefined): number | null {
   if (value === undefined || !/^[1-9]\d*$/.test(value)) {
@@ -68,17 +116,20 @@ export function rememberTicketList(
   searchParams: TicketSearchParams,
 ): void {
   try {
-    const query = ticketListHref(searchParams).split("?")[1] ?? "";
-    sessionStorage.setItem(ticketListStorageKey(account, ticketId), query);
+    const query = new URLSearchParams(ticketListHref(searchParams).split("?")[1]);
+    if (isUnassignedTicketList(account)) query.set(assignmentKey, unassignedValue);
+    sessionStorage.setItem(ticketListStorageKey(account, ticketId), query.toString());
   } catch {
     // Storage may be disabled by the browser.
   }
 }
 
-export function restoreTicketListHref(account: TicketListAccount, ticketId: number): string {
+export function restoreTicketList(account: TicketListAccount, ticketId: number): string {
   try {
-    const query = sessionStorage.getItem(ticketListStorageKey(account, ticketId));
-    return ticketListHref(new URLSearchParams(query ?? ""));
+    const saved = sessionStorage.getItem(ticketListStorageKey(account, ticketId));
+    const query = new URLSearchParams(saved ?? "");
+    selectTicketList(account, query.get(assignmentKey) === unassignedValue);
+    return ticketListHref(query);
   } catch {
     return "/tickets";
   }
