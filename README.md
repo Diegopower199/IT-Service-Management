@@ -75,120 +75,144 @@ Frontend role checks control navigation and available actions. The predefined ro
 
 ## Getting Started with Docker
 
-Docker is the recommended way to run the full application locally. There is no need to install Java, Node.js, MySQL, or MongoDB separately when using this approach.
+Docker runs the full Help Desk stack locally. Java, Node.js, MySQL, and MongoDB are provided by the container images.
 
 ### Requirements
 
-- Docker Desktop (or Docker Engine with Docker Compose).
-- Docker Compose 2.32 or later for Compose Watch.
-- Available host ports: 3000 and 8080 for PROD; 3001 and 8081 for DEV.
+- A running Docker Desktop installation or Docker Engine with the Docker Compose plugin.
+- Docker Compose 2.32.0 or later for DEV, which uses the Compose Watch `restart` action. Check the installed version with `docker compose version`. [Compose Develop specification](https://docs.docker.com/reference/compose-file/develop/#action)
+- Free host ports for the environment you want to run. Only the frontend and backend publish host ports.
 
-Run the following commands from the root of the repository.
+| Environment | Frontend port | Backend port |
+| ----------- | ------------- | ------------ |
+| PROD (local) | `3000` | `8080` |
+| DEV | `3001` | `8081` |
 
-### Option 1 — Run the compiled application (recommended for demonstrations)
+Run the commands below from the repository root.
 
-**1. Create the environment file.**
+### Environment files
+
+For a new setup, copy the sample for the environment you plan to run.
 
 ```powershell
 # Windows PowerShell
 Copy-Item .env.sample .env
+Copy-Item .env.dev.sample .env.dev
 ```
 
 ```bash
 # Linux / macOS
 cp .env.sample .env
+cp .env.dev.sample .env.dev
 ```
 
-Configure `.env` with your own values:
+Replace the placeholder passwords and JWT secrets before starting. Keep `.env`, `.env.dev`, and private credentials out of version control and off GitHub.
 
-```dotenv
-MYSQL_ROOT_PASSWORD=replace_with_root_password
-DB_USERNAME=helpdesk
-DB_PASSWORD=replace_with_database_password
-JWT_SECRET=replace_with_base64_signing_key
-FRONTEND_URL=http://localhost:3000
-NEXT_PUBLIC_WEB_SERVER=localhost
-NEXT_PUBLIC_WEB_PORT_BACK_END=8080
-```
+| PROD (`.env`) | DEV (`.env.dev`) | Purpose and local values |
+| -------------- | ---------------- | ------------------------ |
+| `MYSQL_ROOT_PASSWORD` | `DEV_MYSQL_ROOT_PASSWORD` | Password for the MySQL root account. |
+| `DB_USERNAME` | `DEV_DB_USERNAME` | MySQL account used by Spring Boot. The samples use `helpdesk`. |
+| `DB_PASSWORD` | `DEV_DB_PASSWORD` | Password for the MySQL application account. |
+| `JWT_SECRET` | `DEV_JWT_SECRET` | Base64-encoded JWT signing key. |
+| `FRONTEND_URL` | `DEV_FRONTEND_URL` | Browser origin allowed by the API. Use `http://localhost:3000` in PROD and `http://localhost:3001` in DEV. |
+| `NEXT_PUBLIC_WEB_SERVER` | `DEV_NEXT_PUBLIC_WEB_SERVER` | Backend hostname used by the browser. Use `localhost` in both environments. |
+| `NEXT_PUBLIC_WEB_PORT_BACK_END` | `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` | Published backend port used by the browser. Use `8080` in PROD and `8081` in DEV. |
 
-Replace the placeholders before starting. The JWT signing key must be a Base64-encoded random secret of at least 32 bytes (256 bits before Base64 encoding). For example, generate one with `openssl rand -base64 32` if OpenSSL is installed. In Windows PowerShell, the following is an alternative:
+### JWT signing key
+
+Spring Boot decodes the signing key from Base64 and uses it with HS256. Generate a separate key for each environment from at least 32 cryptographically random bytes before Base64 encoding. Store the resulting string in `JWT_SECRET` or `DEV_JWT_SECRET`.
 
 ```powershell
+# Windows PowerShell
 $key = New-Object byte[] 32
 $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-$rng.GetBytes($key)
-[Convert]::ToBase64String($key)
-$rng.Dispose()
+try {
+    $rng.GetBytes($key)
+    [Convert]::ToBase64String($key)
+} finally {
+    $rng.Dispose()
+}
 ```
 
-**2. Build and start the application.**
+```bash
+# Linux / macOS with OpenSSL
+openssl rand -base64 32
+```
+
+### MySQL initialization
+
+Both Compose files mount `database/` read-only at `/docker-entrypoint-initdb.d`. MySQL executes the SQL files directly under `database/` in filename order on its first initialization with an empty volume.
+
+1. `01_create_tables.sql` creates the tables and relationships.
+2. `02_seed_reference_data.sql` loads the reference catalogs.
+3. `03_seed_admin.sql` initializes the private administrator when the owner has prepared the file locally.
+4. `04_seed_demo_data.sql` loads the demo accounts, sample tickets, comments, and history.
+
+`database/.gitignore` excludes the private administrator seed from Git. On a fresh clone, use the public demo accounts below. Creating the private administrator during initial setup requires the owner's local seed to be present before MySQL initializes.
+
+`database/local/00_setup_local_database.sql` is for manual setup outside Docker. MySQL skips the initialization scripts when it reuses an initialized volume.
+
+### Option 1 — Run the compiled application (recommended for demonstrations)
+
+PROD is the local production-mode build. With `.env` configured, validate the Compose configuration and start the application.
 
 ```bash
 docker compose config --quiet
 docker compose up -d --build
 ```
 
-Docker Compose builds the backend and frontend images, initializes MySQL with the SQL scripts on first startup, and starts MongoDB. The backend waits for the database healthchecks to pass.
+The build packages the backend and frontend into images. Compose then starts the application containers, MySQL, and MongoDB in the background. The backend starts after both database health checks pass.
 
-**3. Open the application.**
-
-- Frontend: <http://localhost:3000>
-- REST API: `http://localhost:8080/api/v1`
-
-On the first run, wait for image builds and application startup to finish. Use the demo accounts below to explore the interface.
+- Frontend <http://localhost:3000>
+- REST API `http://localhost:8080/api/v1`
 
 ### Option 2 — Development with live reload
 
-Copy `.env.dev.sample` to `.env.dev` (using `Copy-Item` on Windows or `cp` on Linux/macOS). Edit the new file to use the following variables, with your own passwords and a valid Base64 JWT signing key:
-
-```dotenv
-DEV_MYSQL_ROOT_PASSWORD=replace_with_root_password
-DEV_DB_USERNAME=helpdesk
-DEV_DB_PASSWORD=replace_with_database_password
-DEV_JWT_SECRET=replace_with_base64_signing_key
-DEV_FRONTEND_URL=http://localhost:3001
-DEV_NEXT_PUBLIC_WEB_SERVER=localhost
-DEV_NEXT_PUBLIC_WEB_PORT_BACK_END=8081
-```
+With `.env.dev` configured, start the development services.
 
 ```bash
 docker compose --env-file .env.dev -f docker-compose.dev.yaml config --quiet
 docker compose --env-file .env.dev -f docker-compose.dev.yaml up -d --build
 ```
 
-In a separate terminal, enable automatic backend restart and recompilation when Java source files or the Maven configuration change:
+Run Compose Watch in a second terminal while developing.
 
 ```bash
 docker compose --env-file .env.dev -f docker-compose.dev.yaml watch --no-up backend
 ```
 
-The frontend reloads during development using Next.js, Webpack, and polling.
+Compose Watch restarts the running backend container when `back-end/src` or `back-end/pom.xml` changes. Maven recompiles on restart. Next.js handles frontend live reloading through Webpack and polling.
 
-- Frontend: <http://localhost:3001>
-- REST API: `http://localhost:8081/api/v1`
+- Frontend <http://localhost:3001>
+- REST API `http://localhost:8081/api/v1`
 
-### Docker environments
+### Check and stop services
 
-| Resource         | DEV                       | PROD (local compiled build) |
-| ---------------- | ------------------------- | --------------------------- |
-| Compose file     | `docker-compose.dev.yaml` | `docker-compose.yaml`       |
-| Environment file | `.env.dev`                | `.env`                      |
-| Frontend         | `localhost:3001`          | `localhost:3000`            |
-| Backend          | `localhost:8081`          | `localhost:8080`            |
-| Source updates   | Live reload / restart     | Rebuild images              |
-| Database volumes | Independent DEV volumes   | Independent PROD volumes    |
-
-Both environments contain four services: frontend, backend, MySQL, and MongoDB. Named volumes preserve database data when containers are recreated. The production-mode application images use multi-stage builds and Next.js standalone output.
-
-To inspect or stop the compiled environment:
+Use `ps` to check running containers and `logs` to read recent output. Use `stop` to shut down the services and retain their data.
 
 ```bash
+# PROD (local)
 docker compose ps
-docker compose logs -f backend
+docker compose logs --tail=100 backend
+docker compose logs --tail=100 mysql
 docker compose stop
 ```
 
-See [Docker Workflow](./DOCKER-WORKFLOW.md) for development commands, logs, rebuilds, and troubleshooting. Do not use `docker compose down -v` unless you intend to remove persistent volumes and their data.
+```bash
+# DEV
+docker compose --env-file .env.dev -f docker-compose.dev.yaml ps
+docker compose --env-file .env.dev -f docker-compose.dev.yaml logs --tail=100 backend
+docker compose --env-file .env.dev -f docker-compose.dev.yaml logs --tail=100 mysql
+docker compose --env-file .env.dev -f docker-compose.dev.yaml stop
+```
+
+### Persistent data
+
+DEV and PROD use separate named volumes for MySQL and MongoDB. Stopping services keeps the containers and volumes. Recreating containers replaces them and reattaches their existing named volumes, which preserve the data.
+
+**`docker compose down -v` removes the selected project's declared volumes and their stored MySQL and MongoDB data.**
+
+For rebuilds, troubleshooting, and the daily development workflow, see [Docker Workflow](./DOCKER-WORKFLOW.md).
 
 ### Demo accounts
 
