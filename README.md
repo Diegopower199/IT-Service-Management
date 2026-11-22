@@ -11,7 +11,7 @@ Built with **Java, Spring Boot, Next.js, TypeScript, MySQL, and MongoDB**, the p
 - **Search and filtering:** Server-side pagination, sorting, and dynamic filters.
 - **Comments and activity history:** Public and internal comments, with chronological tracking of ticket changes.
 - **File attachments:** Upload, download, and preview GridFS-backed PDF, JPEG, and PNG attachments on tickets and comments.
-- **User profiles:** Edit personal information, change passwords, and upload, replace, or remove profile pictures according to account permissions. Avatar changes are reflected in the application header without reloading the page. For `admin_demo`, `technician_demo`, and `user_demo`, personal details are read-only, password changes and avatar deletion are disabled, and avatar uploads and replacements are available.
+- **User profiles:** Edit personal information, change passwords, and upload, replace, or remove profile pictures according to account permissions. Avatar changes are reflected in the application header without reloading the page. `admin_demo`, `technician_demo`, and `user_demo` can upload, replace, or delete their own avatars. Their personal details are read-only and password changes are disabled.
 - **Dashboard:** Role-specific statistics and recent tickets, with quick actions for administrators and technicians.
 - **Administration:** Manage users, departments, categories, priorities, and statuses, and view configured roles.
 - **Internationalization:** English and Spanish interfaces with language selection.
@@ -250,7 +250,7 @@ Spring Boot enforces the account restrictions on the server.
 
 - `admin_demo` can view all users and edit regular users and technicians. The `admin`, `admin_demo`, `technician_demo`, and `user_demo` accounts are read-only for `admin_demo` in the Users module. `admin_demo` cannot grant the `ADMIN` role.
 - `technician_demo` and `user_demo` can use the features available to their respective roles.
-- All three demo accounts have read-only personal details and cannot change their passwords. They can upload or replace their own avatar. Avatar deletion is disabled for these accounts.
+- All three demo accounts have read-only personal details and cannot change their passwords. They can upload, replace, or delete their own avatars.
 - Visitors can sign in as `admin_demo` to create additional `USER` or `TECHNICIAN` test accounts and try the permitted user management operations.
 - `admin` is the private administrator account.
 

@@ -157,7 +157,6 @@ public class UserAvatarService {
     public void deleteMyAvatar() {
 
         UserModel user = getAuthenticatedUser();
-        DemoAccountAccess.requireProfileEditable(user.getUsername());
 
         UserAvatarModel avatar = findAvatarByUserId(
                 user.getIdUser());
