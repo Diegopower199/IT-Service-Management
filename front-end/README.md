@@ -1,5 +1,7 @@
 # Help Desk — Frontend
 
+**English** | [Español](./README.es.md)
+
 Frontend for a full-stack **IT Service Management (ITSM) / Help Desk** application. Built with Next.js and React, it provides role-based ticket management, administration screens, and a dashboard connected to the Spring Boot REST API.
 
 ## Tech Stack

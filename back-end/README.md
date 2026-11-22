@@ -250,6 +250,7 @@ In the table, `<catalog>` is one of `/departments`, `/categories`, `/priorities`
 | `GET` | `/tickets` | `ADMIN`. List tickets across the system. |
 | `GET` | `/tickets/my` | List tickets created by or requested for the authenticated user. |
 | `GET` | `/tickets/assigned` | `TECHNICIAN`. List tickets assigned to the current technician. |
+| `GET` | `/tickets/unassigned` | `TECHNICIAN`. List tickets without an assigned technician, with filtering and pagination. |
 | `GET` | `/tickets/{id}` | Read a ticket using the [ticket access rules](#role-and-resource-access). |
 | `POST` | `/tickets` | Create a ticket. Accounts with role `USER` can create tickets for themselves. |
 | `PATCH` | `/tickets/{id}` | Edit ticket details subject to ticket access. Technicians must be assigned to the ticket. |

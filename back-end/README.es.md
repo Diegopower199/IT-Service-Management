@@ -250,6 +250,7 @@ En la tabla, `<catalog>` corresponde a una de las rutas base `/departments`, `/c
 | `GET` | `/tickets` | `ADMIN`. Listar todos los tickets del sistema. |
 | `GET` | `/tickets/my` | Listar los tickets creados por el usuario autenticado o solicitados para él. |
 | `GET` | `/tickets/assigned` | `TECHNICIAN`. Listar los tickets asignados al técnico autenticado. |
+| `GET` | `/tickets/unassigned` | `TECHNICIAN`. Listar los tickets sin técnico asignado, con filtros y paginación. |
 | `GET` | `/tickets/{id}` | Consultar un ticket conforme a las [reglas de acceso a tickets](#acceso-por-rol-y-recurso). |
 | `POST` | `/tickets` | Crear un ticket. Las cuentas con rol `USER` pueden crear tickets para sí mismas. |
 | `PATCH` | `/tickets/{id}` | Editar los datos del ticket según las reglas de acceso. El ticket debe estar asignado al técnico que lo edita. |
