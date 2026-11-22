@@ -27,6 +27,7 @@
     },
     "ChangePassword": {
         "title": "Change Password",
+        "demoReadOnly": "The profile and password of this demo account are read-only.",
         "currentPassword": "Current Password",
         "newPassword": "New Password",
         "confirmPassword": "Confirm New Password",

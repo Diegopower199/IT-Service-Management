@@ -31,10 +31,11 @@ Execute these scripts **in order** when setting up a new database manually:
 
 | Script                       | Description                                             |
 | ---------------------------- | ------------------------------------------------------- |
-| `00_create_database.sql`     | Creates the local MySQL account, database, and grants   |
+| `local/00_setup_local_database.sql` | Creates the local MySQL account, database, and grants for manual setup |
 | `01_create_tables.sql`       | Creates the core tables, relationships, and constraints |
-| `02_seed_data.sql`           | Inserts demo accounts and sample business data          |
-| `03_create_file_storage.sql` | Creates the three file metadata tables                  |
+| `02_seed_reference_data.sql` | Inserts the reference catalogs                         |
+| `03_seed_admin.sql`          | Creates the private administrator from the local seed   |
+| `04_seed_demo_data.sql`      | Inserts demo accounts and sample tickets (optional)     |
 
 The full script sequence is intended for a new, empty database. Do not rerun it against an existing database containing important data. No automatic schema migration tool is configured.
 
@@ -70,7 +71,7 @@ The two environments use independent named volumes. Recreating containers does n
 Requirements: MySQL 8.4 (or a compatible MySQL 8 server), MongoDB 8.0, and a SQL client such as MySQL Workbench.
 
 1. Start MySQL and MongoDB locally.
-2. Review `00_create_database.sql` and set your own local database password before execution. Run the SQL scripts listed above using a MySQL administrative account.
+2. Review `local/00_setup_local_database.sql` and set your own local database password before execution. Run the SQL scripts listed above using a MySQL administrative account.
 3. Configure the backend environment variables with the matching database credentials and MongoDB URI:
 
 ```dotenv
@@ -100,7 +101,7 @@ The seed script creates three main accounts for testing the application roles.
 | `technician` | TECHNICIAN |
 | `user`       | USER       |
 
-Additional users, tickets, comments and history records are included. Demo accounts use the BCrypt password hash in `02_seed_data.sql`; see the [main README](../README.md) for demonstration login details. These accounts are intended for local demonstrations only.
+Additional users, tickets, comments and history records are included. Demo accounts use BCrypt password hashes from `04_seed_demo_data.sql`. These accounts are intended for local demonstrations only.
 
 ## Verify the Setup
 

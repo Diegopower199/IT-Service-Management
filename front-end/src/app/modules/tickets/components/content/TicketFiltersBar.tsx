@@ -20,6 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 import type { TicketFilters } from "@/types/ticketTypes";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import styles from "../../styles/tickets.module.css";
 
@@ -53,28 +54,6 @@ export default function TicketFiltersBar({
   const filterId = useId();
 
   const [draftFilters, setDraftFilters] = useState<TicketFilters>(filters);
-
-  /**
-   * Returns the translated status name when it is a protected system status.
-   */
-  const getStatusDisplayName = (statusName: string) => {
-    if (tStatuses.has(statusName)) {
-      return tStatuses(statusName);
-    }
-
-    return statusName;
-  };
-
-  /**
-   * Returns the translated priority name when it is a protected system priority.
-   */
-  const getPriorityDisplayName = (priorityName: string) => {
-    if (tPriorities.has(priorityName)) {
-      return tPriorities(priorityName);
-    }
-
-    return priorityName;
-  };
 
   /**
    * Updates one filter value locally without immediately applying it.
@@ -156,7 +135,7 @@ export default function TicketFiltersBar({
 
               {statusOptions.map((status) => (
                 <MenuItem key={status} value={status}>
-                  {getStatusDisplayName(status)}
+                  {getClassificationLabel(status, tStatuses)}
                 </MenuItem>
               ))}
             </Select>
@@ -181,7 +160,7 @@ export default function TicketFiltersBar({
 
               {priorityOptions.map((priority) => (
                 <MenuItem key={priority} value={priority}>
-                  {getPriorityDisplayName(priority)}
+                  {getClassificationLabel(priority, tPriorities)}
                 </MenuItem>
               ))}
             </Select>

@@ -4,7 +4,7 @@ public enum ProtectedStatus {
 
     OPEN,
     IN_PROGRESS,
-    WAITING,
+    BLOCKED,
     RESOLVED,
     CLOSED;
 

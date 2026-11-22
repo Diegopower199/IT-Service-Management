@@ -20,6 +20,7 @@ import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import PageLoading from "@/components/ui/PageLoading";
 import { CatalogList, catalogRowActions, CatalogName } from "@/app/modules/adminCatalog/CatalogList";
@@ -104,14 +105,6 @@ export default function PrioritiesContent() {
 
     loadPriorities();
   }, [isAuthReady, user, router, prioritiesUpdated, fetchPriorities]);
-
-  const getPriorityDisplayName = (priorityName: string) => {
-    if (tPriorities.has(priorityName)) {
-      return tPriorities(priorityName);
-    }
-
-    return priorityName;
-  };
 
   const handleCreatePriority = () => {
     setSelectedPriority(null);
@@ -214,7 +207,7 @@ export default function PrioritiesContent() {
       flex: 1,
       minWidth: 156,
       renderCell: ({ row }) => (
-        <CatalogName name={getPriorityDisplayName(row.name)} protectedItem={isProtectedPriority(row.name)} />
+        <CatalogName name={getClassificationLabel(row.name, tPriorities)} protectedItem={isProtectedPriority(row.name)} />
       ),
     },
     {
@@ -283,7 +276,9 @@ export default function PrioritiesContent() {
         open={Boolean(priorityStatusToChange)}
         active={deactivating}
         title={t(deactivating ? "deactivateTitle" : "activateTitle")}
-        message={priorityStatusToChange ? t(deactivating ? "deactivateConfirmation" : "activateConfirmation", { name: priorityStatusToChange.name }) : undefined}
+        message={priorityStatusToChange ? t(deactivating ? "deactivateConfirmation" : "activateConfirmation", {
+          name: getClassificationLabel(priorityStatusToChange.name, tPriorities),
+        }) : undefined}
         errorMessage={statusErrorMessage}
         saving={changingStatus}
         cancelLabel={t("cancel")}

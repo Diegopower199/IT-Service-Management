@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Alert, Button, Chip } from "@mui/material";
+import { Alert, Button } from "@mui/material";
 
 import {
   DataGrid,
@@ -42,7 +42,7 @@ import {
   PAGE_SIZE_OPTIONS,
 } from "@/utils/constans";
 
-import { getPriorityColor, getStatusColor } from "@/utils/ticketUiUtils";
+import TicketClassificationChip from "@/components/ui/TicketClassificationChip";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
@@ -77,8 +77,6 @@ export default function TicketsContent() {
   const searchParams = useSearchParams();
 
   const t = useTranslations("Tickets.Content");
-  const tStatuses = useTranslations("Common.Statuses");
-  const tPriorities = useTranslations("Common.Priorities");
   const locale = useLocale();
   const dateFormatter = new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
@@ -302,22 +300,6 @@ export default function TicketsContent() {
     loadTickets();
   }, [isAuthReady, user, router, ticketsUpdated, fetchTickets]);
 
-  const getStatusDisplayName = (statusName: string) => {
-    if (tStatuses.has(statusName)) {
-      return tStatuses(statusName);
-    }
-
-    return statusName;
-  };
-
-  const getPriorityDisplayName = (priorityName: string) => {
-    if (tPriorities.has(priorityName)) {
-      return tPriorities(priorityName);
-    }
-
-    return priorityName;
-  };
-
   const handleApplyFilters = (nextFilters: TicketFilters) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -410,12 +392,7 @@ export default function TicketsContent() {
       width: 134,
       valueGetter: (_, row) => row.status.name,
       renderCell: (params) => (
-        <Chip
-          label={getStatusDisplayName(params.row.status.name)}
-          color={getStatusColor(params.row.status.name)}
-          size="small"
-          className={styles.ticketBadge}
-        />
+        <TicketClassificationChip kind="status" name={params.row.status.name} className={styles.ticketBadge} />
       ),
     },
     {
@@ -424,12 +401,7 @@ export default function TicketsContent() {
       width: 112,
       valueGetter: (_, row) => row.priority.name,
       renderCell: (params) => (
-        <Chip
-          label={getPriorityDisplayName(params.row.priority.name)}
-          color={getPriorityColor(params.row.priority.name)}
-          size="small"
-          className={styles.ticketBadge}
-        />
+        <TicketClassificationChip kind="priority" name={params.row.priority.name} className={styles.ticketBadge} />
       ),
     },
     {

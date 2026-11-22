@@ -41,7 +41,7 @@ vi.mock("next-intl", () => {
   };
 
   const translate = Object.assign((key: string) => translations[key] ?? key, {
-    has: (_key: string) => false,
+    has: () => false,
   });
 
   return {
@@ -106,7 +106,7 @@ describe("ChangeTicketStatusDialog", () => {
       }),
     ).toBeInTheDocument();
 
-    expect(screen.getByText("OPEN")).toBeInTheDocument();
+    expect(screen.getByText("Open")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(mocks.getAllActiveStatuses).toHaveBeenCalledTimes(1);
@@ -132,7 +132,7 @@ describe("ChangeTicketStatusDialog", () => {
 
     await user.click(
       await screen.findByRole("option", {
-        name: "IN_PROGRESS",
+        name: "In progress",
       }),
     );
 
@@ -196,7 +196,7 @@ describe("ChangeTicketStatusDialog", () => {
 
     await user.click(
       await screen.findByRole("option", {
-        name: "RESOLVED",
+        name: "Resolved",
       }),
     );
 

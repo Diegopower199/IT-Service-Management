@@ -17,6 +17,7 @@ import PersonAddAltOutlined from "@mui/icons-material/PersonAddAltOutlined";
 
 import type { UserResponse } from "@/types/userTypes";
 import type { RoleResponse } from "@/types/roleTypes";
+import { USER_ROLES } from "@/types/roleTypes";
 import type { DepartmentResponse } from "@/types/departmentTypes";
 
 import { FORM_MODES, type FormMode } from "@/utils/constans";
@@ -35,6 +36,7 @@ import styles from "./UserForm.module.css";
 interface UserFormProps {
   formMode: FormMode;
   selectedUser: UserResponse | null;
+  canGrantAdminRole?: boolean;
   onClose: () => void;
   onSubmitSuccess: () => void;
 }
@@ -94,6 +96,7 @@ export default function UserForm({ formMode, selectedUser, ...props }: UserFormP
 function UserEditor({
   formMode,
   selectedUser,
+  canGrantAdminRole = true,
   onClose,
   onSubmitSuccess,
 }: UserFormProps & { formMode: EditorMode }) {
@@ -314,6 +317,9 @@ function UserEditor({
   };
 
   const isCreate = formMode === FORM_MODES.CREATE;
+  const availableRoles = canGrantAdminRole || selectedUser?.role.name === USER_ROLES.ADMIN
+    ? rolesOptions
+    : rolesOptions.filter((role) => role.name !== USER_ROLES.ADMIN);
   const headingId = isCreate ? "create-user-heading" : "edit-user-heading";
 
   const fields = (
@@ -368,7 +374,7 @@ function UserEditor({
         label={t("role")}
         name="roleId"
         value={
-          rolesOptions.some((role) => role.idRole === formData.roleId)
+          availableRoles.some((role) => role.idRole === formData.roleId)
             ? formData.roleId
             : 0
         }
@@ -382,10 +388,10 @@ function UserEditor({
           {t("selectRole")}
         </MenuItem>
 
-        {rolesOptions.length === 0 ? (
+        {availableRoles.length === 0 ? (
           <MenuItem disabled>{t("noRolesAvailable")}</MenuItem>
         ) : (
-          rolesOptions.map((role) => (
+          availableRoles.map((role) => (
             <MenuItem key={role.idRole} value={role.idRole}>
               {tRoles(role.name)}
             </MenuItem>

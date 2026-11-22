@@ -14,7 +14,8 @@
         "enabled": "Enabled",
         "disabled": "Disabled",
         "view": "View",
-        "edit": "Edit"
+        "edit": "Edit",
+        "demoAccountReadOnly": "This account is read-only for the demo administrator."
     },
     "Details": {
         "accountInformation": "Account Information",

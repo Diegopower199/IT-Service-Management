@@ -53,7 +53,7 @@ vi.mock("next-intl", () => {
       return translations[key] ?? key;
     },
     {
-      has: (_key: string) => false,
+      has: () => false,
     },
   );
 
@@ -120,7 +120,7 @@ describe("ChangeTicketPriorityDialog", () => {
       }),
     ).toBeInTheDocument();
 
-    expect(screen.getByText("MEDIUM")).toBeInTheDocument();
+    expect(screen.getByText("Medium")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(mocks.getAllActivePriorities).toHaveBeenCalledTimes(1);
@@ -142,7 +142,7 @@ describe("ChangeTicketPriorityDialog", () => {
 
     await user.click(
       await screen.findByRole("option", {
-        name: "HIGH",
+        name: "High",
       }),
     );
 
@@ -172,7 +172,7 @@ describe("ChangeTicketPriorityDialog", () => {
 
     await user.click(
       await screen.findByRole("option", {
-        name: "MEDIUM",
+        name: "Medium",
       }),
     );
 
@@ -224,7 +224,7 @@ describe("ChangeTicketPriorityDialog", () => {
 
     await user.click(
       await screen.findByRole("option", {
-        name: "HIGH",
+        name: "High",
       }),
     );
 

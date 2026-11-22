@@ -34,6 +34,7 @@ import {
 } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
+import { isDemoAdministrator, isUserEditRestricted } from "@/utils/demoAccountAccess";
 import { logger } from "@/utils/logger";
 
 import { getAllUsers } from "../../services/userService";
@@ -149,8 +150,10 @@ export default function UsersContent() {
     setShowForm(true);
   };
 
-  const handleEditUser = (user: UserResponse) => {
-    setSelectedUser(user);
+  const handleEditUser = (target: UserResponse) => {
+    if (isUserEditRestricted(user?.username, target.username)) return;
+
+    setSelectedUser(target);
     setFormMode(FORM_MODES.EDIT);
 
     setShowForm(true);
@@ -234,24 +237,29 @@ export default function UsersContent() {
       type: "actions",
       headerName: t("actions"),
       width: 108,
-      getActions: ({ row }) => [
-        <GridActionsCellItem
-          key="view"
-          icon={<VisibilityOutlined />}
-          label={t("view")}
-          title={t("view")}
-          className={styles.viewAction}
-          onClick={() => handleViewUser(row)}
-        />,
-        <GridActionsCellItem
-          key="edit"
-          icon={<EditOutlined />}
-          label={t("edit")}
-          title={t("edit")}
-          className={styles.editAction}
-          onClick={() => handleEditUser(row)}
-        />,
-      ],
+      getActions: ({ row }) => {
+        const editRestricted = isUserEditRestricted(user?.username, row.username);
+
+        return [
+          <GridActionsCellItem
+            key="view"
+            icon={<VisibilityOutlined />}
+            label={t("view")}
+            title={t("view")}
+            className={styles.viewAction}
+            onClick={() => handleViewUser(row)}
+          />,
+          <GridActionsCellItem
+            key="edit"
+            icon={<EditOutlined />}
+            label={t("edit")}
+            title={t(editRestricted ? "demoAccountReadOnly" : "edit")}
+            className={styles.editAction}
+            disabled={editRestricted}
+            onClick={() => handleEditUser(row)}
+          />,
+        ];
+      },
     },
   ];
 
@@ -268,6 +276,7 @@ export default function UsersContent() {
       <UserForm
         formMode={formMode}
         selectedUser={selectedUser}
+        canGrantAdminRole={!isDemoAdministrator(user.username)}
         onClose={handleCloseForm}
         onSubmitSuccess={handleSubmitSuccess}
       />

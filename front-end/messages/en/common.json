@@ -7,8 +7,8 @@
     },
     "Statuses": {
         "OPEN": "Open",
-        "IN_PROGRESS": "In Progress",
-        "WAITING": "Waiting",
+        "IN_PROGRESS": "In progress",
+        "BLOCKED": "Blocked",
         "RESOLVED": "Resolved",
         "CLOSED": "Closed"
     },
@@ -16,7 +16,9 @@
         "LOW": "Low",
         "MEDIUM": "Medium",
         "HIGH": "High",
-        "CRITICAL": "Critical"
+        "CRITICAL": "Critical",
+        "VERY_LOW": "Very low",
+        "URGENT": "Urgent"
     },
     "Roles": {
         "ADMIN": "Administrator",

@@ -24,6 +24,7 @@ import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -214,14 +215,6 @@ export default function TicketForm({
     fetchPrioritiesOptions,
     fetchUsersOptions,
   ]);
-
-  const getPriorityDisplayName = (priorityName: string) => {
-    if (tPriorities.has(priorityName)) {
-      return tPriorities(priorityName);
-    }
-
-    return priorityName;
-  };
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -508,7 +501,7 @@ export default function TicketForm({
             ) : (
               prioritiesOptions.map((priority) => (
                 <MenuItem key={priority.idPriority} value={priority.idPriority}>
-                  {getPriorityDisplayName(priority.name)}
+                  {getClassificationLabel(priority.name, tPriorities)}
                 </MenuItem>
               ))
             )}

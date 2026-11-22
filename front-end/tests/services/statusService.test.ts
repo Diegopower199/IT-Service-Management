@@ -87,12 +87,12 @@ describe("statusService", () => {
   describe("createStatus", () => {
     it("should create status", async () => {
       const request: StatusRequest = {
-        name: "WAITING",
+        name: "BLOCKED",
       };
 
       const response: StatusResponse = {
         idStatus: 3,
-        name: "WAITING",
+        name: "BLOCKED",
         active: true,
       };
 

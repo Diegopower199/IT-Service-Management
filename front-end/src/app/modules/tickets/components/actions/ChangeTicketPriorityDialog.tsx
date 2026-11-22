@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import {
   Alert,
   Button,
-  Chip,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -27,7 +26,8 @@ import { getAllActivePriorities } from "@/app/modules/priorities/services/priori
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
-import { getPriorityColor } from "@/utils/ticketUiUtils";
+import TicketClassificationChip from "@/components/ui/TicketClassificationChip";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import { changeTicketPriority } from "../../services/ticketService";
 
@@ -110,14 +110,6 @@ export default function ChangeTicketPriorityDialog({
 
     loadPriorities();
   }, [fetchPriorities, user, open]);
-
-  const getPriorityDisplayName = (priorityName: string) => {
-    if (tPriorities.has(priorityName)) {
-      return tPriorities(priorityName);
-    }
-
-    return priorityName;
-  };
 
   const handlePriorityChange = (event: SelectChangeEvent) => {
     setSelectedPriorityId(event.target.value);
@@ -218,12 +210,7 @@ export default function ChangeTicketPriorityDialog({
             {t("currentPriority")}
           </span>
 
-          <Chip
-            label={getPriorityDisplayName(currentPriority.name)}
-            color={getPriorityColor(currentPriority.name)}
-            size="small"
-            className={sharedStyles.ticketBadge}
-          />
+          <TicketClassificationChip kind="priority" name={currentPriority.name} className={sharedStyles.ticketBadge} />
         </div>
 
         <div>
@@ -261,20 +248,10 @@ export default function ChangeTicketPriorityDialog({
                       alignItems: "center",
                     }}
                   >
-                    <Chip
-                      size="small"
-                      color={getPriorityColor(priority.name)}
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        "& .MuiChip-label": {
-                          display: "none",
-                        },
-                      }}
-                    />
+                    <TicketClassificationChip kind="priority" name={priority.name} dot />
 
                     <Typography variant="body2">
-                      {getPriorityDisplayName(priority.name)}
+                      {getClassificationLabel(priority.name, tPriorities)}
                     </Typography>
                   </Stack>
                 </MenuItem>

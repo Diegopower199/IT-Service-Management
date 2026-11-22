@@ -98,6 +98,7 @@ public class UserAvatarService {
             throws IOException {
 
         UserModel user = getAuthenticatedUser();
+        DemoAccountAccess.requireProfileEditable(user.getUsername());
 
         validateFileSize(file);
 
@@ -157,6 +158,7 @@ public class UserAvatarService {
     public void deleteMyAvatar() {
 
         UserModel user = getAuthenticatedUser();
+        DemoAccountAccess.requireProfileEditable(user.getUsername());
 
         UserAvatarModel avatar = findAvatarByUserId(
                 user.getIdUser());

@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import {
   Alert,
   Button,
-  Chip,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -27,7 +26,8 @@ import { getAllActiveStatuses } from "@/app/modules/statuses/services/statusServ
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
-import { getStatusColor } from "@/utils/ticketUiUtils";
+import TicketClassificationChip from "@/components/ui/TicketClassificationChip";
+import { getClassificationLabel } from "@/utils/ticketUiUtils";
 
 import { changeTicketStatus } from "../../services/ticketService";
 
@@ -110,14 +110,6 @@ export default function ChangeTicketStatusDialog({
 
     loadStatuses();
   }, [fetchStatuses, user, open]);
-
-  const getStatusDisplayName = (statusName: string) => {
-    if (tStatuses.has(statusName)) {
-      return tStatuses(statusName);
-    }
-
-    return statusName;
-  };
 
   const handleStatusChange = (event: SelectChangeEvent) => {
     setSelectedStatusId(event.target.value);
@@ -218,12 +210,7 @@ export default function ChangeTicketStatusDialog({
             {t("currentStatus")}
           </span>
 
-          <Chip
-            label={getStatusDisplayName(currentStatus.name)}
-            color={getStatusColor(currentStatus.name)}
-            size="small"
-            className={sharedStyles.ticketBadge}
-          />
+          <TicketClassificationChip kind="status" name={currentStatus.name} className={sharedStyles.ticketBadge} />
         </div>
 
         <div>
@@ -260,20 +247,10 @@ export default function ChangeTicketStatusDialog({
                       alignItems: "center",
                     }}
                   >
-                    <Chip
-                      size="small"
-                      color={getStatusColor(status.name)}
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        "& .MuiChip-label": {
-                          display: "none",
-                        },
-                      }}
-                    />
+                    <TicketClassificationChip kind="status" name={status.name} dot />
 
                     <Typography variant="body2">
-                      {getStatusDisplayName(status.name)}
+                      {getClassificationLabel(status.name, tStatuses)}
                     </Typography>
                   </Stack>
                 </MenuItem>

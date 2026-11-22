@@ -24,7 +24,7 @@ const INITIAL_FORM_DATA: ChangePasswordFormData = {
   confirmPassword: "",
 };
 
-export default function ChangePasswordForm() {
+export default function ChangePasswordForm({ readOnly = false }: { readOnly?: boolean }) {
   const t = useTranslations("Profile.ChangePassword");
 
   const [formData, setFormData] =
@@ -87,6 +87,8 @@ export default function ChangePasswordForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (readOnly) return;
+
     const requiredFieldsError = validateRequiredFields();
 
     if (requiredFieldsError) {
@@ -135,6 +137,8 @@ export default function ChangePasswordForm() {
         {t("title")}
       </h2>
 
+      {readOnly && <Alert severity="info">{t("demoReadOnly")}</Alert>}
+
       <div className={styles.formFields}>
         <TextField
           className={styles.fullWidth}
@@ -145,7 +149,7 @@ export default function ChangePasswordForm() {
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.currentPassword)}
           helperText={requiredFieldsIncomplete.currentPassword}
-          disabled={loading}
+          disabled={loading || readOnly}
           fullWidth
         />
 
@@ -158,7 +162,7 @@ export default function ChangePasswordForm() {
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.newPassword)}
           helperText={requiredFieldsIncomplete.newPassword}
-          disabled={loading}
+          disabled={loading || readOnly}
           fullWidth
         />
 
@@ -171,7 +175,7 @@ export default function ChangePasswordForm() {
           onChange={handleFormChange}
           error={Boolean(requiredFieldsIncomplete.confirmPassword)}
           helperText={requiredFieldsIncomplete.confirmPassword}
-          disabled={loading}
+          disabled={loading || readOnly}
           fullWidth
         />
       </div>
@@ -185,7 +189,7 @@ export default function ChangePasswordForm() {
           type="submit"
           variant="contained"
           disableElevation
-          disabled={loading}
+          disabled={loading || readOnly}
           className={styles.primaryButton}
         >
           {loading ? t("saving") : t("submit")}

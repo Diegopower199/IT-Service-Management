@@ -120,6 +120,23 @@ describe("UserForm", () => {
     });
   });
 
+  it.each([FORM_MODES.CREATE, FORM_MODES.EDIT])("omits the ADMIN option when granting roles is restricted in %s mode", async (mode) => {
+    const user = userEvent.setup();
+    render(
+      <UserForm
+        formMode={mode}
+        selectedUser={mode === FORM_MODES.EDIT ? { ...selectedUser, role: roles[1] } : null}
+        canGrantAdminRole={false}
+        onClose={onClose}
+        onSubmitSuccess={onSubmitSuccess}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Role" }));
+    expect(await screen.findByRole("option", { name: "USER" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "ADMIN" })).not.toBeInTheDocument();
+  });
+
   it("shows required-field errors and does not submit an empty form", async () => {
     const user = userEvent.setup();
     renderForm(FORM_MODES.CREATE);

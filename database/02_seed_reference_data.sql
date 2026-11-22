@@ -76,19 +76,14 @@ INSERT INTO priorities (name, active) VALUES
 
 -- ------------------------------------------------------------
 -- 5. STATUSES
--- The initial five are protected system statuses.
--- Additional values are custom statuses. Dashboard metrics
--- for OPEN and IN_PROGRESS do not include other statuses.
+-- The five seeded statuses are protected system statuses.
 -- ------------------------------------------------------------
 INSERT INTO statuses (name, active) VALUES
     ('OPEN', TRUE),
     ('IN_PROGRESS', TRUE),
-    ('WAITING', TRUE),
+    ('BLOCKED', TRUE),
     ('RESOLVED', TRUE),
-    ('CLOSED', TRUE),
-    ('PENDING_CUSTOMER', TRUE),
-    ('PENDING_VENDOR', TRUE),
-    ('CANCELLED', TRUE);
+    ('CLOSED', TRUE);
 
 COMMIT;
 

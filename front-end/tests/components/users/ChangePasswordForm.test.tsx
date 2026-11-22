@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -26,6 +26,7 @@ vi.mock("next-intl", () => ({
   useTranslations: () => {
     const translations: Record<string, string> = {
       title: "Change password",
+      demoReadOnly: "Demo account is read-only",
       currentPassword: "Current password",
       newPassword: "New password",
       confirmPassword: "Confirm password",
@@ -68,6 +69,19 @@ describe("ChangePasswordForm", () => {
     expect(
       screen.getByRole("button", { name: "Change password" }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps the password form read-only and ignores a submit event", () => {
+    render(<ChangePasswordForm readOnly />);
+
+    expect(screen.getByLabelText("Current password")).toBeDisabled();
+    expect(screen.getByLabelText("New password")).toBeDisabled();
+    expect(screen.getByLabelText("Confirm password")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Change password" })).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent("Demo account is read-only");
+    fireEvent.submit(screen.getByRole("form", { name: "Change password" }));
+
+    expect(mocks.changePassword).not.toHaveBeenCalled();
   });
 
   it("should require all three password fields", async () => {

@@ -62,7 +62,7 @@ public class UserService {
         return convertToResponse(user);
     }
 
-    public UserResponse createUser(CreateUserRequest request) {
+    public UserResponse createUser(String actorUsername, CreateUserRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new ResourceAlreadyExistsException(
@@ -77,6 +77,7 @@ public class UserService {
         RoleModel role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Role with id " + request.getRoleId() + " not found"));
+        DemoAccountAccess.requireRoleAssignable(actorUsername, role, null);
 
         DepartmentModel department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -100,12 +101,15 @@ public class UserService {
     }
 
     public UserResponse updateUser(
+            String actorUsername,
             UpdateUserRequest request,
             Long userId) {
 
         UserModel existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User with id " + userId + " not found"));
+
+        DemoAccountAccess.requireUserEditable(actorUsername, existingUser.getUsername());
 
         if (!existingUser.getUsername().equals(request.getUsername())
                 && userRepository.existsByUsername(request.getUsername())) {
@@ -124,6 +128,7 @@ public class UserService {
         RoleModel role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Role with id " + request.getRoleId() + " not found"));
+        DemoAccountAccess.requireRoleAssignable(actorUsername, role, existingUser.getRole());
 
         DepartmentModel department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -145,6 +150,8 @@ public class UserService {
     public UserResponse updateCurrentUser(
             String username,
             UpdateProfileRequest request) {
+
+        DemoAccountAccess.requireProfileEditable(username);
 
         UserModel existingUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -169,6 +176,8 @@ public class UserService {
     public void changePassword(
             String username,
             ChangePasswordRequest request) {
+
+        DemoAccountAccess.requireProfileEditable(username);
 
         UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException(
