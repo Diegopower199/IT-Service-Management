@@ -3,14 +3,10 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import FlagOutlined from "@mui/icons-material/FlagOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+
+import { CatalogEntityDetails, CatalogNameForm } from "@/app/modules/adminCatalog/CatalogEntityView";
 
 import { type PriorityResponse } from "@/types/priorityTypes";
 
@@ -182,70 +178,36 @@ export default function PriorityForm({
     }
   };
 
-  const getTitle = () => {
-    if (formMode === FORM_MODES.CREATE) {
-      return t("createTitle");
-    }
+  if (isViewMode) {
+    return selectedPriority ? (
+      <CatalogEntityDetails
+        title={t("viewTitle")}
+        icon={<FlagOutlined />}
+        name={getPriorityDisplayName(formData.name)}
+        active={selectedPriority.active}
+        statusLabel={t(selectedPriority.active ? "active" : "inactive")}
+        backLabel={t("back")}
+        onClose={onClose}
+      />
+    ) : null;
+  }
 
-    if (formMode === FORM_MODES.VIEW) {
-      return t("viewTitle");
-    }
-
-    return t("editTitle");
-  };
+  const isCreate = formMode === FORM_MODES.CREATE;
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {getTitle()}
-      </Typography>
-
-      <Stack spacing={3}>
-        <TextField
-          label={t("name")}
-          name="name"
-          value={
-            isViewMode ? getPriorityDisplayName(formData.name) : formData.name
-          }
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.name)}
-          helperText={requiredFieldsIncomplete.name}
-          disabled={isViewMode || loading}
-          fullWidth
-        />
-
-        {selectedPriority && formMode === FORM_MODES.VIEW && (
-          <TextField
-            label={t("status")}
-            value={selectedPriority.active ? t("active") : t("inactive")}
-            disabled
-            fullWidth
-          />
-        )}
-
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-
-        <Stack direction="row" spacing={2}>
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={onClose}
-            disabled={loading}
-          >
-            {isViewMode ? t("back") : t("cancel")}
-          </Button>
-
-          {!isViewMode && (
-            <Button type="submit" variant="contained" disabled={loading}>
-              {loading
-                ? t("saving")
-                : formMode === FORM_MODES.CREATE
-                  ? t("createPriority")
-                  : t("saveChanges")}
-            </Button>
-          )}
-        </Stack>
-      </Stack>
-    </Box>
+    <CatalogNameForm
+      title={t(isCreate ? "createTitle" : "editTitle")}
+      icon={isCreate ? <FlagOutlined /> : <EditOutlined />}
+      name={formData.name}
+      nameLabel={t("name")}
+      nameError={requiredFieldsIncomplete.name}
+      errorMessage={errorMessage}
+      loading={loading}
+      cancelLabel={t("cancel")}
+      submitLabel={t(loading ? "saving" : isCreate ? "createPriority" : "saveChanges")}
+      onChange={handleFormChange}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    />
   );
 }

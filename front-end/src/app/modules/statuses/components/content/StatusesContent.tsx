@@ -4,27 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from "@mui/material";
-
-import {
-  DataGrid,
-  GridActionsCellItem,
-  type GridColDef,
-} from "@mui/x-data-grid";
-
-import AddIcon from "@mui/icons-material/Add";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditIcon from "@mui/icons-material/Edit";
-import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
+import type { GridColDef } from "@mui/x-data-grid";
+import RuleOutlined from "@mui/icons-material/RuleOutlined";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -32,18 +13,14 @@ import { isProtectedStatus, type StatusResponse } from "@/types/statusTypes";
 
 import { USER_ROLES } from "@/types/roleTypes";
 
-import {
-  DATA_GRID_LOCALE_TEXT,
-  DEFAULT_PAGE_SIZE,
-  FORM_MODES,
-  PAGE_SIZE_OPTIONS,
-  type FormMode,
-} from "@/utils/constans";
+import { FORM_MODES, type FormMode } from "@/utils/constans";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
+import { CatalogList, catalogRowActions, CatalogName } from "@/app/modules/adminCatalog/CatalogList";
+import { CatalogStatusBadge, CatalogStatusDialog } from "@/app/modules/adminCatalog/CatalogEntityView";
 
 import {
   activateStatus,
@@ -58,11 +35,12 @@ export default function StatusesContent() {
   const router = useRouter();
 
   const t = useTranslations("Statuses.Content");
+  const tCatalog = useTranslations("Common.AdminCatalog");
   const tStatuses = useTranslations("Common.Statuses");
 
   const [statuses, setStatuses] = useState<StatusResponse[]>([]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [changingStatus, setChangingStatus] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
@@ -224,63 +202,43 @@ export default function StatusesContent() {
     {
       field: "idStatus",
       headerName: t("id"),
-      width: 100,
+      width: 80,
     },
     {
       field: "name",
       headerName: t("name"),
       flex: 1,
-      minWidth: 200,
-      renderCell: (params) => getStatusDisplayName(params.row.name),
+      minWidth: 156,
+      renderCell: ({ row }) => (
+        <CatalogName name={getStatusDisplayName(row.name)} protectedItem={isProtectedStatus(row.name)} />
+      ),
     },
     {
       field: "active",
       headerName: t("status"),
-      width: 150,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.active ? t("active") : t("inactive")}
-          color={params.row.active ? "success" : "default"}
-          size="small"
-          variant="outlined"
-          sx={{
-            fontWeight: 600,
-          }}
-        />
-      ),
+      width: 112,
+      renderCell: ({ row }) => <CatalogStatusBadge active={row.active} label={t(row.active ? "active" : "inactive")} />,
     },
     {
       field: "actions",
       type: "actions",
       headerName: t("actions"),
-      width: 170,
+      width: 138,
       getActions: ({ row }) => {
-        const protectedStatus = isProtectedStatus(row.name);
+        const protectedItem = isProtectedStatus(row.name);
 
-        return [
-          <GridActionsCellItem
-            key="view"
-            icon={<VisibilityIcon />}
-            label={t("view")}
-            onClick={() => handleViewStatus(row)}
-          />,
-
-          <GridActionsCellItem
-            key="edit"
-            icon={<EditIcon />}
-            label={t("edit")}
-            disabled={protectedStatus}
-            onClick={() => handleEditStatus(row)}
-          />,
-
-          <GridActionsCellItem
-            key="status"
-            icon={<ChangeCircleIcon />}
-            label={row.active ? t("deactivate") : t("activate")}
-            disabled={protectedStatus && row.active}
-            onClick={() => handleOpenStatusDialog(row)}
-          />,
-        ];
+        return catalogRowActions({
+          view: t("view"),
+          edit: t("edit"),
+          toggle: t(row.active ? "deactivate" : "activate"),
+          active: row.active,
+          onView: () => handleViewStatus(row),
+          onEdit: () => handleEditStatus(row),
+          onToggle: () => handleOpenStatusDialog(row),
+          disabledEdit: protectedItem,
+          disabledToggle: protectedItem && row.active,
+          protectedHint: tCatalog("protectedStatus"),
+        });
       },
     },
   ];
@@ -304,101 +262,31 @@ export default function StatusesContent() {
     );
   }
 
+  const deactivating = statusToChange?.active ?? false;
+
   return (
-    <main>
-      <h1>{t("title")}</h1>
-
-      <Button variant="contained" onClick={handleCreateStatus}>
-        {t("createStatus")} <AddIcon />
-      </Button>
-
-      {errorMessage && (
-        <Alert
-          severity="error"
-          sx={{
-            my: 2,
-          }}
-        >
-          {errorMessage}
-        </Alert>
-      )}
-
-      <DataGrid
-        rows={statuses}
-        columns={columns}
-        getRowId={(row) => row.idStatus}
-        loading={loading}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              page: 0,
-              pageSize: DEFAULT_PAGE_SIZE,
-            },
-          },
-        }}
-        localeText={DATA_GRID_LOCALE_TEXT}
-      />
-
-      <Dialog
+    <CatalogList
+      title={t("title")}
+      icon={<RuleOutlined />}
+      rows={statuses}
+      columns={columns}
+      getRowId={(row) => row.idStatus}
+      loading={loading}
+      errorMessage={errorMessage}
+      create={{ label: t("createStatus"), onClick: handleCreateStatus }}
+    >
+      <CatalogStatusDialog
         open={Boolean(statusToChange)}
+        active={deactivating}
+        title={t(deactivating ? "deactivateTitle" : "activateTitle")}
+        message={statusToChange ? t(deactivating ? "deactivateConfirmation" : "activateConfirmation", { name: statusToChange.name }) : undefined}
+        errorMessage={statusErrorMessage}
+        saving={changingStatus}
+        cancelLabel={t("cancel")}
+        confirmLabel={t(changingStatus ? "saving" : deactivating ? "deactivate" : "activate")}
         onClose={handleCloseStatusDialog}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>
-          {statusToChange?.active ? t("deactivateTitle") : t("activateTitle")}
-        </DialogTitle>
-
-        <DialogContent>
-          {statusToChange && (
-            <Typography>
-              {statusToChange.active
-                ? t("deactivateConfirmation", {
-                    name: getStatusDisplayName(statusToChange.name),
-                  })
-                : t("activateConfirmation", {
-                    name: getStatusDisplayName(statusToChange.name),
-                  })}
-            </Typography>
-          )}
-
-          {statusErrorMessage && (
-            <Alert
-              severity="error"
-              sx={{
-                mt: 2,
-              }}
-            >
-              {statusErrorMessage}
-            </Alert>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={handleCloseStatusDialog}
-            disabled={changingStatus}
-          >
-            {t("cancel")}
-          </Button>
-
-          <Button
-            type="button"
-            variant="contained"
-            onClick={handleChangeStatus}
-            disabled={changingStatus}
-          >
-            {changingStatus
-              ? t("saving")
-              : statusToChange?.active
-                ? t("deactivate")
-                : t("activate")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </main>
+        onConfirm={handleChangeStatus}
+      />
+    </CatalogList>
   );
 }

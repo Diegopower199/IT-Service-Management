@@ -3,6 +3,7 @@
         "title": "Users",
         "createUser": "Create User",
         "loadError": "Error loading users.",
+        "empty": "There are no users to display.",
         "username": "Username",
         "name": "Name",
         "email": "Email",
@@ -14,6 +15,10 @@
         "disabled": "Disabled",
         "view": "View",
         "edit": "Edit"
+    },
+    "Details": {
+        "accountInformation": "Account Information",
+        "noDepartment": "No department assigned"
     },
     "Form": {
         "createTitle": "Create User",

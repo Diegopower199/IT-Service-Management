@@ -3,28 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 
-import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Alert, Paper } from "@mui/material";
 
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import DownloadIcon from "@mui/icons-material/Download";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import AttachFileRounded from "@mui/icons-material/AttachFileRounded";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -40,29 +23,18 @@ import {
   previewTicketAttachment,
 } from "../../services/ticketAttachmentService";
 
+import TicketDate from "../shared/TicketDate";
+import { AttachmentRow } from "./AttachmentFile";
+import AttachmentPicker from "./AttachmentPicker";
+import AttachmentPreviewDialog, { type AttachmentPreview } from "./AttachmentPreviewDialog";
+import detailStyles from "../../styles/ticketDetails.module.css";
+import styles from "../../styles/ticketAttachments.module.css";
+
 interface TicketAttachmentsProps {
   ticketId: number;
 }
 
-interface AttachmentPreview {
-  url: string;
-  fileName: string;
-  contentType: string;
-}
-
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 
 export default function TicketAttachments({
   ticketId,
@@ -74,7 +46,7 @@ export default function TicketAttachments({
   );
 
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [previewingId, setPreviewingId] = useState<number | null>(null);
 
@@ -147,7 +119,7 @@ export default function TicketAttachments({
     }
 
     try {
-      setUploading(true);
+      setUploadingFile(file);
       setErrorMessage("");
       setSuccessMessage("");
 
@@ -166,7 +138,7 @@ export default function TicketAttachments({
       const apiError = getApiError(error);
       setErrorMessage(apiError?.message ?? t("uploadError"));
     } finally {
-      setUploading(false);
+      setUploadingFile(null);
     }
   };
 
@@ -257,165 +229,58 @@ export default function TicketAttachments({
 
   return (
     <>
-      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={2}
-          sx={{
-            alignItems: { xs: "stretch", sm: "center" },
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography variant="h6">{t("title")}</Typography>
+      <Paper component="section" variant="outlined" className={`${detailStyles.panel} ${styles.panel}`}>
+        <div className={styles.header}>
+          <h2 className={detailStyles.panelTitle}>
+            <AttachFileRounded aria-hidden="true" />
+            {t("title")}
+          </h2>
 
-          <Button
-            component="label"
-            variant="contained"
-            startIcon={<UploadFileIcon />}
-            disabled={uploading}
-          >
-            {uploading ? t("uploading") : t("upload")}
+          <AttachmentPicker
+            primary
+            label={uploadingFile ? t("uploading") : t("upload")}
+            file={uploadingFile}
+            onChange={handleFileChange}
+            disabled={uploadingFile !== null}
+            busy={uploadingFile !== null}
+          />
+        </div>
 
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.png,.jpg,.jpeg"
-              onChange={handleFileChange}
-              disabled={uploading}
-            />
-          </Button>
-        </Stack>
+        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        <Divider sx={{ my: 2 }} />
-
-        {errorMessage && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {errorMessage}
-          </Alert>
-        )}
-
-        {successMessage && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {successMessage}
-          </Alert>
-        )}
+        {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
         {loading ? (
-          <PageLoading />
+          <div className={detailStyles.panelLoading}>
+            <PageLoading />
+          </div>
         ) : attachments.length === 0 ? (
-          <Typography color="text.secondary">{t("empty")}</Typography>
+          !errorMessage && <p className={detailStyles.emptyState}>{t("empty")}</p>
         ) : (
-          <Stack spacing={2}>
+          <ul className={styles.list}>
             {attachments.map((attachment) => (
-              <Paper
+              <AttachmentRow
                 key={attachment.idAttachment}
-                variant="outlined"
-                sx={{ p: 2 }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={{ alignItems: "center" }}
-                >
-                  <AttachFileIcon color="action" />
-
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography
-                      variant="body1"
-                      sx={{ overflowWrap: "anywhere", fontWeight: 500 }}
-                    >
-                      {attachment.fileName}
-                    </Typography>
-
-                    <Typography variant="body2" color="text.secondary">
-                      {formatFileSize(attachment.fileSize)}
-                      {" · "}
-                      {attachment.uploadedBy.username}
-                      {" · "}
-                      {dayjs(attachment.createdAt).format("DD/MM/YYYY HH:mm")}
-                    </Typography>
-                  </Box>
-
-                  <IconButton
-                    onClick={() => void handlePreviewAttachment(attachment)}
-                    disabled={previewingId !== null}
-                    aria-label={t("preview")}
-                    title={t("preview")}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-
-                  <IconButton
-                    onClick={() => void handleDownloadAttachment(attachment)}
-                    disabled={downloadingId !== null}
-                    aria-label={t("download")}
-                    title={t("download")}
-                  >
-                    <DownloadIcon />
-                  </IconButton>
-                </Stack>
-              </Paper>
+                name={attachment.fileName}
+                contentType={attachment.contentType}
+                size={attachment.fileSize}
+                metadata={
+                  <>
+                    <span>{attachment.uploadedBy.username}</span>
+                    <TicketDate value={attachment.createdAt} />
+                  </>
+                }
+                onPreview={() => void handlePreviewAttachment(attachment)}
+                previewDisabled={previewingId !== null}
+                onDownload={() => void handleDownloadAttachment(attachment)}
+                downloadDisabled={downloadingId !== null}
+              />
             ))}
-          </Stack>
+          </ul>
         )}
-
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ display: "block", mt: 2 }}
-        >
-          {t("allowedFormats")}
-        </Typography>
       </Paper>
 
-      <Dialog
-        open={preview !== null}
-        onClose={handleClosePreview}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle>{preview?.fileName}</DialogTitle>
-
-        <DialogContent
-          dividers
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: 300,
-          }}
-        >
-          {preview?.contentType.startsWith("image/") && (
-            <Box
-              component="img"
-              src={preview.url}
-              alt={preview.fileName}
-              sx={{
-                maxWidth: "100%",
-                maxHeight: "70vh",
-                objectFit: "contain",
-              }}
-            />
-          )}
-
-          {preview?.contentType === "application/pdf" && (
-            <Box
-              component="iframe"
-              src={preview.url}
-              title={preview.fileName}
-              sx={{
-                width: "100%",
-                height: "70vh",
-                border: 0,
-              }}
-            />
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleClosePreview}>{t("close")}</Button>
-        </DialogActions>
-      </Dialog>
+      <AttachmentPreviewDialog preview={preview} onClose={handleClosePreview} />
     </>
   );
 }

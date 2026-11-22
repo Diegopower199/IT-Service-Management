@@ -4,25 +4,19 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { Alert } from "@mui/material";
-
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import type { GridColDef } from "@mui/x-data-grid";
+import AdminPanelSettingsOutlined from "@mui/icons-material/AdminPanelSettingsOutlined";
 
 import { useAuth } from "@/hooks/useAuth";
 
 import type { RoleResponse } from "@/types/roleTypes";
 import { USER_ROLES } from "@/types/roleTypes";
 
-import {
-  DATA_GRID_LOCALE_TEXT,
-  DEFAULT_PAGE_SIZE,
-  PAGE_SIZE_OPTIONS,
-} from "@/utils/constans";
-
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import PageLoading from "@/components/ui/PageLoading";
+import { CatalogList } from "@/app/modules/adminCatalog/CatalogList";
 
 import { getAllRoles } from "../services/rolesService";
 
@@ -35,7 +29,7 @@ export default function RolesContent() {
 
   const [roles, setRoles] = useState<RoleResponse[]>([]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -87,13 +81,13 @@ export default function RolesContent() {
     {
       field: "idRole",
       headerName: t("id"),
-      width: 100,
+      width: 80,
     },
     {
       field: "name",
       headerName: t("name"),
       flex: 1,
-      minWidth: 200,
+      minWidth: 160,
       renderCell: (params) => tRoles(params.row.name),
     },
   ];
@@ -107,36 +101,14 @@ export default function RolesContent() {
   }
 
   return (
-    <main>
-      <h1>{t("title")}</h1>
-
-      {errorMessage && (
-        <Alert
-          severity="error"
-          sx={{
-            my: 2,
-          }}
-        >
-          {errorMessage}
-        </Alert>
-      )}
-
-      <DataGrid
-        rows={roles}
-        columns={columns}
-        getRowId={(row) => row.idRole}
-        loading={loading}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              page: 0,
-              pageSize: DEFAULT_PAGE_SIZE,
-            },
-          },
-        }}
-        localeText={DATA_GRID_LOCALE_TEXT}
-      />
-    </main>
+    <CatalogList
+      title={t("title")}
+      icon={<AdminPanelSettingsOutlined />}
+      rows={roles}
+      columns={columns}
+      getRowId={(row) => row.idRole}
+      loading={loading}
+      errorMessage={errorMessage}
+    />
   );
 }

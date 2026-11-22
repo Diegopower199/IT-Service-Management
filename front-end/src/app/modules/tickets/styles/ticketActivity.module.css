@@ -1,0 +1,173 @@
+.activityHeader {
+  display: grid;
+  gap: 14px;
+}
+
+.activityHeader > :global(.MuiButton-root) {
+  justify-self: start;
+}
+
+.activityHeading,
+.commentCard,
+.commentsLoading,
+.composer:global(.MuiPaper-root) {
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background: var(--app-surface);
+  box-shadow: 0 2px 5px #162e5510;
+}
+
+.activityHeading {
+  padding: clamp(16px, 2.4vw, 24px);
+  background: linear-gradient(125deg, #fff 52%, #f4f8ff);
+}
+
+.activityHeading > div {
+  min-width: 0;
+}
+
+.ticketReference {
+  margin: 5px 0 0;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.commentLayout,
+.commentFeed {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.commentLayout {
+  gap: 18px;
+}
+
+.commentCard,
+.commentsLoading {
+  padding: clamp(12px, 1.8vw, 18px);
+}
+
+.commentHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.authorIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
+  font-size: 0.875rem;
+  font-weight: 750;
+}
+
+.commentByline {
+  flex: 1;
+  min-width: 0;
+  color: var(--app-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.commentByline h2 {
+  margin: 0 0 2px;
+  color: var(--app-ink);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.commentText {
+  margin: 10px 0 0;
+  color: var(--app-ink);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.commentsLoading {
+  display: grid;
+  gap: 12px;
+  color: var(--app-muted);
+  font-size: 0.875rem;
+}
+
+.commentsLoading :global(.MuiLinearProgress-root) {
+  border-radius: 999px;
+  background: var(--app-accent-soft);
+}
+
+.commentsLoading :global(.MuiLinearProgress-bar) {
+  background: var(--app-accent);
+}
+
+.composer:global(.MuiPaper-root) {
+  display: grid;
+  gap: 14px;
+  padding: clamp(16px, 2vw, 20px);
+}
+
+.composer :global(.MuiOutlinedInput-root) {
+  border-radius: 9px;
+  background: #f8faff;
+}
+
+.composer :global(.MuiOutlinedInput-root.Mui-focused) {
+  background: #fff;
+}
+
+.composer :global(.MuiOutlinedInput-root.Mui-focused:not(.Mui-error) .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--app-accent);
+}
+
+.composer .internalOption {
+  justify-self: start;
+  margin: 0;
+}
+
+.composerActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border);
+}
+
+.historyGrid:global(.MuiDataGrid-root) {
+  --DataGrid-overlayHeight: 118px;
+
+  height: auto;
+}
+
+.historyGrid .historyAction {
+  font-weight: 700;
+}
+
+.historyGrid .historyPrevious {
+  color: var(--app-muted);
+}
+
+@container (min-width: 860px) {
+  .commentLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.52fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .composerActions > :global(.MuiButton-root) {
+    width: 100%;
+  }
+}

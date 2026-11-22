@@ -3,14 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Button,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Button, Paper, TextField } from "@mui/material";
+import EditOutlined from "@mui/icons-material/EditOutlined";
 
 import type { UpdateProfileRequest, UserResponse } from "@/types/userTypes";
 
@@ -18,6 +12,7 @@ import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
 
 import { updateCurrentUser } from "../../users/services/userService";
+import styles from "../styles/profile.module.css";
 
 interface ProfileFormProps {
   profile: UserResponse;
@@ -140,16 +135,16 @@ export default function ProfileForm({
       component="form"
       variant="outlined"
       onSubmit={handleSubmit}
-      sx={{
-        p: 3,
-        borderRadius: 3,
-      }}
+      aria-labelledby="edit-profile-heading"
+      aria-busy={loading}
+      className={styles.panel}
     >
-      <Typography variant="h6" gutterBottom>
+      <h2 id="edit-profile-heading" className={styles.panelTitle}>
+        <EditOutlined aria-hidden="true" />
         {t("title")}
-      </Typography>
+      </h2>
 
-      <Stack spacing={3} sx={{ mt: 3 }}>
+      <div className={`${styles.formFields} ${styles.editFields}`}>
         <TextField
           label={t("firstName")}
           name="firstName"
@@ -173,6 +168,7 @@ export default function ProfileForm({
         />
 
         <TextField
+          className={styles.fullWidth}
           label={t("email")}
           name="email"
           type="email"
@@ -183,24 +179,31 @@ export default function ProfileForm({
           disabled={loading}
           fullWidth
         />
+      </div>
 
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        <Stack direction="row" spacing={2}>
-          <Button
-            type="button"
-            variant="outlined"
-            onClick={onClose}
-            disabled={loading}
-          >
-            {t("cancel")}
-          </Button>
+      <div className={styles.formActions}>
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={onClose}
+          disabled={loading}
+          className={styles.secondaryButton}
+        >
+          {t("cancel")}
+        </Button>
 
-          <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? t("saving") : t("saveChanges")}
-          </Button>
-        </Stack>
-      </Stack>
+        <Button
+          type="submit"
+          variant="contained"
+          disableElevation
+          disabled={loading}
+          className={styles.primaryButton}
+        >
+          {loading ? t("saving") : t("saveChanges")}
+        </Button>
+      </div>
     </Paper>
   );
 }

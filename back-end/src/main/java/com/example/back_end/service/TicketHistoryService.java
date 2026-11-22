@@ -34,9 +34,17 @@ public class TicketHistoryService {
     public Page<TicketHistoryResponse> getAllHistory(
             Pageable pageable) {
 
-        Page<TicketHistoryModel> history = ticketHistoryRepository.findAll(pageable);
+        UserModel currentUser = getAuthenticatedUser();
+        if (TicketAccess.hasRole(currentUser, RoleName.TECHNICIAN)) {
+            return ticketHistoryRepository.findReadableByTechnician(currentUser.getIdUser(), pageable)
+                    .map(this::convertToResponse);
+        }
 
-        return history.map(this::convertToResponse);
+        if (!TicketAccess.hasRole(currentUser, RoleName.ADMIN)) {
+            throw new AccessDeniedException("You do not have permission to view global ticket history");
+        }
+
+        return ticketHistoryRepository.findAll(pageable).map(this::convertToResponse);
     }
 
     public Page<TicketHistoryResponse> getHistoryByTicketId(
@@ -48,24 +56,8 @@ public class TicketHistoryService {
                         "Ticket with id " + ticketId + " not found"));
 
         UserModel currentUser = getAuthenticatedUser();
-
-        String role = currentUser.getRole().getName();
-
-        if (role.equalsIgnoreCase(RoleName.USER.name())) {
-
-            boolean isCreatedByUser = ticket.getCreatedBy()
-                    .getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            boolean isRequestedForUser = ticket.getRequestedFor()
-                    .getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            if (!isCreatedByUser && !isRequestedForUser) {
-                throw new AccessDeniedException(
-                        "You do not have permission to view the history of this ticket");
-            }
-        }
+        TicketAccess.requireReadAccess(ticket, currentUser,
+                "You do not have permission to view the history of this ticket");
 
         Page<TicketHistoryModel> history = ticketHistoryRepository.findByTicket(
                 ticket,

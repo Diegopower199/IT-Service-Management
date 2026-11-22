@@ -8,19 +8,11 @@ import {
   Alert,
   Button,
   Checkbox,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
   FormControlLabel,
-  Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -31,6 +23,11 @@ import { logger } from "@/utils/logger";
 
 import { createTicketComment } from "../../services/ticketCommentsService";
 import { uploadTicketCommentAttachment } from "../../services/ticketCommentAttachmentService";
+
+import AttachmentPicker from "../attachments/AttachmentPicker";
+import TicketDialog from "../shared/TicketDialog";
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketDetails.module.css";
 
 interface AddTicketCommentDialogProps {
   open: boolean;
@@ -252,152 +249,83 @@ export default function AddTicketCommentDialog({
   };
 
   return (
-    <Dialog
+    <TicketDialog
       open={open}
       onClose={handleClose}
-      fullWidth
-      maxWidth="sm"
-      slotProps={{
-        paper: {
-          sx: {
-            borderRadius: 3,
-          },
-        },
-      }}
-    >
-      <DialogTitle
-        component="div"
-        sx={{
-          px: 3,
-          pt: 3,
-          pb: 2,
-        }}
-      >
-        <Typography
-          variant="h5"
-          component="h2"
-          sx={{
-            fontWeight: 600,
-          }}
-        >
-          {t("title")}
-        </Typography>
-
-        <Typography
-          variant="body2"
-          component="p"
-          color="text.secondary"
-          sx={{
-            mt: 0.5,
-            mb: 0,
-          }}
-        >
-          {t("subtitle", { ticketId })}
-        </Typography>
-      </DialogTitle>
-
-      <Divider />
-
-      <DialogContent sx={{ p: 3 }}>
-        <Stack spacing={2}>
-          <TextField
-            name="comment"
-            label={t("comment")}
-            multiline
-            minRows={4}
-            fullWidth
-            value={formData.comment}
-            onChange={handleFormChange}
-            error={Boolean(requiredFieldsIncomplete.comment)}
-            helperText={requiredFieldsIncomplete.comment}
-            disabled={savingComment || commentCreated}
-          />
-
-          {canCreateInternalComment && (
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="internal"
-                  checked={formData.internal}
-                  onChange={handleFormChange}
-                  disabled={savingComment || commentCreated}
-                />
-              }
-              label={t("internalComment")}
-            />
-          )}
-
+      title={t("title")}
+      description={t("subtitle", { ticketId })}
+      icon={<ChatBubbleOutlineRounded />}
+      actions={
+        <>
           <Button
-            component="label"
             variant="outlined"
-            startIcon={<UploadFileIcon />}
-            disabled={savingComment || commentCreated}
-            sx={{ alignSelf: "flex-start" }}
-          >
-            {t("attachFile")}
-
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileChange}
-              disabled={savingComment || commentCreated}
-            />
-          </Button>
-
-          {selectedFile && (
-            <Chip
-              label={selectedFile.name}
-              onDelete={
-                savingComment || commentCreated
-                  ? undefined
-                  : () => setSelectedFile(null)
-              }
-              sx={{ alignSelf: "flex-start" }}
-            />
-          )}
-
-          <Typography variant="caption" color="text.secondary">
-            {tAttachments("allowedFormats")}
-          </Typography>
-
-          {attachmentError && <Alert severity="error">{attachmentError}</Alert>}
-
-          {attachmentWarning && (
-            <Alert severity="warning">{attachmentWarning}</Alert>
-          )}
-
-          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-        </Stack>
-      </DialogContent>
-
-      <Divider />
-
-      <DialogActions
-        sx={{
-          px: 3,
-          py: 2,
-          bgcolor: "action.hover",
-        }}
-      >
-        <Button onClick={handleClose} disabled={savingComment} color="inherit">
-          {commentCreated ? tAttachments("close") : t("cancel")}
-        </Button>
-
-        {!commentCreated && (
-          <Button
-            variant="contained"
-            onClick={handleConfirm}
+            onClick={handleClose}
             disabled={savingComment}
-            sx={{
-              px: 3,
-              borderRadius: 2,
-            }}
+            className={sharedStyles.secondaryButton}
           >
-            {savingComment ? t("adding") : t("addComment")}
+            {commentCreated ? tAttachments("close") : t("cancel")}
           </Button>
+
+          {!commentCreated && (
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={handleConfirm}
+              disabled={savingComment}
+              className={sharedStyles.primaryButton}
+            >
+              {savingComment ? t("adding") : t("addComment")}
+            </Button>
+          )}
+        </>
+      }
+    >
+      <div className={styles.dialogFields}>
+        <TextField
+          name="comment"
+          label={t("comment")}
+          multiline
+          minRows={4}
+          fullWidth
+          value={formData.comment}
+          onChange={handleFormChange}
+          error={Boolean(requiredFieldsIncomplete.comment)}
+          helperText={requiredFieldsIncomplete.comment}
+          disabled={savingComment || commentCreated}
+        />
+
+        {canCreateInternalComment && (
+          <FormControlLabel
+            className={styles.internalOption}
+            control={
+              <Checkbox
+                name="internal"
+                checked={formData.internal}
+                onChange={handleFormChange}
+                disabled={savingComment || commentCreated}
+              />
+            }
+            label={t("internalComment")}
+          />
         )}
-      </DialogActions>
-    </Dialog>
+
+        <AttachmentPicker
+          label={t("attachFile")}
+          file={selectedFile}
+          onChange={handleFileChange}
+          onRemove={savingComment || commentCreated ? undefined : () => setSelectedFile(null)}
+          disabled={savingComment || commentCreated}
+          busy={savingComment && selectedFile !== null}
+        />
+
+        {attachmentError && <Alert severity="error">{attachmentError}</Alert>}
+
+        {attachmentWarning && (
+          <Alert severity="warning">{attachmentWarning}</Alert>
+        )}
+
+        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      </div>
+    </TicketDialog>
   );
 }

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { Alert, Box, Typography } from "@mui/material";
+import { Alert } from "@mui/material";
+import PersonOutlineRounded from "@mui/icons-material/PersonOutlineRounded";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -19,6 +20,7 @@ import PageLoading from "@/components/ui/PageLoading";
 
 import ChangePasswordForm from "../form/ChangePasswordForm";
 import ProfileInformation from "../information/ProfileInformation";
+import styles from "../styles/profile.module.css";
 
 export default function ProfileContent() {
   const { user, isAuthReady } = useAuth();
@@ -28,7 +30,7 @@ export default function ProfileContent() {
 
   const [profile, setProfile] = useState<UserResponse | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -81,42 +83,27 @@ export default function ProfileContent() {
     return <PageLoading />;
   }
 
-  if (loading && !profile) {
-    return <PageLoading />;
-  }
-
   return (
-    <main>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {t("title")}
-      </Typography>
+    <div className={`${styles.page} ${styles.profile}`}>
+      <header className={styles.heading}>
+        <span className={styles.headingIcon} aria-hidden="true">
+          <PersonOutlineRounded />
+        </span>
+        <h1>{t("title")}</h1>
+      </header>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {errorMessage}
-        </Alert>
-      )}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-      {profile && (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              md: "1fr 1fr",
-            },
-            gap: 4,
-            mt: 4,
-          }}
-        >
+      {profile ? (
+        <div className={styles.layout}>
           <ProfileInformation
             profile={profile}
             onSubmitSuccess={handleProfileUpdated}
           />
 
           <ChangePasswordForm />
-        </Box>
-      )}
-    </main>
+        </div>
+      ) : loading && <PageLoading />}
+    </div>
   );
 }

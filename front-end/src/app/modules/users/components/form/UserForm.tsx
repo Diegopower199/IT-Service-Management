@@ -10,10 +10,10 @@ import {
   Checkbox,
   FormControlLabel,
   MenuItem,
-  Stack,
   TextField,
-  Typography,
 } from "@mui/material";
+import EditOutlined from "@mui/icons-material/EditOutlined";
+import PersonAddAltOutlined from "@mui/icons-material/PersonAddAltOutlined";
 
 import type { UserResponse } from "@/types/userTypes";
 import type { RoleResponse } from "@/types/roleTypes";
@@ -27,6 +27,10 @@ import { logger } from "@/utils/logger";
 import { createUser, updateUser } from "../../services/userService";
 import { getAllActiveDepartments } from "@/app/modules/departments/services/departmentService";
 import { getAllRoles } from "@/app/modules/roles/services/rolesService";
+import UserDetails from "../details/UserDetails";
+import sharedStyles from "../../styles/users.module.css";
+
+import styles from "./UserForm.module.css";
 
 interface UserFormProps {
   formMode: FormMode;
@@ -34,6 +38,8 @@ interface UserFormProps {
   onClose: () => void;
   onSubmitSuccess: () => void;
 }
+
+type EditorMode = Exclude<FormMode, typeof FORM_MODES.VIEW>;
 
 interface UserFormData {
   username: string;
@@ -58,13 +64,10 @@ const INITIAL_FORM_DATA: UserFormData = {
 };
 
 const getInitialFormData = (
-  formMode: FormMode,
+  formMode: EditorMode,
   selectedUser: UserResponse | null,
 ): UserFormData => {
-  if (
-    (formMode === FORM_MODES.EDIT || formMode === FORM_MODES.VIEW) &&
-    selectedUser
-  ) {
+  if (formMode === FORM_MODES.EDIT && selectedUser) {
     return {
       username: selectedUser.username,
       email: selectedUser.email,
@@ -80,12 +83,20 @@ const getInitialFormData = (
   return { ...INITIAL_FORM_DATA };
 };
 
-export default function UserForm({
+export default function UserForm({ formMode, selectedUser, ...props }: UserFormProps) {
+  if (formMode === FORM_MODES.VIEW) {
+    return selectedUser ? <UserDetails user={selectedUser} onClose={props.onClose} /> : null;
+  }
+
+  return <UserEditor {...props} formMode={formMode} selectedUser={selectedUser} />;
+}
+
+function UserEditor({
   formMode,
   selectedUser,
   onClose,
   onSubmitSuccess,
-}: UserFormProps) {
+}: UserFormProps & { formMode: EditorMode }) {
   const t = useTranslations("Users.Form");
   const tRoles = useTranslations("Common.Roles");
 
@@ -229,10 +240,6 @@ export default function UserForm({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (formMode === FORM_MODES.VIEW) {
-      return;
-    }
-
     const requiredFieldsError = validateRequiredFields();
 
     if (requiredFieldsError) {
@@ -306,179 +313,190 @@ export default function UserForm({
     }
   };
 
-  const getTitle = () => {
-    if (formMode === FORM_MODES.CREATE) {
-      return t("createTitle");
-    }
+  const isCreate = formMode === FORM_MODES.CREATE;
+  const headingId = isCreate ? "create-user-heading" : "edit-user-heading";
 
-    if (formMode === FORM_MODES.VIEW) {
-      return t("viewTitle");
-    }
+  const fields = (
+    <>
+      <TextField
+        label={t("username")}
+        name="username"
+        value={formData.username}
+        onChange={handleFormChange}
+        error={Boolean(requiredFieldsIncomplete.username)}
+        helperText={requiredFieldsIncomplete.username}
+        disabled={loading}
+        fullWidth
+      />
 
-    return t("editTitle");
-  };
+      <TextField
+        label={t("email")}
+        name="email"
+        type="email"
+        value={formData.email}
+        onChange={handleFormChange}
+        error={Boolean(requiredFieldsIncomplete.email)}
+        helperText={requiredFieldsIncomplete.email}
+        disabled={loading}
+        fullWidth
+      />
+
+      <TextField
+        label={t("firstName")}
+        name="firstName"
+        value={formData.firstName}
+        onChange={handleFormChange}
+        error={Boolean(requiredFieldsIncomplete.firstName)}
+        helperText={requiredFieldsIncomplete.firstName}
+        disabled={loading}
+        fullWidth
+      />
+
+      <TextField
+        label={t("lastName")}
+        name="lastName"
+        value={formData.lastName}
+        onChange={handleFormChange}
+        error={Boolean(requiredFieldsIncomplete.lastName)}
+        helperText={requiredFieldsIncomplete.lastName}
+        disabled={loading}
+        fullWidth
+      />
+
+      <TextField
+        select
+        label={t("role")}
+        name="roleId"
+        value={
+          rolesOptions.some((role) => role.idRole === formData.roleId)
+            ? formData.roleId
+            : 0
+        }
+        onChange={handleFormChange}
+        error={Boolean(requiredFieldsIncomplete.roleId)}
+        helperText={requiredFieldsIncomplete.roleId}
+        disabled={loading}
+        fullWidth
+      >
+        <MenuItem value={0} disabled>
+          {t("selectRole")}
+        </MenuItem>
+
+        {rolesOptions.length === 0 ? (
+          <MenuItem disabled>{t("noRolesAvailable")}</MenuItem>
+        ) : (
+          rolesOptions.map((role) => (
+            <MenuItem key={role.idRole} value={role.idRole}>
+              {tRoles(role.name)}
+            </MenuItem>
+          ))
+        )}
+      </TextField>
+
+      <TextField
+        select
+        label={t("department")}
+        name="departmentId"
+        value={
+          departmentsOptions.some(
+            (department) => department.idDepartment === formData.departmentId,
+          )
+            ? formData.departmentId
+            : 0
+        }
+        onChange={handleFormChange}
+        error={Boolean(requiredFieldsIncomplete.departmentId)}
+        helperText={requiredFieldsIncomplete.departmentId}
+        disabled={loading}
+        fullWidth
+      >
+        <MenuItem value={0} disabled>
+          {t("selectDepartment")}
+        </MenuItem>
+
+        {departmentsOptions.length === 0 ? (
+          <MenuItem disabled>{t("noDepartmentsAvailable")}</MenuItem>
+        ) : (
+          departmentsOptions.map((department) => (
+            <MenuItem
+              key={department.idDepartment}
+              value={department.idDepartment}
+            >
+              {department.name}
+            </MenuItem>
+          ))
+        )}
+      </TextField>
+
+      {isCreate && (
+        <TextField
+          label={t("password")}
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleFormChange}
+          error={Boolean(requiredFieldsIncomplete.password)}
+          helperText={requiredFieldsIncomplete.password}
+          disabled={loading}
+          fullWidth
+        />
+      )}
+
+      <FormControlLabel
+        className={styles.enabledControl}
+        control={
+          <Checkbox
+            name="enabled"
+            checked={formData.enabled}
+            onChange={handleFormChange}
+            disabled={loading}
+          />
+        }
+        label={t("enabled")}
+      />
+    </>
+  );
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {getTitle()}
-      </Typography>
+    <Box
+      component="form"
+      className={`${sharedStyles.form} ${styles.formPanel}`}
+      aria-labelledby={headingId}
+      aria-busy={loading}
+      onSubmit={handleSubmit}
+    >
+      <header className={styles.formHeader}>
+        <div className={sharedStyles.heading}>
+          <span className={sharedStyles.headingIcon} aria-hidden="true">
+            {isCreate ? <PersonAddAltOutlined /> : <EditOutlined />}
+          </span>
+          <h1 id={headingId}>{t(isCreate ? "createTitle" : "editTitle")}</h1>
+        </div>
+      </header>
 
-      <Stack spacing={3}>
-        <TextField
-          label={t("username")}
-          name="username"
-          value={formData.username}
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.username)}
-          helperText={requiredFieldsIncomplete.username}
-          disabled={formMode === FORM_MODES.VIEW}
-          fullWidth
-        />
+      <div className={styles.formFields}>{fields}</div>
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        <TextField
-          label={t("email")}
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.email)}
-          helperText={requiredFieldsIncomplete.email}
-          disabled={formMode === FORM_MODES.VIEW}
-          fullWidth
-        />
-
-        <TextField
-          label={t("firstName")}
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.firstName)}
-          helperText={requiredFieldsIncomplete.firstName}
-          disabled={formMode === FORM_MODES.VIEW}
-          fullWidth
-        />
-
-        <TextField
-          label={t("lastName")}
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.lastName)}
-          helperText={requiredFieldsIncomplete.lastName}
-          disabled={formMode === FORM_MODES.VIEW}
-          fullWidth
-        />
-
-        <TextField
-          select
-          label={t("role")}
-          name="roleId"
-          value={
-            rolesOptions.some((role) => role.idRole === formData.roleId)
-              ? formData.roleId
-              : 0
-          }
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.roleId)}
-          helperText={requiredFieldsIncomplete.roleId}
-          disabled={formMode === FORM_MODES.VIEW}
-          fullWidth
+      <div className={styles.formActions}>
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={onClose}
+          disabled={loading}
+          className={sharedStyles.secondaryButton}
         >
-          <MenuItem value={0} disabled>
-            {t("selectRole")}
-          </MenuItem>
-
-          {rolesOptions.length === 0 ? (
-            <MenuItem disabled>{t("noRolesAvailable")}</MenuItem>
-          ) : (
-            rolesOptions.map((role) => (
-              <MenuItem key={role.idRole} value={role.idRole}>
-                {tRoles(role.name)}
-              </MenuItem>
-            ))
-          )}
-        </TextField>
-
-        <TextField
-          select
-          label={t("department")}
-          name="departmentId"
-          value={
-            departmentsOptions.some(
-              (department) => department.idDepartment === formData.departmentId,
-            )
-              ? formData.departmentId
-              : 0
-          }
-          onChange={handleFormChange}
-          error={Boolean(requiredFieldsIncomplete.departmentId)}
-          helperText={requiredFieldsIncomplete.departmentId}
-          disabled={formMode === FORM_MODES.VIEW}
-          fullWidth
+          {t("cancel")}
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disableElevation
+          disabled={loading}
+          className={sharedStyles.primaryButton}
         >
-          <MenuItem value={0} disabled>
-            {t("selectDepartment")}
-          </MenuItem>
-
-          {departmentsOptions.length === 0 ? (
-            <MenuItem disabled>{t("noDepartmentsAvailable")}</MenuItem>
-          ) : (
-            departmentsOptions.map((department) => (
-              <MenuItem
-                key={department.idDepartment}
-                value={department.idDepartment}
-              >
-                {department.name}
-              </MenuItem>
-            ))
-          )}
-        </TextField>
-
-        {formMode === FORM_MODES.CREATE && (
-          <TextField
-            label={t("password")}
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleFormChange}
-            error={Boolean(requiredFieldsIncomplete.password)}
-            helperText={requiredFieldsIncomplete.password}
-            disabled={loading}
-            fullWidth
-          />
-        )}
-
-        <FormControlLabel
-          control={
-            <Checkbox
-              name="enabled"
-              checked={formData.enabled}
-              onChange={handleFormChange}
-              disabled={formMode === FORM_MODES.VIEW || loading}
-            />
-          }
-          label={t("enabled")}
-        />
-
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-
-        <Stack spacing={3} direction="row">
-          <Button variant="outlined" onClick={onClose} disabled={loading}>
-            {formMode === FORM_MODES.VIEW ? t("back") : t("cancel")}
-          </Button>
-
-          {formMode !== FORM_MODES.VIEW && (
-            <Button type="submit" variant="contained" disabled={loading}>
-              {loading
-                ? t("saving")
-                : formMode === FORM_MODES.CREATE
-                  ? t("createUser")
-                  : t("saveChanges")}
-            </Button>
-          )}
-        </Stack>
-      </Stack>
+          {loading ? t("saving") : t(isCreate ? "createUser" : "saveChanges")}
+        </Button>
+      </div>
     </Box>
   );
 }

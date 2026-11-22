@@ -4,25 +4,20 @@ import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 
-import dayjs from "dayjs";
-
 import {
   Alert,
-  Box,
-  Button as MuiButton,
+  Button,
   Checkbox,
   Chip,
   FormControlLabel,
+  LinearProgress,
   Paper,
-  Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 
 import CustomPagination from "@/components/ui/CustomPagination";
-import Button from "@/components/ui/Button";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -40,7 +35,14 @@ import {
 
 import { uploadTicketCommentAttachment } from "../../services/ticketCommentAttachmentService";
 
+import AttachmentPicker from "../attachments/AttachmentPicker";
 import TicketCommentAttachments from "../attachments/TicketCommentAttachments";
+import TicketActivityHeader from "../shared/TicketActivityHeader";
+import TicketDate from "../shared/TicketDate";
+import TicketRouteError, { getTicketAccessError } from "../shared/TicketRouteError";
+import sharedStyles from "../../styles/tickets.module.css";
+import detailStyles from "../../styles/ticketDetails.module.css";
+import styles from "../../styles/ticketActivity.module.css";
 
 interface TicketCommentsContentProps {
   ticketId: number;
@@ -61,6 +63,7 @@ export default function TicketCommentsContent({
   const { user } = useAuth();
 
   const t = useTranslations("Tickets.Comments");
+  const tCommentDialog = useTranslations("Tickets.AddCommentDialog");
   const tAttachments = useTranslations("Tickets.Attachments");
 
   const [ticketComments, setTicketComments] = useState<TicketCommentResponse[]>(
@@ -81,7 +84,7 @@ export default function TicketCommentsContent({
 
   const [totalElements, setTotalElements] = useState(0);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [savingComment, setSavingComment] = useState(false);
 
   const [requiredFieldsIncomplete, setRequiredFieldsIncomplete] = useState<
@@ -89,6 +92,7 @@ export default function TicketCommentsContent({
   >({});
 
   const [loadErrorMessage, setLoadErrorMessage] = useState("");
+  const [accessError, setAccessError] = useState<ReturnType<typeof getTicketAccessError>>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const [attachmentError, setAttachmentError] = useState("");
@@ -119,9 +123,14 @@ export default function TicketCommentsContent({
         ticketId,
       });
 
-      const apiError = getApiError(error);
-
-      setLoadErrorMessage(apiError?.message ?? t("loadError"));
+      const kind = getTicketAccessError(error);
+      if (kind) {
+        setTicketComments([]);
+        setTotalElements(0);
+        setAccessError(kind);
+      } else {
+        setLoadErrorMessage(getApiError(error)?.message ?? t("loadError"));
+      }
 
       return false;
     } finally {
@@ -279,6 +288,13 @@ export default function TicketCommentsContent({
         await fetchTicketComments();
       }
     } catch (error) {
+      const kind = getTicketAccessError(error);
+      if (kind) {
+        setTicketComments([]);
+        setAccessError(kind);
+        return;
+      }
+
       const apiError = getApiError(error);
 
       if (apiError?.errors?.comment) {
@@ -301,82 +317,88 @@ export default function TicketCommentsContent({
     }
   };
 
+  if (accessError) return <TicketRouteError kind={accessError} ticketId={ticketId} />;
+
   return (
-    <Box>
-      <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
-        {t("title")}
-      </Typography>
+    <div className={sharedStyles.page}>
+      <TicketActivityHeader
+        ticketId={ticketId}
+        title={t("title")}
+        reference={t("ticket", { ticketId })}
+        icon={<ChatBubbleOutlineRounded />}
+      />
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        {t("ticket", { ticketId })}
-      </Typography>
+      <div className={styles.commentLayout}>
+        <section className={styles.commentFeed} aria-labelledby="ticket-activity-title">
+          {loadErrorMessage && <Alert severity="error">{loadErrorMessage}</Alert>}
 
-      {loadErrorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {loadErrorMessage}
-        </Alert>
-      )}
+          {loading ? (
+            <div className={styles.commentsLoading} role="status">
+              <span>{t("loading")}</span>
+              <LinearProgress aria-hidden="true" />
+            </div>
+          ) : ticketComments.length === 0 ? (
+            !loadErrorMessage && <p className={detailStyles.emptyState}>{t("empty")}</p>
+          ) : (
+            <>
+              {ticketComments.map((ticketComment) => (
+                <article className={styles.commentCard} key={ticketComment.idComment}>
+                  <header className={styles.commentHeader}>
+                    <span className={styles.authorIcon} aria-hidden="true">
+                      {ticketComment.user.username.slice(0, 1).toUpperCase()}
+                    </span>
+                    <div className={styles.commentByline}>
+                      <h2>{ticketComment.user.username}</h2>
+                      <TicketDate value={ticketComment.createdAt} />
+                    </div>
+                    {ticketComment.internal && (
+                      <Chip
+                        label={t("internal")}
+                        size="small"
+                        color="warning"
+                        className={sharedStyles.ticketBadge}
+                      />
+                    )}
+                  </header>
 
-      {loading ? (
-        <Typography color="text.secondary">{t("loading")}</Typography>
-      ) : ticketComments.length === 0 ? (
-        <Typography color="text.secondary">{t("empty")}</Typography>
-      ) : (
-        <Stack spacing={2}>
-          {ticketComments.map((ticketComment) => (
-            <Paper
-              key={ticketComment.idComment}
-              variant="outlined"
-              sx={{ p: 2 }}
-            >
-              <Stack
-                direction="row"
-                spacing={2}
-                sx={{
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Box>
-                  <Typography variant="subtitle1">
-                    {ticketComment.user.username}
-                  </Typography>
+                  <p className={styles.commentText}>{ticketComment.comment}</p>
 
-                  <Typography variant="body2" color="text.secondary">
-                    {dayjs(ticketComment.createdAt).format("DD/MM/YYYY HH:mm")}
-                  </Typography>
-                </Box>
+                  <TicketCommentAttachments ticketId={ticketId} commentId={ticketComment.idComment} />
+                </article>
+              ))}
 
-                {ticketComment.internal && (
-                  <Chip label={t("internal")} size="small" variant="outlined" />
-                )}
-              </Stack>
-
-              <Typography sx={{ mt: 2 }}>{ticketComment.comment}</Typography>
-
-              <TicketCommentAttachments
-                ticketId={ticketId}
-                commentId={ticketComment.idComment}
+              <CustomPagination
+                page={paginationModel.page}
+                pageSize={paginationModel.pageSize}
+                totalElements={totalElements}
+                onPageChange={handlePageChange}
+                resultsLabel={t("results", { count: totalElements })}
+                navigationLabel={t("pagination")}
+                getItemAriaLabel={(type, page) =>
+                  t("paginationItem", { type, page: page ?? 0 })
+                }
               />
-            </Paper>
-          ))}
+            </>
+          )}
+        </section>
 
-          <CustomPagination
-            page={paginationModel.page}
-            pageSize={paginationModel.pageSize}
-            totalElements={totalElements}
-            onPageChange={handlePageChange}
-          />
-        </Stack>
-      )}
+        <Paper
+          component="form"
+          variant="outlined"
+          className={styles.composer}
+          aria-labelledby="ticket-comment-form-title"
+          onSubmit={handleSubmit}
+        >
+          <h2 id="ticket-comment-form-title" className={detailStyles.panelTitle}>
+            <ChatBubbleOutlineRounded aria-hidden="true" />
+            {t("addComment")}
+          </h2>
 
-      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
-        <Stack spacing={2}>
           <TextField
             name="comment"
-            label={t("addComment")}
+            label={tCommentDialog("comment")}
             multiline
-            minRows={3}
+            minRows={4}
             fullWidth
             value={formData.comment}
             onChange={handleFormChange}
@@ -387,6 +409,7 @@ export default function TicketCommentsContent({
 
           {canCreateInternalComment && (
             <FormControlLabel
+              className={styles.internalOption}
               control={
                 <Checkbox
                   name="internal"
@@ -399,35 +422,14 @@ export default function TicketCommentsContent({
             />
           )}
 
-          <MuiButton
-            component="label"
-            variant="outlined"
-            startIcon={<UploadFileIcon />}
+          <AttachmentPicker
+            label={t("attachFile")}
+            file={selectedFile}
+            onChange={handleFileChange}
+            onRemove={() => setSelectedFile(null)}
             disabled={savingComment}
-            sx={{ alignSelf: "flex-start" }}
-          >
-            {t("attachFile")}
-
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileChange}
-              disabled={savingComment}
-            />
-          </MuiButton>
-
-          {selectedFile && (
-            <Chip
-              label={selectedFile.name}
-              onDelete={() => setSelectedFile(null)}
-              sx={{ alignSelf: "flex-start" }}
-            />
-          )}
-
-          <Typography variant="caption" color="text.secondary">
-            {tAttachments("allowedFormats")}
-          </Typography>
+            busy={savingComment && selectedFile !== null}
+          />
 
           {attachmentError && <Alert severity="error">{attachmentError}</Alert>}
 
@@ -437,11 +439,19 @@ export default function TicketCommentsContent({
 
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-          <Button type="submit" variant="primary" disabled={savingComment}>
-            {savingComment ? t("adding") : t("submit")}
-          </Button>
-        </Stack>
-      </Box>
-    </Box>
+          <div className={styles.composerActions}>
+            <Button
+              type="submit"
+              variant="contained"
+              disableElevation
+              disabled={savingComment}
+              className={sharedStyles.primaryButton}
+            >
+              {savingComment ? t("adding") : t("submit")}
+            </Button>
+          </div>
+        </Paper>
+      </div>
+    </div>
   );
 }

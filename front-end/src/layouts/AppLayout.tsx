@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import theme from "@/styles/tokens.module.css";
+
 import AppHeader from "./AppHeader";
 import AppSidebar from "./AppSidebar";
 
@@ -11,7 +13,7 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className={styles.app}>
+    <div className={`${theme.tokens} ${styles.app}`}>
       <AppHeader />
 
       <div className={styles.body}>

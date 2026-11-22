@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -11,7 +11,6 @@ import {
   MenuItem,
   Paper,
   Select,
-  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -21,6 +20,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 import type { TicketFilters } from "@/types/ticketTypes";
+
+import styles from "../../styles/tickets.module.css";
 
 interface TicketFiltersBarProps {
   filters: TicketFilters;
@@ -49,6 +50,7 @@ export default function TicketFiltersBar({
   const t = useTranslations("Tickets.Filters");
   const tStatuses = useTranslations("Common.Statuses");
   const tPriorities = useTranslations("Common.Priorities");
+  const filterId = useId();
 
   const [draftFilters, setDraftFilters] = useState<TicketFilters>(filters);
 
@@ -101,35 +103,22 @@ export default function TicketFiltersBar({
 
   return (
     <Paper
+      component="section"
+      aria-labelledby={`${filterId}-heading`}
+      className={styles.filterPanel}
       variant="outlined"
-      sx={{
-        p: 2.5,
-        my: 3,
-        borderRadius: 2,
-      }}
     >
-      <Stack spacing={2.5}>
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <FilterAltOutlinedIcon color="primary" />
+      <Typography
+        component="h2"
+        id={`${filterId}-heading`}
+        className={styles.filterHeading}
+      >
+        <FilterAltOutlinedIcon fontSize="small" aria-hidden="true" />
+        {t("title")}
+      </Typography>
 
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            {t("title")}
-          </Typography>
-        </Stack>
-
-        <Stack
-          direction={{
-            xs: "column",
-            lg: "row",
-          }}
-          spacing={2}
-          sx={{
-            alignItems: {
-              xs: "stretch",
-              lg: "center",
-            },
-          }}
-        >
+      <div className={styles.filterBody}>
+        <div className={styles.filterFields}>
           <TextField
             label={t("searchByTitle")}
             value={draftFilters.title ?? ""}
@@ -137,10 +126,6 @@ export default function TicketFiltersBar({
               handleFilterChange("title", event.target.value)
             }
             size="small"
-            sx={{
-              flex: 1.5,
-              minWidth: 220,
-            }}
             slotProps={{
               input: {
                 startAdornment: (
@@ -152,16 +137,11 @@ export default function TicketFiltersBar({
             }}
           />
 
-          <FormControl
-            size="small"
-            sx={{
-              flex: 1,
-              minWidth: 150,
-            }}
-          >
-            <InputLabel>{t("status")}</InputLabel>
+          <FormControl size="small">
+            <InputLabel id={`${filterId}-status`}>{t("status")}</InputLabel>
 
             <Select
+              labelId={`${filterId}-status`}
               label={t("status")}
               value={
                 statusOptions.includes(draftFilters.status ?? "")
@@ -182,16 +162,11 @@ export default function TicketFiltersBar({
             </Select>
           </FormControl>
 
-          <FormControl
-            size="small"
-            sx={{
-              flex: 1,
-              minWidth: 150,
-            }}
-          >
-            <InputLabel>{t("priority")}</InputLabel>
+          <FormControl size="small">
+            <InputLabel id={`${filterId}-priority`}>{t("priority")}</InputLabel>
 
             <Select
+              labelId={`${filterId}-priority`}
               label={t("priority")}
               value={
                 priorityOptions.includes(draftFilters.priority ?? "")
@@ -212,16 +187,11 @@ export default function TicketFiltersBar({
             </Select>
           </FormControl>
 
-          <FormControl
-            size="small"
-            sx={{
-              flex: 1,
-              minWidth: 150,
-            }}
-          >
-            <InputLabel>{t("category")}</InputLabel>
+          <FormControl size="small">
+            <InputLabel id={`${filterId}-category`}>{t("category")}</InputLabel>
 
             <Select
+              labelId={`${filterId}-category`}
               label={t("category")}
               value={
                 categoryOptions.includes(draftFilters.category ?? "")
@@ -241,33 +211,30 @@ export default function TicketFiltersBar({
               ))}
             </Select>
           </FormControl>
-        </Stack>
+        </div>
 
-        <Stack
-          direction="row"
-          spacing={1.5}
-          sx={{
-            justifyContent: "flex-end",
-          }}
-        >
+        <div className={styles.filterActions}>
           <Button
             variant="text"
             startIcon={<RestartAltIcon />}
             onClick={handleClear}
             disabled={!hasFilters}
+            className={styles.clearButton}
           >
             {t("clear")}
           </Button>
 
           <Button
             variant="contained"
+            disableElevation
             startIcon={<FilterAltOutlinedIcon />}
             onClick={() => onApply(draftFilters)}
+            className={styles.primaryButton}
           >
             {t("applyFilters")}
           </Button>
-        </Stack>
-      </Stack>
+        </div>
+      </div>
     </Paper>
   );
 }

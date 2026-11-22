@@ -2,17 +2,22 @@
 
 import { useTranslations } from "next-intl";
 
-import DashboardTicketStatisticCard from "./DashboardTicketStatisticCard";
-
 import { USER_ROLES, type UserRole } from "@/types/roleTypes";
 import type { TicketStatisticsResponse } from "@/types/ticketTypes";
 
+import DashboardTicketStatisticCard from "./DashboardTicketStatisticCard";
 import styles from "../styles/dashboard.module.css";
 
 interface DashboardTicketStatisticsProps {
   role: UserRole;
   statistics: TicketStatisticsResponse;
 }
+
+const totalTitleByRole = {
+  [USER_ROLES.ADMIN]: "totalTickets",
+  [USER_ROLES.TECHNICIAN]: "assignedTickets",
+  [USER_ROLES.USER]: "myTickets",
+} as const;
 
 export default function DashboardTicketStatistics({
   role,
@@ -24,96 +29,46 @@ export default function DashboardTicketStatistics({
 
   const { totalTickets, openTickets, inProgressTickets, criticalTickets } =
     statistics;
+  const totalTitle = totalTitleByRole[role];
 
-  if (role === USER_ROLES.USER) {
-    return (
-      <section className={styles.statistics}>
+  if (!totalTitle) {
+    return null;
+  }
+
+  return (
+    <ul className={styles.statistics}>
+      <li>
         <DashboardTicketStatisticCard
-          title={t("myTickets")}
+          kind="total"
+          title={t(totalTitle)}
           value={totalTickets}
           href="/tickets"
         />
-
+      </li>
+      <li>
         <DashboardTicketStatisticCard
+          kind="open"
           title={tStatuses("OPEN")}
           value={openTickets}
           href="/tickets?status=OPEN"
         />
-
+      </li>
+      <li>
         <DashboardTicketStatisticCard
+          kind="inProgress"
           title={tStatuses("IN_PROGRESS")}
           value={inProgressTickets}
           href="/tickets?status=IN_PROGRESS"
         />
-
+      </li>
+      <li>
         <DashboardTicketStatisticCard
+          kind="critical"
           title={tPriorities("CRITICAL")}
           value={criticalTickets}
           href="/tickets?priority=CRITICAL"
         />
-      </section>
-    );
-  }
-
-  if (role === USER_ROLES.TECHNICIAN) {
-    return (
-      <section className={styles.statistics}>
-        <DashboardTicketStatisticCard
-          title={t("assignedTickets")}
-          value={totalTickets}
-          href="/tickets"
-        />
-
-        <DashboardTicketStatisticCard
-          title={tStatuses("OPEN")}
-          value={openTickets}
-          href="/tickets?status=OPEN"
-        />
-
-        <DashboardTicketStatisticCard
-          title={tStatuses("IN_PROGRESS")}
-          value={inProgressTickets}
-          href="/tickets?status=IN_PROGRESS"
-        />
-
-        <DashboardTicketStatisticCard
-          title={tPriorities("CRITICAL")}
-          value={criticalTickets}
-          href="/tickets?priority=CRITICAL"
-        />
-      </section>
-    );
-  }
-
-  if (role === USER_ROLES.ADMIN) {
-    return (
-      <section className={styles.statistics}>
-        <DashboardTicketStatisticCard
-          title={t("totalTickets")}
-          value={totalTickets}
-          href="/tickets"
-        />
-
-        <DashboardTicketStatisticCard
-          title={tStatuses("OPEN")}
-          value={openTickets}
-          href="/tickets?status=OPEN"
-        />
-
-        <DashboardTicketStatisticCard
-          title={tStatuses("IN_PROGRESS")}
-          value={inProgressTickets}
-          href="/tickets?status=IN_PROGRESS"
-        />
-
-        <DashboardTicketStatisticCard
-          title={tPriorities("CRITICAL")}
-          value={criticalTickets}
-          href="/tickets?priority=CRITICAL"
-        />
-      </section>
-    );
-  }
-
-  return null;
+      </li>
+    </ul>
+  );
 }

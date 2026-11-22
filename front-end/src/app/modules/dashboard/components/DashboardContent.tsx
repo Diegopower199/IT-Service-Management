@@ -108,13 +108,11 @@ export default function DashboardContent() {
   }
 
   return (
-    <main>
+    <div className={styles.dashboard}>
       <DashboardHeader username={user.username} role={user.role} />
 
       {statisticsErrorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {statisticsErrorMessage}
-        </Alert>
+        <Alert severity="error">{statisticsErrorMessage}</Alert>
       )}
 
       {statistics && (
@@ -122,9 +120,7 @@ export default function DashboardContent() {
       )}
 
       {ticketsErrorMessage && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {ticketsErrorMessage}
-        </Alert>
+        <Alert severity="error">{ticketsErrorMessage}</Alert>
       )}
 
       <div className={styles.dashboardBottom}>
@@ -132,6 +128,6 @@ export default function DashboardContent() {
 
         <DashboardQuickActions role={user.role} />
       </div>
-    </main>
+    </div>
   );
 }

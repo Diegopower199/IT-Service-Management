@@ -1,0 +1,104 @@
+.page {
+  display: grid;
+  gap: 18px;
+  max-width: 1480px;
+  min-width: 0;
+  margin-inline: auto;
+  container-type: inline-size;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.headingIcon {
+  display: grid;
+  flex: 0 0 44px;
+  place-items: center;
+  height: 44px;
+  border-radius: 11px;
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+
+.heading h1 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+:is(.page, .form) :is(.primaryButton, .secondaryButton) {
+  min-height: 40px;
+  padding-inline: 12px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-transform: none;
+}
+
+:is(.page, .form) .primaryButton:not(:global(.Mui-disabled)) {
+  color: #fff;
+  background: var(--app-accent);
+}
+
+:is(.page, .form) .primaryButton:hover:not(:global(.Mui-disabled)) {
+  background: var(--app-accent-hover);
+}
+
+:is(.page, .form) .secondaryButton:not(:global(.Mui-disabled)) {
+  border-color: #c4d2ec;
+  color: var(--app-accent);
+}
+
+:is(.page, .form) :is(.primaryButton, .secondaryButton):focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 3px;
+}
+
+.badge:global(.MuiChip-root) {
+  max-width: 100%;
+  min-height: 24px;
+  height: auto;
+  padding-block: 2px;
+  color: #495a74;
+  background: #edf1f6;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.badge :global(.MuiChip-label) {
+  padding-inline: 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.badge:global(.MuiChip-root.MuiChip-colorInfo) {
+  color: #155384;
+  background: #e7f3ff;
+}
+
+.badge:global(.MuiChip-root.MuiChip-colorSuccess) {
+  color: #216344;
+  background: #e6f5ec;
+}
+
+.badge:global(.MuiChip-root.MuiChip-colorPrimary) {
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+
+.statusBadge :global(.MuiChip-icon) {
+  margin-inline: 6px -3px;
+  color: inherit;
+  font-size: 0.875rem;
+}

@@ -192,11 +192,8 @@ public class TicketCommentAttachmentService {
      * Loads a comment after validating its ticket relation and visibility.
      *
      * <p>
-     * Authorization follows the existing ticket-comments functionality:
-     * ADMIN and TECHNICIAN can access ticket comments; USER can access comments
-     * only on tickets they created or were requested for, excluding internal
-     * comments. Internal comments are hidden from USER even through direct
-     * attachment URLs.
+     * The shared ticket access policy applies before checking the comment.
+     * Internal comments are hidden from USER even through direct attachment URLs.
      * </p>
      *
      * @param ticketId    expected ticket identifier
@@ -211,7 +208,8 @@ public class TicketCommentAttachmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Ticket with id " + ticketId + " not found"));
 
-        validateTicketCommentAccess(ticket, currentUser);
+        TicketAccess.requireReadAccess(ticket, currentUser,
+                "You do not have permission to access comments on this ticket");
 
         TicketCommentModel comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -230,32 +228,6 @@ public class TicketCommentAttachmentService {
         }
 
         return comment;
-    }
-
-    /**
-     * Enforces the same ticket access rules as TicketCommentService.
-     *
-     * @throws AccessDeniedException if the user cannot view comments
-     */
-    private void validateTicketCommentAccess(
-            TicketModel ticket, UserModel user) {
-
-        String role = user.getRole().getName();
-        Long userId = user.getIdUser();
-
-        if (RoleName.ADMIN.name().equalsIgnoreCase(role)
-                || RoleName.TECHNICIAN.name().equalsIgnoreCase(role)) {
-            return;
-        }
-
-        if (RoleName.USER.name().equalsIgnoreCase(role)
-                && (ticket.getCreatedBy().getIdUser().equals(userId)
-                        || ticket.getRequestedFor().getIdUser().equals(userId))) {
-            return;
-        }
-
-        throw new AccessDeniedException(
-                "You do not have permission to access comments on this ticket");
     }
 
     /**

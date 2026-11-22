@@ -1,28 +1,92 @@
 .sidebar {
-  width: 180px;
-  padding: 22px 20px;
-
-  background-color: #edf3f9;
+  flex: 0 0 224px;
+  box-sizing: border-box;
+  padding: 16px 12px;
+  background: linear-gradient(160deg, #0d2146, #0a1731);
 }
 
 .navigation {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  gap: 4px;
 }
 
 .navigation a {
-  padding: 11px 16px;
-
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 8px 12px;
   border-radius: 8px;
-
-  color: #1f2937;
-
-  font-size: 14px;
+  color: #c4d2e8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
   text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navigation svg {
+  flex-shrink: 0;
+  color: #91aed9;
 }
 
 .navigation a:hover {
-  background-color: #dce8f8;
-  color: #2563eb;
+  color: #fff;
+  background: #1c345a;
+}
+
+.navigation a[aria-current] {
+  color: #fff;
+  background: #24477b;
+  box-shadow: inset 3px 0 #8cb5ff;
+}
+
+.navigation a:hover svg,
+.navigation a[aria-current] svg {
+  color: #afcaff;
+}
+
+.navigation a:focus-visible {
+  outline: 2px solid #a4c6ff;
+  outline-offset: 1px;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    flex: none;
+    padding: 8px 16px;
+  }
+
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .navigation a {
+    min-height: 40px;
+    padding: 7px 10px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  .navigation {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .navigation a {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 46px;
+    padding: 5px 3px;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  .navigation a[aria-current] {
+    box-shadow: inset 0 -2px #8cb5ff;
+  }
 }

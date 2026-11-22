@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import dayjs from "dayjs";
-
-import { Alert, Box, Button, Divider, Paper, Typography } from "@mui/material";
+import { Alert, Button, Paper } from "@mui/material";
+import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
+import HistoryRounded from "@mui/icons-material/HistoryRounded";
 
 import PageLoading from "@/components/ui/PageLoading";
 
@@ -18,6 +18,11 @@ import { logger } from "@/utils/logger";
 
 import { getAllTicketHistoryById } from "../../services/ticketHistoryService";
 
+import TicketDate from "../shared/TicketDate";
+import { ticketActivityHref } from "../shared/ticketNavigation";
+import sharedStyles from "../../styles/tickets.module.css";
+import styles from "../../styles/ticketDetails.module.css";
+
 interface TicketHistoryProps {
   ticketId: number;
   historyUpdated: boolean;
@@ -27,8 +32,6 @@ export default function TicketHistory({
   ticketId,
   historyUpdated,
 }: TicketHistoryProps) {
-  const router = useRouter();
-
   const t = useTranslations("Tickets.HistoryPanel");
 
   const [ticketHistory, setTicketHistory] = useState<TicketHistoryResponse[]>(
@@ -75,84 +78,56 @@ export default function TicketHistory({
   }, [fetchTicketHistory, historyUpdated]);
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 3,
-        minHeight: 180,
-      }}
-    >
-      <Typography variant="h6">{t("title")}</Typography>
+    <Paper component="section" variant="outlined" className={styles.panel}>
+      <h2 className={styles.panelTitle}>
+        <HistoryRounded aria-hidden="true" />
+        {t("title")}
+      </h2>
 
-      <Divider sx={{ my: 2 }} />
-
-      {errorMessage && (
-        <Alert
-          severity="error"
-          sx={{
-            mb: 2,
-          }}
-        >
-          {errorMessage}
-        </Alert>
-      )}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
       {loading ? (
-        <PageLoading />
+        <div className={styles.panelLoading}>
+          <PageLoading />
+        </div>
       ) : ticketHistory.length === 0 ? (
-        <Typography color="text.secondary">{t("empty")}</Typography>
+        <p className={styles.emptyState}>{t("empty")}</p>
       ) : (
-        ticketHistory.map((history) => (
-          <Paper
-            key={history.idHistory}
-            variant="outlined"
-            sx={{
-              p: 2,
-              mb: 2,
-            }}
-          >
-            <Typography variant="subtitle1">{history.action}</Typography>
+        <div className={styles.activityList}>
+          {ticketHistory.map((history) => (
+            <article className={styles.activityItem} key={history.idHistory}>
+              <div className={styles.activityMeta}>
+                <h3>{history.action}</h3>
+                <span>
+                  {history.user.username} · <TicketDate value={history.createdAt} />
+                </span>
+              </div>
 
-            <Typography variant="body2" color="text.secondary">
-              {history.user.username} ·{" "}
-              {dayjs(history.createdAt).format("DD/MM/YYYY HH:mm")}
-            </Typography>
+              {history.fieldName && (
+                <p className={styles.activityText}>
+                  {t("field")}: {history.fieldName}
+                </p>
+              )}
 
-            {history.fieldName && (
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: 1,
-                }}
-              >
-                {t("field")}: {history.fieldName}
-              </Typography>
-            )}
-
-            {(history.oldValue || history.newValue) && (
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 1,
-                  mt: 1,
-                  alignItems: "center",
-                }}
-              >
-                <Typography>{history.oldValue ?? "-"}</Typography>
-
-                <Typography>→</Typography>
-
-                <Typography>{history.newValue ?? "-"}</Typography>
-              </Box>
-            )}
-          </Paper>
-        ))
+              {(history.oldValue || history.newValue) && (
+                <div className={styles.historyValues}>
+                  <span>{history.oldValue ?? "-"}</span>
+                  <span aria-hidden="true">→</span>
+                  <span>{history.newValue ?? "-"}</span>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
       )}
 
       {ticketHistory.length > 0 && (
         <Button
+          component={Link}
+          href={ticketActivityHref(ticketId, "history")}
           variant="outlined"
-          onClick={() => router.push(`/tickets/${ticketId}/history`)}
+          endIcon={<ArrowForwardRounded />}
+          className={sharedStyles.secondaryButton}
         >
           {t("viewAll")}
         </Button>

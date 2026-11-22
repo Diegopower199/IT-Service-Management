@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 
   getAllCategories: vi.fn(),
   getAllPriorities: vi.fn(),
-  getAllTechnicians: vi.fn(),
+  getUserOptions: vi.fn(),
 
   createTicket: vi.fn(),
   updateTicket: vi.fn(),
@@ -33,7 +33,7 @@ vi.mock("@/app/modules/priorities/services/priorityService", () => ({
 }));
 
 vi.mock("@/app/modules/users/services/userService", () => ({
-  getAllTechnicians: mocks.getAllTechnicians,
+  getUserOptions: mocks.getUserOptions,
 }));
 
 vi.mock("@/app/modules/tickets/services/ticketService", () => ({
@@ -70,7 +70,7 @@ vi.mock("next-intl", () => {
   };
 
   const translate = Object.assign((key: string) => translations[key] ?? key, {
-    has: (_key: string) => false,
+    has: () => false,
   });
 
   return {
@@ -94,7 +94,7 @@ const priorities = [
   },
 ];
 
-const technicians = [
+const userOptions = [
   {
     idUser: 7,
     username: "john",
@@ -142,7 +142,7 @@ describe("TicketForm", () => {
 
     mocks.getAllCategories.mockResolvedValue(categories);
     mocks.getAllPriorities.mockResolvedValue(priorities);
-    mocks.getAllTechnicians.mockResolvedValue(technicians);
+    mocks.getUserOptions.mockResolvedValue(userOptions);
 
     mocks.createTicket.mockResolvedValue(selectedTicket);
     mocks.updateTicket.mockResolvedValue(selectedTicket);
@@ -173,7 +173,7 @@ describe("TicketForm", () => {
       expect(mocks.getAllPriorities).toHaveBeenCalledTimes(1);
     });
 
-    expect(mocks.getAllTechnicians).not.toHaveBeenCalled();
+    expect(mocks.getUserOptions).not.toHaveBeenCalled();
 
     expect(
       screen.queryByRole("combobox", { name: "Requested for" }),
@@ -257,14 +257,14 @@ describe("TicketForm", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("should allow ADMIN to create a ticket for another user", async () => {
+  it.each([USER_ROLES.ADMIN, USER_ROLES.TECHNICIAN])("should allow %s to create a ticket for another user", async (role) => {
     const user = userEvent.setup();
 
     mocks.useAuth.mockReturnValue({
       user: {
         userId: 1,
         username: "admin",
-        role: USER_ROLES.ADMIN,
+        role,
       },
     });
 
@@ -278,7 +278,7 @@ describe("TicketForm", () => {
     );
 
     await waitFor(() => {
-      expect(mocks.getAllTechnicians).toHaveBeenCalledTimes(1);
+      expect(mocks.getUserOptions).toHaveBeenCalledTimes(1);
     });
 
     await user.type(
@@ -336,7 +336,7 @@ describe("TicketForm", () => {
     });
 
     expect(mocks.getAllPriorities).not.toHaveBeenCalled();
-    expect(mocks.getAllTechnicians).not.toHaveBeenCalled();
+    expect(mocks.getUserOptions).not.toHaveBeenCalled();
 
     const titleInput = screen.getByRole("textbox", {
       name: "Title",
@@ -379,6 +379,6 @@ describe("TicketForm", () => {
     );
 
     expect(mocks.getAllPriorities).not.toHaveBeenCalled();
-    expect(mocks.getAllTechnicians).not.toHaveBeenCalled();
+    expect(mocks.getUserOptions).not.toHaveBeenCalled();
   });
 });

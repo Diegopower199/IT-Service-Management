@@ -1,12 +1,16 @@
 "use client";
 
 import { Pagination, Stack, Typography } from "@mui/material";
+import type { PaginationProps } from "@mui/material";
 
 interface CustomPaginationProps {
   page: number;
   pageSize: number;
   totalElements: number;
   onPageChange: (page: number) => void;
+  resultsLabel: string;
+  navigationLabel: string;
+  getItemAriaLabel: PaginationProps["getItemAriaLabel"];
 }
 
 /**
@@ -30,6 +34,9 @@ export default function CustomPagination({
   pageSize,
   totalElements,
   onPageChange,
+  resultsLabel,
+  navigationLabel,
+  getItemAriaLabel,
 }: CustomPaginationProps) {
   const totalPages = Math.ceil(totalElements / pageSize);
 
@@ -46,22 +53,23 @@ export default function CustomPagination({
 
   return (
     <Stack
-      direction="row"
-      spacing={2}
+      direction={{ xs: "column", sm: "row" }}
+      spacing={1}
       sx={{
-        mt: 3,
-        alignItems: "center",
+        alignItems: { xs: "flex-start", sm: "center" },
         justifyContent: "space-between",
       }}
     >
       <Typography variant="body2" color="text.secondary">
-        {totalElements} results
+        {resultsLabel}
       </Typography>
 
       <Pagination
         count={totalPages}
         page={page + 1}
         onChange={handlePaginationChange}
+        aria-label={navigationLabel}
+        getItemAriaLabel={getItemAriaLabel}
       />
     </Stack>
   );

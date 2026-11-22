@@ -1,0 +1,123 @@
+.badge:global(.MuiChip-root) {
+  max-width: 100%;
+  min-height: 24px;
+  height: auto;
+  padding-block: 2px;
+  color: #495a74;
+  background: #edf1f6;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.badge :global(.MuiChip-label) {
+  padding-inline: 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.badge:global(.MuiChip-root.MuiChip-colorPrimary) {
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+
+.metadata dt {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.metadataItem {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e5ecf6;
+  border-radius: 9px;
+  overflow-wrap: anywhere;
+}
+
+.metadata dd {
+  margin: 4px 0 0;
+  color: var(--app-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(12px, 2vw, 18px);
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  background: #f5f8fd;
+}
+
+.avatarFrame {
+  flex: 0 0 auto;
+  padding: 4px;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+  background: var(--app-surface);
+}
+
+.identityDetails {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.identityDetails h3 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.identityDetails p {
+  margin: 4px 0 7px;
+  color: var(--app-ink);
+  font-size: 0.875rem;
+}
+
+.identityDetails p span {
+  margin-inline-end: 4px;
+  color: var(--app-muted);
+  font-weight: 650;
+}
+
+.photoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.photoActions .deletePhoto:global(.MuiButton-colorError):not(:global(.Mui-disabled)) {
+  color: var(--mui-palette-error-main, #9e2d41);
+  border-color: currentColor;
+}
+
+@container (max-width: 520px) {
+  .metadata {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .identity {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .photoActions {
+    justify-content: center;
+  }
+}

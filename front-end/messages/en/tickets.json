@@ -61,7 +61,12 @@
         "saveChanges": "Save Changes"
     },
     "Details": {
-        "backToTickets": "Back to Tickets"
+        "backToTickets": "Back to Tickets",
+        "backToTicket": "Back to Ticket",
+        "loadError": "Error loading the ticket details.",
+        "denied": "Access denied. You do not have permission to view this ticket resource.",
+        "notFound": "Ticket not found.",
+        "invalidId": "The ticket ID in this URL is invalid."
     },
     "Overview": {
         "title": "Overview",
@@ -142,6 +147,9 @@
         "createError": "Error creating comment.",
         "loading": "Loading comments...",
         "empty": "No comments have been added yet.",
+        "results": "{count, plural, one {# comment} other {# comments}}",
+        "pagination": "Comment pages",
+        "paginationItem": "{type, select, first {Go to first page} last {Go to last page} next {Go to next page} previous {Go to previous page} page {Page {page}} other {More pages}}",
         "internal": "INTERNAL",
         "addComment": "Add comment",
         "internalComment": "Internal comment",
@@ -162,6 +170,7 @@
         "title": "Ticket History",
         "ticket": "Ticket #{ticketId}",
         "loadError": "Error loading ticket history.",
+        "empty": "No history has been recorded yet.",
         "action": "Action",
         "field": "Field",
         "oldValue": "Old Value",
@@ -185,19 +194,24 @@
         "uploadError": "Error uploading the file.",
         "uploadSuccess": "File uploaded successfully.",
         "fileTooLarge": "File size cannot exceed 10 MB.",
-        "allowedFormats": "Allowed formats: PDF, PNG and JPG. Maximum 10 MB.",
-        "download": "Download file",
+        "allowedFormats": "PDF, JPG/JPEG or PNG. Max. 10 MB.",
+        "fileSelected": "File selected",
+        "removeFile": "Remove {name}",
+        "download": "Download",
+        "downloadFile": "Download {name}",
         "downloadError": "Error downloading the file.",
-        "preview": "Preview file",
+        "preview": "Preview",
+        "previewFile": "Preview {name}",
         "previewError": "Error previewing the file.",
         "close": "Close"
     },
     "CommentAttachments": {
+        "checkAttachments": "Check attachments",
+        "loading": "Checking attachments…",
         "showAttachments": "Show attachments",
         "hideAttachments": "Hide attachments",
+        "toggleWithCount": "{label} ({count, plural, one {# file} other {# files}})",
         "noAttachments": "This comment has no attachments.",
-        "preview": "Preview",
-        "download": "Download",
         "loadError": "Could not load attachments.",
         "downloadError": "Could not download the file.",
         "previewError": "Could not preview the file."

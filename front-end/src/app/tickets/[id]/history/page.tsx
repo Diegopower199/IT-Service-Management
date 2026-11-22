@@ -1,20 +1,15 @@
 import TicketHistoryContent from "@/app/modules/tickets/components/history/TicketHistoryContent";
-import AppLayout from "@/layouts/AppLayout";
 
-interface TicketCommentsPageProps {
+interface TicketHistoryPageProps {
   params: Promise<{
     id: string;
   }>;
 }
 
-export default async function TicketCommentsPage({
+export default async function TicketHistoryPage({
   params,
-}: TicketCommentsPageProps) {
+}: TicketHistoryPageProps) {
   const { id } = await params;
 
-  return (
-    <AppLayout>
-      <TicketHistoryContent ticketId={Number(id)} />
-    </AppLayout>
-  );
+  return <TicketHistoryContent ticketId={Number(id)} />;
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import LogoutRounded from "@mui/icons-material/LogoutRounded";
+import SupportAgentOutlined from "@mui/icons-material/SupportAgentOutlined";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -37,19 +39,26 @@ export default function AppHeader() {
 
   return (
     <header className={styles.header}>
-      <h1 className={styles.logo}>HELP DESK</h1>
+      <div className={styles.brand}>
+        <span className={styles.brandIcon}>
+          <SupportAgentOutlined aria-hidden="true" />
+        </span>
+        <span className={styles.wordmark}>HELP DESK</span>
+      </div>
 
       {user && (
         <div className={styles.userSection}>
           <div className={styles.userIdentity}>
             <UserAvatar key={avatarVersion} userId={user.userId} size={40} />
-
-            <span>{user.username}</span>
+            <div className={styles.userDetails}>
+              <span className={styles.username}>{user.username}</span>
+              <span className={styles.role}>{tRoles(user.role)}</span>
+            </div>
           </div>
 
-          <span className={styles.role}>{tRoles(user.role)}</span>
-
-          <LanguageSelector />
+          <div className={styles.language}>
+            <LanguageSelector />
+          </div>
 
           <Button
             type="button"
@@ -57,6 +66,7 @@ export default function AppHeader() {
             onClick={signOut}
             className={styles.logout}
           >
+            <LogoutRounded aria-hidden="true" fontSize="small" />
             {t("logout")}
           </Button>
         </div>

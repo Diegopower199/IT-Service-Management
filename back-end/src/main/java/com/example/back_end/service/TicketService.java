@@ -78,38 +78,7 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Ticket with id " + ticketId + " not found"));
 
-        UserModel currentUser = getAuthenticatedUser();
-
-        String role = currentUser.getRole().getName();
-
-        if (role.equalsIgnoreCase(RoleName.USER.name())) {
-
-            boolean isCreatedByUser = ticket.getCreatedBy()
-                    .getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            boolean isRequestedForUser = ticket.getRequestedFor()
-                    .getIdUser()
-                    .equals(currentUser.getIdUser());
-
-            if (!isCreatedByUser && !isRequestedForUser) {
-                throw new AccessDeniedException(
-                        "You do not have permission to access this ticket");
-            }
-        }
-
-        if (role.equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
-
-            UserModel assignedTo = ticket.getAssignedTo();
-
-            if (assignedTo != null
-                    && !assignedTo.getIdUser()
-                            .equals(currentUser.getIdUser())) {
-
-                throw new AccessDeniedException(
-                        "You cannot access tickets assigned to another technician");
-            }
-        }
+        TicketAccess.requireReadAccess(ticket, getAuthenticatedUser());
 
         return convertToResponse(ticket);
     }
@@ -222,31 +191,11 @@ public class TicketService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        String role = currentUser.getRole().getName();
-
-        if (role.equalsIgnoreCase(RoleName.USER.name())) {
-
-            boolean isCreatedByUser = ticket.getCreatedBy().getIdUser().equals(currentUser.getIdUser());
-
-            boolean isRequestedForUser = ticket.getRequestedFor().getIdUser().equals(currentUser.getIdUser());
-
-            if (!isCreatedByUser && !isRequestedForUser) {
-                throw new AccessDeniedException(
-                        "You do not have permission to access this ticket");
-            }
+        if (TicketAccess.hasRole(currentUser, RoleName.TECHNICIAN)
+                && !TicketAccess.isAssignedTo(ticket, currentUser)) {
+            throw new AccessDeniedException("You can only update tickets assigned to you");
         }
-
-        if (role.equalsIgnoreCase(RoleName.TECHNICIAN.name())) {
-
-            if (ticket.getAssignedTo() == null
-                    || !ticket.getAssignedTo()
-                            .getIdUser()
-                            .equals(currentUser.getIdUser())) {
-
-                throw new AccessDeniedException(
-                        "You can only update tickets assigned to you");
-            }
-        }
+        TicketAccess.requireReadAccess(ticket, currentUser);
 
         String oldTitle = null;
         boolean titleChanged = false;
@@ -335,6 +284,9 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Ticket with id " + ticketId + " not found"));
 
+        UserModel currentUser = getAuthenticatedUser();
+        TicketAccess.requireReadAccess(ticket, currentUser);
+
         UserModel assignedTo = userRepository.findById(request.getAssignedToId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User with id " + request.getAssignedToId() + " not found"));
@@ -353,8 +305,6 @@ public class TicketService {
             throw new InvalidOperationException(
                     "The ticket is already assigned to this technician");
         }
-
-        UserModel currentUser = getAuthenticatedUser();
 
         String oldAssignedTo = null;
 
@@ -393,12 +343,13 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Ticket with id " + ticketId + " not found"));
 
+        UserModel currentUser = getAuthenticatedUser();
+        TicketAccess.requireReadAccess(ticket, currentUser);
+
         PriorityModel priority = priorityRepository
                 .findByIdPriorityAndActiveTrue(request.getPriorityId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Active priority with id " + request.getPriorityId() + " not found"));
-
-        UserModel currentUser = getAuthenticatedUser();
 
         String oldPriority = ticket.getPriority().getName();
 
@@ -434,12 +385,13 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Ticket with id " + ticketId + " not found"));
 
+        UserModel currentUser = getAuthenticatedUser();
+        TicketAccess.requireReadAccess(ticket, currentUser);
+
         StatusModel status = statusRepository
                 .findByIdStatusAndActiveTrue(request.getStatusId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Active status with id " + request.getStatusId() + " not found"));
-
-        UserModel currentUser = getAuthenticatedUser();
 
         String oldStatus = ticket.getStatus().getName();
 

@@ -12,7 +12,7 @@
     },
     "QuickActions": {
         "title": "Acciones rápidas",
-        "assignToMe": "Asignarme ticket",
+        "viewAssigned": "Ver tickets asignados",
         "viewUnassigned": "Ver tickets sin asignar",
         "assign": "Asignar ticket",
         "reassign": "Reasignar ticket"

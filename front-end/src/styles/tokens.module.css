@@ -1,0 +1,10 @@
+.tokens {
+  --app-ink: #102044;
+  --app-muted: #52627d;
+  --app-accent: #2452cb;
+  --app-accent-hover: #1b42ad;
+  --app-accent-soft: #eaf0ff;
+  --app-border: #dee6f1;
+  --app-surface: #fff;
+  --app-font: "Segoe UI", system-ui, sans-serif;
+}

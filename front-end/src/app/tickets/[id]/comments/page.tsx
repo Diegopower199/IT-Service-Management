@@ -1,5 +1,4 @@
 import TicketCommentsContent from "@/app/modules/tickets/components/comments/TicketCommentsContent";
-import AppLayout from "@/layouts/AppLayout";
 
 interface TicketCommentsPageProps {
   params: Promise<{
@@ -12,9 +11,5 @@ export default async function TicketCommentsPage({
 }: TicketCommentsPageProps) {
   const { id } = await params;
 
-  return (
-    <AppLayout>
-      <TicketCommentsContent ticketId={Number(id)} />
-    </AppLayout>
-  );
+  return <TicketCommentsContent ticketId={Number(id)} />;
 }

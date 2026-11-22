@@ -3,19 +3,14 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Button, Paper, TextField } from "@mui/material";
+import LockOutlined from "@mui/icons-material/LockOutlined";
 
 import { changePassword } from "@/app/modules/users/services/userService";
 
 import { getApiError } from "@/utils/apiErrorUtils";
 import { logger } from "@/utils/logger";
+import styles from "../styles/profile.module.css";
 
 interface ChangePasswordFormData {
   currentPassword: string;
@@ -127,13 +122,22 @@ export default function ChangePasswordForm() {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h6" gutterBottom>
+    <Paper
+      component="form"
+      variant="outlined"
+      onSubmit={handleSubmit}
+      aria-labelledby="change-password-heading"
+      aria-busy={loading}
+      className={styles.panel}
+    >
+      <h2 id="change-password-heading" className={styles.panelTitle}>
+        <LockOutlined aria-hidden="true" />
         {t("title")}
-      </Typography>
+      </h2>
 
-      <Stack spacing={3}>
+      <div className={styles.formFields}>
         <TextField
+          className={styles.fullWidth}
           label={t("currentPassword")}
           name="currentPassword"
           type="password"
@@ -146,6 +150,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
+          className={styles.fullWidth}
           label={t("newPassword")}
           name="newPassword"
           type="password"
@@ -158,6 +163,7 @@ export default function ChangePasswordForm() {
         />
 
         <TextField
+          className={styles.fullWidth}
           label={t("confirmPassword")}
           name="confirmPassword"
           type="password"
@@ -168,15 +174,23 @@ export default function ChangePasswordForm() {
           disabled={loading}
           fullWidth
         />
+      </div>
 
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        {successMessage && <Alert severity="success">{successMessage}</Alert>}
+      {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
-        <Button type="submit" variant="contained" disabled={loading}>
+      <div className={styles.formActions}>
+        <Button
+          type="submit"
+          variant="contained"
+          disableElevation
+          disabled={loading}
+          className={styles.primaryButton}
+        >
           {loading ? t("saving") : t("submit")}
         </Button>
-      </Stack>
-    </Box>
+      </div>
+    </Paper>
   );
 }

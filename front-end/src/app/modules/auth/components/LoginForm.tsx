@@ -5,9 +5,23 @@ import { useRouter } from "next/navigation";
 
 import { useTranslations } from "next-intl";
 
-import { Alert, Box, Paper, Stack, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  GlobalStyles,
+  InputAdornment,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
+import CheckRounded from "@mui/icons-material/CheckRounded";
+import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOutlined";
+import LockOutlined from "@mui/icons-material/LockOutlined";
+import PersonOutlineRounded from "@mui/icons-material/PersonOutlineRounded";
+import SupportAgentOutlined from "@mui/icons-material/SupportAgentOutlined";
 
-import Button from "@/components/ui/Button";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +32,7 @@ import { logger } from "@/utils/logger";
 import { login } from "../services/authService";
 
 import type { LoginRequest } from "../../../../types/authTypes";
+import styles from "./LoginForm.module.css";
 
 interface RequiredFieldsErrors {
   username?: string;
@@ -115,92 +130,144 @@ export default function LoginForm() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f5f7fb",
-        px: 2,
-        position: "relative",
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          top: 24,
-          right: 24,
-        }}
+    <Box component="main" className={styles.login}>
+      <GlobalStyles styles={{ body: { margin: 0 } }} />
+
+      <Box aria-hidden="true" className={styles.brandPanel}>
+        <div className={styles.illustration}>
+          <div className={styles.rearTicket} />
+          <div className={styles.ticket}>
+            <div className={styles.ticketIcon}>
+              <ConfirmationNumberOutlined />
+            </div>
+            <div className={styles.ticketLines}>
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div className={styles.status}>
+            <CheckRounded />
+          </div>
+        </div>
+      </Box>
+
+      <Stack
+        direction="row"
+        spacing={1.25}
+        className={styles.brand}
       >
+        <Box className={styles.brandIcon}>
+          <SupportAgentOutlined aria-hidden="true" />
+        </Box>
+        <Typography component="span" className={styles.wordmark}>
+          HELP DESK
+        </Typography>
+      </Stack>
+
+      <Box className={styles.language}>
         <LanguageSelector />
       </Box>
 
-      <Paper
-        component="form"
-        onSubmit={handleSubmit}
-        elevation={0}
-        sx={{
-          width: "100%",
-          maxWidth: 420,
-          p: 4,
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.06)",
-        }}
-      >
-        <Stack spacing={3}>
-          <Box>
-            <Typography
-              variant="h5"
-              component="h1"
-              sx={{
-                fontWeight: 700,
-                mb: 0.5,
-              }}
-            >
+      <Box className={styles.formPanel}>
+        <Stack
+          component="form"
+          onSubmit={handleSubmit}
+          aria-labelledby="login-title"
+          spacing={3.5}
+          sx={{ width: "100%", maxWidth: 420 }}
+        >
+          <Stack spacing={1}>
+            <Typography id="login-title" component="h1" className={styles.title}>
               {t("title")}
             </Typography>
-
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body1" sx={{ color: "#52627d" }}>
               {t("subtitle")}
             </Typography>
-          </Box>
+          </Stack>
 
-          <TextField
-            label={t("username")}
-            name="username"
-            type="text"
-            value={formData.username}
-            onChange={handleFormChange}
-            error={Boolean(requiredFieldsIncomplete.username)}
-            helperText={requiredFieldsIncomplete.username}
+          <Stack spacing={2.5}>
+            <Stack spacing={0.75}>
+              <Typography
+                component="label"
+                htmlFor="login-username"
+                variant="body2"
+                className={styles.label}
+              >
+                {t("username")}
+              </Typography>
+              <TextField
+                id="login-username"
+                name="username"
+                type="text"
+                value={formData.username}
+                onChange={handleFormChange}
+                error={Boolean(requiredFieldsIncomplete.username)}
+                helperText={requiredFieldsIncomplete.username}
+                disabled={isLoading}
+                fullWidth
+                autoComplete="username"
+                className={styles.field}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonOutlineRounded fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Stack>
+
+            <Stack spacing={0.75}>
+              <Typography
+                component="label"
+                htmlFor="login-password"
+                variant="body2"
+                className={styles.label}
+              >
+                {t("password")}
+              </Typography>
+              <TextField
+                id="login-password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleFormChange}
+                error={Boolean(requiredFieldsIncomplete.password)}
+                helperText={requiredFieldsIncomplete.password}
+                disabled={isLoading}
+                fullWidth
+                autoComplete="current-password"
+                className={styles.field}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockOutlined fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Stack>
+
+            {error && <Alert severity="error">{error}</Alert>}
+          </Stack>
+
+          <Button
+            type="submit"
+            variant="contained"
             disabled={isLoading}
-            fullWidth
-            autoComplete="username"
-          />
-
-          <TextField
-            label={t("password")}
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleFormChange}
-            error={Boolean(requiredFieldsIncomplete.password)}
-            helperText={requiredFieldsIncomplete.password}
-            disabled={isLoading}
-            fullWidth
-            autoComplete="current-password"
-          />
-
-          {error && <Alert severity="error">{error}</Alert>}
-
-          <Button type="submit" variant="primary" disabled={isLoading}>
+            disableElevation
+            endIcon={<ArrowForwardRounded />}
+            className={styles.submit}
+          >
             {isLoading ? t("loggingIn") : t("login")}
           </Button>
         </Stack>
-      </Paper>
+      </Box>
     </Box>
   );
 }

@@ -12,7 +12,7 @@
     },
     "QuickActions": {
         "title": "Quick Actions",
-        "assignToMe": "Assign Ticket to Me",
+        "viewAssigned": "View Assigned Tickets",
         "viewUnassigned": "View Unassigned Tickets",
         "assign": "Assign Ticket",
         "reassign": "Reassign Ticket"

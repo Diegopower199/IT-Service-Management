@@ -61,7 +61,12 @@
         "saveChanges": "Guardar cambios"
     },
     "Details": {
-        "backToTickets": "Volver a tickets"
+        "backToTickets": "Volver a tickets",
+        "backToTicket": "Volver al ticket",
+        "loadError": "Error al cargar los detalles del ticket.",
+        "denied": "Acceso denegado. No tienes permiso para consultar este recurso del ticket.",
+        "notFound": "No se encontró el ticket.",
+        "invalidId": "El identificador del ticket en esta URL no es válido."
     },
     "Overview": {
         "title": "Resumen",
@@ -142,6 +147,9 @@
         "createError": "Error al crear el comentario.",
         "loading": "Cargando comentarios...",
         "empty": "Todavía no se ha añadido ningún comentario.",
+        "results": "{count, plural, one {# comentario} other {# comentarios}}",
+        "pagination": "Páginas de comentarios",
+        "paginationItem": "{type, select, first {Ir a la primera página} last {Ir a la última página} next {Ir a la página siguiente} previous {Ir a la página anterior} page {Página {page}} other {Más páginas}}",
         "internal": "INTERNO",
         "addComment": "Añadir comentario",
         "internalComment": "Comentario interno",
@@ -162,6 +170,7 @@
         "title": "Historial del ticket",
         "ticket": "Ticket #{ticketId}",
         "loadError": "Error al cargar el historial del ticket.",
+        "empty": "Todavía no se ha registrado ningún cambio.",
         "action": "Acción",
         "field": "Campo",
         "oldValue": "Valor anterior",
@@ -185,19 +194,24 @@
         "uploadError": "Error al subir el archivo.",
         "uploadSuccess": "Archivo subido correctamente.",
         "fileTooLarge": "El archivo no puede superar los 10 MB.",
-        "allowedFormats": "Formatos permitidos: PDF, PNG y JPG. Máximo 10 MB.",
-        "download": "Descargar archivo",
+        "allowedFormats": "PDF, JPG/JPEG o PNG. Máx. 10 MB.",
+        "fileSelected": "Archivo seleccionado",
+        "removeFile": "Quitar {name}",
+        "download": "Descargar",
+        "downloadFile": "Descargar {name}",
         "downloadError": "Error al descargar el archivo.",
-        "preview": "Previsualizar archivo",
+        "preview": "Previsualizar",
+        "previewFile": "Previsualizar {name}",
         "previewError": "Error al previsualizar el archivo.",
         "close": "Cerrar"
     },
     "CommentAttachments": {
+        "checkAttachments": "Consultar adjuntos",
+        "loading": "Consultando adjuntos…",
         "showAttachments": "Mostrar adjuntos",
         "hideAttachments": "Ocultar adjuntos",
+        "toggleWithCount": "{label} ({count, plural, one {# archivo} other {# archivos}})",
         "noAttachments": "Este comentario no tiene archivos adjuntos.",
-        "preview": "Previsualizar",
-        "download": "Descargar",
         "loadError": "No se pudieron cargar los adjuntos.",
         "downloadError": "No se pudo descargar el archivo.",
         "previewError": "No se pudo previsualizar el archivo."

@@ -8,10 +8,10 @@ import {
   Box,
   Button,
   MenuItem,
-  Stack,
   TextField,
-  Typography,
 } from "@mui/material";
+import AddRounded from "@mui/icons-material/AddRounded";
+import EditOutlined from "@mui/icons-material/EditOutlined";
 
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { CategoryResponse } from "@/types/categoryTypes";
@@ -32,11 +32,16 @@ import { getAllCategories } from "../../../categories/services/categoryService";
 import { createTicket, updateTicket } from "../../services/ticketService";
 import { getUserOptions } from "../../../users/services/userService";
 
+import sharedStyles from "../../styles/tickets.module.css";
+
+import styles from "./TicketForm.module.css";
+
 interface TicketFormProps {
   formMode: FormMode;
   selectedTicket: TicketResponse | null;
   onClose: () => void;
-  onSubmitSuccess: () => void;
+  onCancel?: () => void;
+  onSubmitSuccess?: () => void;
 }
 
 interface TicketFormData {
@@ -76,6 +81,7 @@ export default function TicketForm({
   formMode,
   selectedTicket,
   onClose,
+  onCancel = onClose,
   onSubmitSuccess,
 }: TicketFormProps) {
   const t = useTranslations("Tickets.Form");
@@ -309,7 +315,7 @@ export default function TicketForm({
         });
       }
 
-      onSubmitSuccess();
+      onSubmitSuccess?.();
       onClose();
     } catch (error) {
       const apiError = getApiError(error);
@@ -361,13 +367,28 @@ export default function TicketForm({
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {getTitle()}
-      </Typography>
+    <Box
+      component="form"
+      className={`${sharedStyles.formPanel} ${styles.formPanel}`}
+      aria-labelledby="ticket-form-heading"
+      onSubmit={handleSubmit}
+    >
+      <header className={styles.formHeader}>
+        <div className={sharedStyles.heading}>
+          <span className={sharedStyles.headingIcon}>
+            {formMode === FORM_MODES.CREATE ? (
+              <AddRounded aria-hidden="true" />
+            ) : (
+              <EditOutlined aria-hidden="true" />
+            )}
+          </span>
+          <h1 id="ticket-form-heading">{getTitle()}</h1>
+        </div>
+      </header>
 
-      <Stack spacing={3}>
+      <div className={styles.formFields}>
         <TextField
+          className={styles.fullWidth}
           label={t("title")}
           name="title"
           value={formData.title}
@@ -379,6 +400,7 @@ export default function TicketForm({
         />
 
         <TextField
+          className={styles.fullWidth}
           label={t("description")}
           name="description"
           value={formData.description}
@@ -387,12 +409,13 @@ export default function TicketForm({
           helperText={requiredFieldsIncomplete.description}
           disabled={loading}
           multiline
-          minRows={4}
+          minRows={5}
           fullWidth
         />
 
         {user && formMode === FORM_MODES.CREATE && !isUser && (
           <TextField
+            className={styles.fullWidth}
             select
             label={t("requestedFor")}
             name="requestedForId"
@@ -426,6 +449,7 @@ export default function TicketForm({
         )}
 
         <TextField
+          className={formMode === FORM_MODES.CREATE ? undefined : styles.fullWidth}
           select
           label={t("category")}
           name="categoryId"
@@ -490,23 +514,35 @@ export default function TicketForm({
             )}
           </TextField>
         )}
+      </div>
 
-        {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
-        <Stack spacing={3} direction="row">
-          <Button variant="outlined" onClick={onClose} disabled={loading}>
-            {t("cancel")}
-          </Button>
+      <div className={styles.formActions}>
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={onCancel}
+          disabled={loading}
+          className={sharedStyles.secondaryButton}
+        >
+          {t("cancel")}
+        </Button>
 
-          <Button type="submit" variant="contained" disabled={loading}>
-            {loading
-              ? t("saving")
-              : formMode === FORM_MODES.CREATE
-                ? t("createTicket")
-                : t("saveChanges")}
-          </Button>
-        </Stack>
-      </Stack>
+        <Button
+          type="submit"
+          variant="contained"
+          disableElevation
+          disabled={loading}
+          className={sharedStyles.primaryButton}
+        >
+          {loading
+            ? t("saving")
+            : formMode === FORM_MODES.CREATE
+              ? t("createTicket")
+              : t("saveChanges")}
+        </Button>
+      </div>
     </Box>
   );
 }

@@ -1,4 +1,10 @@
 {
+    "AdminCatalog": {
+        "empty": "There are no records to display.",
+        "protected": "Protected",
+        "protectedPriority": "This system priority cannot be edited or deactivated.",
+        "protectedStatus": "This system status cannot be edited or deactivated."
+    },
     "Statuses": {
         "OPEN": "Open",
         "IN_PROGRESS": "In Progress",

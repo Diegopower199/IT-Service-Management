@@ -1,11 +1,14 @@
 "use client";
 
-import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
-import { Box, Divider, Paper, Stack, Typography } from "@mui/material";
+import { Paper } from "@mui/material";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
 
 import type { TicketResponse } from "@/types/ticketTypes";
+
+import TicketDate from "../shared/TicketDate";
+import styles from "../../styles/ticketDetails.module.css";
 
 interface TicketOverviewProps {
   ticket: TicketResponse;
@@ -14,79 +17,35 @@ interface TicketOverviewProps {
 export default function TicketOverview({ ticket }: TicketOverviewProps) {
   const t = useTranslations("Tickets.Overview");
 
+  const fields = [
+    { label: t("createdBy"), value: ticket.createdBy.username },
+    { label: t("requestedFor"), value: ticket.requestedFor.username },
+    { label: t("category"), value: ticket.category.name },
+    { label: t("assignedTo"), value: ticket.assignedTo?.username ?? t("unassigned") },
+    { label: t("createdAt"), value: <TicketDate value={ticket.createdAt} /> },
+    { label: t("lastUpdated"), value: <TicketDate value={ticket.lastUpdated} /> },
+  ];
+
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 3,
-      }}
-    >
-      <Typography variant="h6">{t("title")}</Typography>
+    <Paper component="section" variant="outlined" className={styles.panel}>
+      <h2 className={styles.panelTitle}>
+        <InfoOutlined aria-hidden="true" />
+        {t("title")}
+      </h2>
 
-      <Divider sx={{ my: 2 }} />
+      <div className={styles.description}>
+        <h3>{t("description")}</h3>
+        <p>{ticket.description}</p>
+      </div>
 
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {t("description")}
-          </Typography>
-
-          <Typography>{ticket.description}</Typography>
-        </Box>
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "150px 1fr",
-            },
-            gap: 2,
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {t("createdBy")}
-          </Typography>
-
-          <Typography>{ticket.createdBy.username}</Typography>
-
-          <Typography variant="body2" color="text.secondary">
-            {t("requestedFor")}
-          </Typography>
-
-          <Typography>{ticket.requestedFor.username}</Typography>
-
-          <Typography variant="body2" color="text.secondary">
-            {t("category")}
-          </Typography>
-
-          <Typography>{ticket.category.name}</Typography>
-
-          <Typography variant="body2" color="text.secondary">
-            {t("assignedTo")}
-          </Typography>
-
-          <Typography>
-            {ticket.assignedTo?.username ?? t("unassigned")}
-          </Typography>
-
-          <Typography variant="body2" color="text.secondary">
-            {t("createdAt")}
-          </Typography>
-
-          <Typography>
-            {dayjs(ticket.createdAt).format("DD/MM/YYYY HH:mm")}
-          </Typography>
-
-          <Typography variant="body2" color="text.secondary">
-            {t("lastUpdated")}
-          </Typography>
-
-          <Typography>
-            {dayjs(ticket.lastUpdated).format("DD/MM/YYYY HH:mm")}
-          </Typography>
-        </Box>
-      </Stack>
+      <dl className={styles.metadata}>
+        {fields.map(({ label, value }) => (
+          <div className={styles.metadataItem} key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
     </Paper>
   );
 }
