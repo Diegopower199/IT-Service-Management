@@ -1,11 +1,13 @@
 -- ============================================================
 -- HELP DESK / IT SERVICE MANAGEMENT - MySQL 8.0+
--- 01 - TABLE CREATION (schema v1.0)
+-- 01 - COMPLETE TABLE CREATION (schema v1.0)
 -- ============================================================
--- Run AFTER 00_create_database.sql, on a NEW/EMPTY schema.
+-- Run on a NEW/EMPTY helpdesk database.
+-- For Docker, MYSQL_DATABASE creates the database automatically.
+-- For manual local setup, run local/00_setup_local_database.sql first.
 -- Tables and column names follow the JPA entities in the backend.
--- Deliberately no DROP TABLE and no CREATE TABLE IF NOT EXISTS:
--- existing tables trigger an error instead of hiding schema drift.
+-- No DROP TABLE or CREATE TABLE IF NOT EXISTS:
+-- existing tables should trigger an error rather than hide schema drift.
 -- ============================================================
 
 USE helpdesk;
@@ -166,6 +168,74 @@ CREATE TABLE ticket_history (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
--- 5. SCHEMA VERIFICATION
+-- 5. FILE STORAGE METADATA (actual file data is in MongoDB GridFS)
+-- ------------------------------------------------------------
+
+-- GridFS bucket: ticket_files
+CREATE TABLE ticket_attachments (
+    id_attachment BIGINT NOT NULL AUTO_INCREMENT,
+    id_ticket BIGINT NOT NULL,
+    id_uploaded_by BIGINT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(100) NOT NULL,
+    file_size BIGINT NOT NULL,
+    mongo_file_id VARCHAR(24) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+
+    PRIMARY KEY (id_attachment),
+    INDEX idx_ticket_attachments_ticket (id_ticket),
+    UNIQUE KEY uq_ticket_attachments_mongo_file (mongo_file_id),
+    CONSTRAINT fk_ticket_attachments_ticket
+        FOREIGN KEY (id_ticket)
+        REFERENCES tickets (id_ticket),
+    CONSTRAINT fk_ticket_attachments_user
+        FOREIGN KEY (id_uploaded_by)
+        REFERENCES users (id_user)
+) ENGINE=InnoDB;
+
+-- GridFS bucket: ticket_comment_files
+CREATE TABLE ticket_comment_attachments (
+    id_attachment BIGINT NOT NULL AUTO_INCREMENT,
+    id_ticket_comment BIGINT NOT NULL,
+    id_uploaded_by BIGINT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(100) NOT NULL,
+    file_size BIGINT NOT NULL,
+    mongo_file_id VARCHAR(24) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+
+    PRIMARY KEY (id_attachment),
+    INDEX idx_ticket_comment_attachments_comment (id_ticket_comment),
+    INDEX idx_ticket_comment_attachments_uploaded_by (id_uploaded_by),
+    UNIQUE KEY uq_ticket_comment_attachments_mongo_file (mongo_file_id),
+    CONSTRAINT fk_ticket_comment_attachments_comment
+        FOREIGN KEY (id_ticket_comment)
+        REFERENCES ticket_comments (id_comment),
+    CONSTRAINT fk_ticket_comment_attachments_user
+        FOREIGN KEY (id_uploaded_by)
+        REFERENCES users (id_user)
+) ENGINE=InnoDB;
+
+-- GridFS bucket: user_avatars
+CREATE TABLE user_avatars (
+    id_avatar BIGINT NOT NULL AUTO_INCREMENT,
+    id_user BIGINT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(100) NOT NULL,
+    file_size BIGINT NOT NULL,
+    mongo_file_id VARCHAR(24) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+
+    PRIMARY KEY (id_avatar),
+    UNIQUE KEY uq_user_avatars_user (id_user),
+    UNIQUE KEY uq_user_avatars_mongo_file (mongo_file_id),
+    CONSTRAINT fk_user_avatars_user
+        FOREIGN KEY (id_user)
+        REFERENCES users (id_user)
+) ENGINE=InnoDB;
+
+-- ------------------------------------------------------------
+-- 6. SCHEMA VERIFICATION
 -- ------------------------------------------------------------
 SHOW TABLES;
