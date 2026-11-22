@@ -80,7 +80,7 @@ export default function ProfileInformation({
 
     event.target.value = "";
 
-    if (readOnly || !file) {
+    if (!file) {
       return;
     }
 
@@ -207,14 +207,14 @@ export default function ProfileInformation({
           hidden
           accept=".jpg,.jpeg,.png"
           onChange={handleAvatarChange}
-          disabled={avatarBusy || readOnly}
+          disabled={avatarBusy}
         />
         <Button
           type="button"
           variant="outlined"
           startIcon={uploadingAvatar ? <CircularProgress size={16} color="inherit" /> : <UploadFileOutlined />}
           onClick={() => photoInput.current?.click()}
-          disabled={avatarBusy || readOnly}
+          disabled={avatarBusy}
           className={sharedStyles.secondaryButton}
         >
           {uploadingAvatar ? t("uploadingAvatar") : hasAvatar ? t("changeAvatar") : t("uploadAvatar")}

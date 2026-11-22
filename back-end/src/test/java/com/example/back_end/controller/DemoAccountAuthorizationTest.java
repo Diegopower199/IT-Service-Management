@@ -1,6 +1,7 @@
 package com.example.back_end.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,6 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,10 +37,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.example.back_end.enums.GridFsBucketType;
 import com.example.back_end.exception.GlobalExceptionHandler;
 import com.example.back_end.model.DepartmentModel;
 import com.example.back_end.model.RoleModel;
+import com.example.back_end.model.UserAvatarModel;
 import com.example.back_end.model.UserModel;
 import com.example.back_end.repository.DepartmentRepository;
 import com.example.back_end.repository.RoleRepository;
@@ -144,7 +149,8 @@ class DemoAccountAuthorizationTest {
 
     @ParameterizedTest
     @CsvSource({"admin_demo, ADMIN", "technician_demo, TECHNICIAN", "user_demo, USER"})
-    void demoAccountsCanReadTheirProfileButCannotModifyIt(String username, String roleName) throws Exception {
+    void demoAccountsCanReadTheirProfileButCannotEditDetailsChangePasswordOrDeleteAvatar(String username,
+            String roleName) throws Exception {
         Authentication demo = signIn(username, roleName);
         when(users.findByUsername(username)).thenReturn(Optional.of(account(username, new RoleModel(99L, roleName))));
 
@@ -152,12 +158,34 @@ class DemoAccountAuthorizationTest {
                 .andExpect(jsonPath("$.username").value(username));
         forbidden(put("/users/me").principal(demo).contentType(MediaType.APPLICATION_JSON).content(PROFILE));
         forbidden(put("/users/change-password").principal(demo).contentType(MediaType.APPLICATION_JSON).content(PASSWORD));
-        forbidden(multipart(HttpMethod.PUT, "/users/me/avatar").file(
-                new MockMultipartFile("file", "photo.png", "image/png", new byte[] {1})).principal(demo));
         forbidden(delete("/users/me/avatar").principal(demo));
 
         verify(users, never()).save(any());
         verifyNoInteractions(passwords, avatars, storage);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"admin, ADMIN", "admin_demo, ADMIN", "technician_demo, TECHNICIAN", "user_demo, USER"})
+    void accountsCanUploadTheirOwnAvatar(String username, String roleName) throws Exception {
+        Authentication actor = signIn(username, roleName);
+        when(users.findByUsername(username)).thenReturn(Optional.of(account(username, new RoleModel(99L, roleName))));
+        when(storage.saveFile(eq(GridFsBucketType.USER_AVATARS), any(), eq("photo.png"), eq("image/png")))
+                .thenReturn("avatar-id");
+        when(avatars.saveAndFlush(any(UserAvatarModel.class))).thenAnswer(call -> call.getArgument(0));
+        byte[] png = Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X6FYAAAAASUVORK5CYII=");
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            mvc.perform(multipart(HttpMethod.PUT, "/users/me/avatar")
+                    .file(new MockMultipartFile("file", "photo.png", "image/png", png)).principal(actor))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.userId").value(501))
+                    .andExpect(jsonPath("$.fileName").value("photo.png"))
+                    .andExpect(jsonPath("$.contentType").value("image/png"));
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     @ParameterizedTest

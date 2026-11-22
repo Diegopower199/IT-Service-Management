@@ -98,7 +98,6 @@ public class UserAvatarService {
             throws IOException {
 
         UserModel user = getAuthenticatedUser();
-        DemoAccountAccess.requireProfileEditable(user.getUsername());
 
         validateFileSize(file);
 
