@@ -236,47 +236,118 @@ Do not commit `.env`, `.env.dev`, or any real credentials. PROD in this reposito
 
 ## Manual Setup (without Docker)
 
-For development outside Docker, install Java 17, Node.js 22, npm, MySQL 8+, and MongoDB. Initialize MySQL using the four scripts in `database/`, configure `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `FRONTEND_URL`, and `MONGODB_URI` for the backend, and configure the frontend API connection.
+Install JDK 17, Node.js 22 (22.22.2 or later in the 22.x series for the locked dependencies), npm, MySQL 8, and MongoDB 8. The Maven Wrapper is included in `back-end/`.
 
-See the [Database README](./database/README.md), [Backend README](./back-end/README.md), and [Frontend README](./front-end/README.md) for detailed setup. Start Spring Boot before starting the frontend:
+### Prepare MySQL and MongoDB
+
+Start both database servers. In a MySQL client connected as an administrator, run `database/local/00_setup_local_database.sql` to create the `helpdesk` database. Create or select a dedicated MySQL account with read and write access to `helpdesk` for Spring Boot.
+
+Initialize the new database by running these files in order.
+
+1. `database/01_create_tables.sql` creates the schema and relationships.
+2. `database/02_seed_reference_data.sql` loads the reference catalogs.
+3. `database/03_seed_admin.sql` creates the private administrator when the owner has prepared this Git-ignored file locally.
+4. `database/04_seed_demo_data.sql` loads the public demo accounts and sample ticket data.
+
+Complete MySQL initialization before starting Spring Boot. Hibernate uses `spring.jpa.hibernate.ddl-auto=validate` and expects the schema to exist already. MongoDB stores binary files in the `helpdesk_attachments` database through GridFS. The backend creates the GridFS collections as needed. The SQL scripts apply only to MySQL. See the [Database README](./database/README.md).
+
+### Configure and run Spring Boot
+
+Set these environment variables in the terminal that will launch Spring Boot, or in your IDE run configuration.
+
+```dotenv
+DB_URL=jdbc:mysql://localhost:3306/helpdesk
+DB_USERNAME=replace_with_local_mysql_username
+DB_PASSWORD=replace_with_local_mysql_password
+JWT_SECRET=replace_with_generated_base64_key
+FRONTEND_URL=http://localhost:3000
+MONGODB_URI=mongodb://localhost:27017/helpdesk_attachments
+```
+
+In PowerShell, use `$env:NAME = 'value'` for each variable. On Linux or macOS, use `export NAME='value'`. Use your MySQL account credentials and generate `JWT_SECRET` with the [JWT signing key examples](#jwt-signing-key). Keep credentials and signing keys out of version control.
+
+Run the Maven Wrapper from `back-end/`.
 
 ```powershell
-# In back-end/ on Windows
+# Windows PowerShell
 .\mvnw.cmd spring-boot:run
 ```
 
 ```bash
-# In back-end/ on Linux / macOS
+# Linux / macOS
+chmod u+x mvnw
 ./mvnw spring-boot:run
 ```
 
+Spring Boot defaults to port `8080` and serves the API under `/api/v1`. See the [Backend README](./back-end/README.md) for additional configuration.
+
+### Configure and run Next.js
+
+From `front-end/`, copy `.env.sample` to `.env` with `Copy-Item .env.sample .env` in PowerShell or `cp .env.sample .env` on Linux or macOS. Set these values in `front-end/.env`.
+
+```dotenv
+NEXT_PUBLIC_WEB_SERVER=localhost
+NEXT_PUBLIC_WEB_PORT_BACK_END=8080
+```
+
+Leave the Vercel proxy variable `NEXT_PUBLIC_API_BASE_URL` unset for this setup. With the local values, Next.js sends browser requests to `http://localhost:8080/api/v1`.
+
 ```bash
-# In front-end/
 npm ci
 npm run dev
 ```
 
+Open <http://localhost:3000>. See the [Frontend README](./front-end/README.md) for more details.
+
+### Verify the local setup
+
+1. Connect to `helpdesk` with the application's MySQL account and run `SHOW TABLES;`. Check MongoDB with `db.runCommand({ ping: 1 })` in the MongoDB shell.
+2. Check the Spring Boot startup logs for connection or schema validation errors.
+3. Open the frontend and sign in with a [demo account](#demo-accounts) if you loaded the demo seed. In the browser's Network panel, confirm that `POST http://localhost:8080/api/v1/auth/login` succeeds.
+
 ## Testing and Quality Checks
 
-The repository includes backend tests using JUnit and Mockito and frontend tests using Vitest and React Testing Library.
+### Backend tests
+
+The backend uses **JUnit Jupiter 6** and **Mockito** for controller and service tests. The tests cover authentication, users, tickets, comments, history, and configuration catalogs. Selected authorization tests use Spring MockMvc with mocked dependencies to check access to ticket resources and restrictions on protected accounts, ADMIN role assignment, and demo profile changes.
+
+Run the Maven Wrapper from `back-end/`. On Linux or macOS, set its execute permission as shown in [Manual Setup](#manual-setup-without-docker).
 
 ```powershell
-# Backend — Windows, from back-end/
+# Windows PowerShell
 .\mvnw.cmd clean verify
 ```
 
 ```bash
-# Backend — Linux / macOS, from back-end/
+# Linux / macOS
 ./mvnw clean verify
 ```
 
+Maven clears previous build output, compiles the application and test sources, runs the configured tests, and packages the application through the `verify` phase.
+
+### Frontend tests
+
+The frontend uses **Vitest** and **React Testing Library** to test API service calls, Axios token refresh behavior, and selected components such as forms and ticket dialogs.
+
+From `front-end/`, run the suite once with `npm run test:run`. Use `npm test` to run Vitest in interactive watch mode while editing tests.
+
+### Frontend quality checks
+
+- `npm run lint` runs ESLint with the configured static analysis rules.
+- `npm run build` checks that Next.js can compile and generate the production build.
+
+Run the functional tests as well to check behavior. Before integrating significant frontend changes, configure the API variables as described in [Manual Setup](#manual-setup-without-docker) and ensure the full check completes successfully from `front-end/`.
+
 ```bash
-# Frontend, from front-end/
 npm ci
 npm run check
 ```
 
-The frontend check runs linting, tests, and the production build. These checks complement, rather than replace, manual end-to-end testing with both databases running.
+`npm ci` installs dependencies from the lockfile. `npm run check` runs ESLint, Vitest once, and the Next.js production build in that order. It stops if a step fails.
+
+### Integration checks
+
+Supplement the automated suite with checks against the running application. Verify authentication and authorization through the live API, Spring Boot's connection to MySQL, file uploads and retrieval through MongoDB GridFS, and end-to-end requests between Next.js and Spring Boot.
 
 ## Repository Structure
 
