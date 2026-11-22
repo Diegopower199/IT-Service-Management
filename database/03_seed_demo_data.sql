@@ -1,15 +1,14 @@
 -- ============================================================
--- HELP DESK / IT SERVICE MANAGEMENT - DEMO DATA (MySQL 8.0+)
--- 02 - DATA SEED
+-- HELP DESK / IT SERVICE MANAGEMENT - DEMO DATA
+-- 03 - DEMO DATA (MySQL 8.0+)
 -- ============================================================
--- ONLY for a newly created, EMPTY demo schema.
--- This script does not delete data and intentionally is NOT repeatable.
--- All usernames and the BCrypt hashes are demonstration credentials.
--- DO NOT run against production databases.
--- The three required usernames are: admin / technician / user.
--- All SEVEN accounts use the EXACT SAME BCrypt hash provided.
--- The plaintext password is not stored or inferred here.
--- Ticket IDs 1..18 are explicit demo fixture IDs for readable comments/history.
+-- Run AFTER 02_seed_reference_data.sql on a NEW/EMPTY schema.
+-- Contains ONLY demo accounts, tickets, comments and history.
+-- Does not recreate reference catalogs.
+-- NOT idempotent: execute only once; NEVER against production.
+-- Each account has a freshly generated BCrypt hash.
+-- Local development/demo only; do not expose demo accounts in public deployments.
+-- Ticket IDs 1..18 are explicit, referenced by the fixtures.
 -- ============================================================
 
 USE helpdesk;
@@ -17,58 +16,7 @@ SET NAMES utf8mb4;
 START TRANSACTION;
 
 -- ------------------------------------------------------------
--- 1. ROLES (RoleModel does not have an active field)
--- ------------------------------------------------------------
-INSERT INTO roles (name) VALUES
-    ('ADMIN'),
-    ('TECHNICIAN'),
-    ('USER');
-
--- ------------------------------------------------------------
--- 2. DEPARTMENTS
--- ------------------------------------------------------------
-INSERT INTO departments (name, active) VALUES
-    ('IT', TRUE),
-    ('Finance', TRUE),
-    ('Human Resources', TRUE),
-    ('Sales', TRUE),
-    ('Marketing', TRUE),
-    ('Legal', TRUE),
-    ('Operations', TRUE),
-    ('Security', TRUE);
-
--- ------------------------------------------------------------
--- 3. CATEGORIES
--- ------------------------------------------------------------
-INSERT INTO categories (name, active) VALUES
-    ('Hardware', TRUE),
-    ('Software', TRUE),
-    ('Network', TRUE),
-    ('Access', TRUE),
-    ('Security', TRUE),
-    ('Email', TRUE);
-
--- ------------------------------------------------------------
--- 4. PRIORITIES
--- ------------------------------------------------------------
-INSERT INTO priorities (name, active) VALUES
-    ('LOW', TRUE),
-    ('MEDIUM', TRUE),
-    ('HIGH', TRUE),
-    ('CRITICAL', TRUE);
-
--- ------------------------------------------------------------
--- 5. STATUSES
--- ------------------------------------------------------------
-INSERT INTO statuses (name, active) VALUES
-    ('OPEN', TRUE),
-    ('IN_PROGRESS', TRUE),
-    ('WAITING', TRUE),
-    ('RESOLVED', TRUE),
-    ('CLOSED', TRUE);
-
--- ------------------------------------------------------------
--- 6. LOOKUP IDs BY NAME (never depend on lookup AUTO_INCREMENT)
+-- 1. LOOKUP IDs BY NAME (never depend on lookup AUTO_INCREMENT)
 -- ------------------------------------------------------------
 SET @role_admin = (SELECT id_role FROM roles WHERE name = 'ADMIN');
 SET @role_technician = (SELECT id_role FROM roles WHERE name = 'TECHNICIAN');
@@ -81,6 +29,9 @@ SET @department_marketing = (SELECT id_department FROM departments WHERE name = 
 SET @department_legal = (SELECT id_department FROM departments WHERE name = 'Legal');
 SET @department_operations = (SELECT id_department FROM departments WHERE name = 'Operations');
 SET @department_security = (SELECT id_department FROM departments WHERE name = 'Security');
+SET @department_customer_support = (SELECT id_department FROM departments WHERE name = 'Customer Support');
+SET @department_procurement = (SELECT id_department FROM departments WHERE name = 'Procurement');
+SET @department_product_development = (SELECT id_department FROM departments WHERE name = 'Product Development');
 SET @category_hardware = (SELECT id_category FROM categories WHERE name = 'Hardware');
 SET @category_software = (SELECT id_category FROM categories WHERE name = 'Software');
 SET @category_network = (SELECT id_category FROM categories WHERE name = 'Network');
@@ -98,20 +49,30 @@ SET @status_resolved = (SELECT id_status FROM statuses WHERE name = 'RESOLVED');
 SET @status_closed = (SELECT id_status FROM statuses WHERE name = 'CLOSED');
 
 -- ------------------------------------------------------------
--- 7. USERS (all passwords share the same supplied BCrypt hash)
+-- 2. USERS (individual BCrypt password hashes)
 -- ------------------------------------------------------------
 -- Mandatory test accounts: admin / technician / user.
--- Extra accounts: tech.sofia / tech.mario / user.pablo / user.lucia.
+-- Existing extra accounts: tech.sofia / tech.mario / user.pablo / user.lucia.
+-- Additional demo accounts: 2 technicians and 6 regular users.
+-- Passwords for additional accounts are stored in a private local credentials file.
 INSERT INTO users
     (username, email, password, first_name, last_name, enabled, id_role, id_department)
 VALUES
-    ('admin', 'admin@company.test', '$2y$10$CEohmedWcTJyGW4EQB.x6.Z/IA7ttTbOquHx4aK.C0sIlqOqaV/qm', 'Laura', 'Martinez', TRUE, @role_admin, @department_it),
-    ('technician', 'technician@company.test', '$2y$10$CEohmedWcTJyGW4EQB.x6.Z/IA7ttTbOquHx4aK.C0sIlqOqaV/qm', 'Carlos', 'Garcia', TRUE, @role_technician, @department_it),
-    ('user', 'user@company.test', '$2y$10$CEohmedWcTJyGW4EQB.x6.Z/IA7ttTbOquHx4aK.C0sIlqOqaV/qm', 'Ana', 'Rodriguez', TRUE, @role_user, @department_finance),
-    ('tech.sofia', 'tech.sofia@company.test', '$2y$10$CEohmedWcTJyGW4EQB.x6.Z/IA7ttTbOquHx4aK.C0sIlqOqaV/qm', 'Sofia', 'Lopez', TRUE, @role_technician, @department_it),
-    ('tech.mario', 'tech.mario@company.test', '$2y$10$CEohmedWcTJyGW4EQB.x6.Z/IA7ttTbOquHx4aK.C0sIlqOqaV/qm', 'Mario', 'Ruiz', TRUE, @role_technician, @department_security),
-    ('user.pablo', 'user.pablo@company.test', '$2y$10$CEohmedWcTJyGW4EQB.x6.Z/IA7ttTbOquHx4aK.C0sIlqOqaV/qm', 'Pablo', 'Santos', TRUE, @role_user, @department_sales),
-    ('user.lucia', 'user.lucia@company.test', '$2y$10$CEohmedWcTJyGW4EQB.x6.Z/IA7ttTbOquHx4aK.C0sIlqOqaV/qm', 'Lucia', 'Martin', TRUE, @role_user, @department_human_resources);
+    ('admin', 'admin@company.test', '$2a$10$jqObpOlQ4kgKXFvp5Y5EKuIIX2M5B1puAJZ7dcxJrnQza0r0D.X3O', 'Demo', 'Administrator', TRUE, @role_admin, @department_it),
+    ('technician', 'technician@company.test', '$2a$10$jqObpOlQ4kgKXFvp5Y5EKuIIX2M5B1puAJZ7dcxJrnQza0r0D.X3O', 'Demo', 'Technician', TRUE, @role_technician, @department_it),
+    ('user', 'user@company.test', '$2a$10$jqObpOlQ4kgKXFvp5Y5EKuIIX2M5B1puAJZ7dcxJrnQza0r0D.X3O', 'Demo', 'User', TRUE, @role_user, @department_finance),
+    ('tech.sofia', 'tech.sofia@company.test', '$2a$10$nvxSu3VjA6pzxeV.6HBFsu49Q29IlGB/SUM0QAl18wpglaA4tusp.', 'Sofia', 'Lopez', TRUE, @role_technician, @department_it),
+    ('tech.mario', 'tech.mario@company.test', '$2a$10$sa0YY0G9UEle2AmbZHg9hOznEBpUXPx0tuCQHydArF4lda5H44Prm', 'Mario', 'Ruiz', TRUE, @role_technician, @department_security),
+    ('user.pablo', 'user.pablo@company.test', '$2a$10$97U4E9imXzMIZNzRpUI.z.4xEb2Dz72fg1w4Nj.dwQT86Zf2h.mpO', 'Pablo', 'Santos', TRUE, @role_user, @department_sales),
+    ('user.lucia', 'user.lucia@company.test', '$2a$10$OYU65ld3QYytund17M21B.aV00xtGtfhXdzTz4HRB/7MqlTtpgSyG', 'Lucia', 'Martin', TRUE, @role_user, @department_human_resources),
+    ('tech.daniel', 'tech.daniel@company.test', '$2a$10$SIqrcNJygXJ7jR8CPqBSf.hZhTH6sx9CrlqZgy/B9jmWs9yNisa66', 'Daniel', 'Moreno', TRUE, @role_technician, @department_it),
+    ('tech.elena', 'tech.elena@company.test', '$2a$10$won0P6HRK8v0no8NlONLHOi75YYSrWir/7lri6ggzRXu/zCbNwPES', 'Elena', 'Vega', TRUE, @role_technician, @department_security),
+    ('user.marta', 'user.marta@company.test', '$2a$10$1Htl1uE86.ehRTdnn0Ss1eXdCxmnUMJ/igcmSB0J36x.aIUabkcqe', 'Marta', 'Navarro', TRUE, @role_user, @department_marketing),
+    ('user.javier', 'user.javier@company.test', '$2a$10$VEPC7qo1WrdWIKYXsToEAOUh6XuNPeLnmz8CcIuONDA.jHiH.2MUS', 'Javier', 'Torres', TRUE, @role_user, @department_legal),
+    ('user.sara', 'user.sara@company.test', '$2a$10$dL4kk4x5ry2wcdbFIa9FN.TBUiYAWIAWP/Gs32Nz.LaLo2TgXJmRm', 'Sara', 'Romero', TRUE, @role_user, @department_operations),
+    ('user.alberto', 'user.alberto@company.test', '$2a$10$mkXZm.s67VXDvd03hqVPBeN1BQCuc82rfY5lOkZtmXdlAiZ.g37ie', 'Alberto', 'Molina', TRUE, @role_user, @department_customer_support),
+    ('user.clara', 'user.clara@company.test', '$2a$10$8tw.fWTyq1LcX6RB1moUbeXwN2U2N.21Z6XupAPwinkS3WZ73C8YO', 'Clara', 'Fernandez', TRUE, @role_user, @department_procurement),
+    ('user.david', 'user.david@company.test', '$2a$10$a2dX0Hahd2xFXIUV8Fssn.gbeALPHeQtWUz0v4.EiD9qURcl8HFHy', 'David', 'Ortega', TRUE, @role_user, @department_product_development);
 
 SET @admin = (SELECT id_user FROM users WHERE username = 'admin');
 SET @technician = (SELECT id_user FROM users WHERE username = 'technician');
@@ -122,7 +83,7 @@ SET @pablo = (SELECT id_user FROM users WHERE username = 'user.pablo');
 SET @lucia = (SELECT id_user FROM users WHERE username = 'user.lucia');
 
 -- ------------------------------------------------------------
--- 8. TICKETS
+-- 3. TICKETS
 -- ------------------------------------------------------------
 -- Each core user has tickets in all five statuses; additional users
 -- provide extra assignment and permission-testing scenarios.
@@ -151,7 +112,7 @@ VALUES
     (18, 'Human Resources mailbox restored', 'The Human Resources shared mailbox can send and receive messages again.', DATE_SUB(NOW(), INTERVAL 96 HOUR), DATE_SUB(NOW(), INTERVAL 48 HOUR), @lucia, @lucia, @sofia, @category_email, @priority_medium, @status_resolved);
 
 -- ------------------------------------------------------------
--- 9. COMMENTS (public and internal), grouped by ticket
+-- 4. COMMENTS (public and internal), grouped by ticket
 -- ------------------------------------------------------------
 -- Ticket #1: Critical access to administration portal
 INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) VALUES
@@ -257,7 +218,7 @@ INSERT INTO ticket_comments (id_ticket, id_user, comment, internal, created_at) 
     (18, @lucia, 'The mailbox is working correctly. Thank you.', FALSE, DATE_SUB(NOW(), INTERVAL 48 HOUR));
 
 -- ------------------------------------------------------------
--- 10. TICKET HISTORY (creation, assignment, status changes...)
+-- 5. TICKET HISTORY (creation, assignment, status changes...)
 -- ------------------------------------------------------------
 -- Ticket #1: Critical access to administration portal
 INSERT INTO ticket_history
@@ -418,7 +379,7 @@ VALUES
 COMMIT;
 
 -- ------------------------------------------------------------
--- 11. QUICK VERIFICATION (read-only)
+-- 6. QUICK VERIFICATION (read-only)
 -- ------------------------------------------------------------
 SELECT u.username, r.name AS role, u.enabled
 FROM users AS u JOIN roles AS r ON r.id_role = u.id_role
