@@ -20,48 +20,66 @@ Built with **Java, Spring Boot, Next.js, TypeScript, MySQL, and MongoDB**, the p
 
 ## Tech Stack
 
-| Layer                  | Technologies                                            |
-| ---------------------- | ------------------------------------------------------- |
-| Frontend               | Next.js 16 (App Router), React 19, TypeScript           |
-| UI                     | Material UI, MUI X Data Grid                            |
-| API client / i18n      | Axios, next-intl                                        |
+| Layer                  | Technologies |
+| ---------------------- | ------------ |
+| Frontend               | Next.js 16 (App Router), React 19, TypeScript 5 |
+| UI                     | Material UI, MUI X Data Grid |
+| API client / i18n      | Axios, next-intl |
 | Backend                | Java 17, Spring Boot 4.1.1, Spring MVC, Spring Security |
-| Authentication         | JWT (HS256), BCrypt, HttpOnly refresh-token cookies     |
-| Relational persistence | MySQL 8.4, Spring Data JPA, Hibernate                   |
-| File storage           | MongoDB 8.0, Spring Data MongoDB, GridFS                |
-| Testing                | JUnit 5, Mockito, Vitest, React Testing Library         |
-| Infrastructure         | Docker, Docker Compose, Compose Watch                   |
-| Tooling                | Maven, npm, ESLint, Git                                 |
+| Authentication         | JWT access tokens (HS256), BCrypt password hashing, rotating refresh tokens in HttpOnly cookies |
+| Relational persistence | MySQL 8.4 (local), TiDB Cloud (hosted), Spring Data JPA, Hibernate |
+| File storage           | MongoDB 8.0 (local), MongoDB Atlas (cloud), Spring Data MongoDB, GridFS |
+| Local infrastructure   | Docker, Docker Compose, Compose Watch |
+| Cloud deployment       | Vercel (frontend), Render (backend) |
+| Testing                | JUnit Jupiter 6, Mockito, Spring MockMvc, Vitest, React Testing Library |
+| Tooling                | Maven, npm, ESLint, Git |
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    U[Browser] --> F[Next.js / React / TypeScript]
-    F -->|Axios / REST API / JWT| B[Spring Boot API]
-    subgraph Backend
-        B --> C[Controllers]
-        C --> S[Services]
+    U[User browser] --> F[Next.js frontend]
+    F -->|Axios /api/v1| C
+    subgraph Backend [Spring Boot REST API]
+        C[Controllers] --> S[Services]
         S --> R[Spring Data JPA repositories]
         S --> G[GridFS storage service]
     end
-    R --> M[(MySQL)]
-    G --> N[(MongoDB GridFS)]
+    R --> M[(MySQL / TiDB Cloud)]
+    G --> N[(MongoDB GridFS / Atlas)]
 ```
 
-The REST API (`/api/v1`) uses a layered architecture with controllers, services, repositories, DTOs, validation, centralized exception handling, and JPA specifications for dynamic ticket queries. Authentication combines short-lived JWT access tokens with rotating, server-managed refresh tokens. Authorization is enforced by the backend.
+The REST API under `/api/v1` uses a layered architecture. Controllers define HTTP endpoints and validate request DTOs. Services apply business rules and coordinate persistence through Spring Data repositories and the GridFS storage service. A centralized exception handler maps errors to HTTP responses. JPA specifications build dynamic ticket queries.
+
+### Authentication and authorization
+
+Spring Security checks login credentials against BCrypt password hashes. Login returns a short-lived JWT access token and sets an `HttpOnly` cookie containing the refresh token. The frontend stores the access token in `localStorage` and sends it as a Bearer token on protected API requests.
+
+When a protected request returns `401`, Axios can renew the session through the refresh endpoint and retry the request once. The backend validates the refresh token, revokes it, and issues a replacement in the cookie along with a new access token in the response. The relational database stores refresh token hashes.
+
+The frontend uses roles to adapt navigation and actions. Spring Security and backend services enforce endpoint and resource permissions.
 
 ### Hybrid persistence
 
-MySQL stores business data, relationships, and file metadata. MongoDB GridFS stores the binary file contents in three dedicated buckets:
+**MySQL / TiDB Cloud** stores users and roles, departments, categories, priorities, statuses, tickets, comments, ticket history, refresh token hashes, and file and avatar metadata.
 
-| Functionality              | MySQL table                  | MongoDB GridFS bucket  |
+**MongoDB / MongoDB Atlas** stores binary files for ticket attachments, comment attachments, and user avatars in separate GridFS buckets.
+
+| Functionality              | SQL metadata table           | MongoDB GridFS bucket  |
 | -------------------------- | ---------------------------- | ---------------------- |
 | Ticket attachments         | `ticket_attachments`         | `ticket_files`         |
 | Ticket comment attachments | `ticket_comment_attachments` | `ticket_comment_files` |
 | User avatars               | `user_avatars`               | `user_avatars`         |
 
-The metadata includes a reference to the corresponding GridFS file. Uploads include file-size and file-signature checks. Avatars support replacement and removal, with best-effort GridFS cleanup coordinated with MySQL transaction completion. These operations do not constitute a distributed transaction across the two databases.
+Each SQL metadata row stores a `mongo_file_id` that references the corresponding GridFS file. The backend validates upload size and file signatures. SQL and GridFS writes are separate operations, with best-effort cleanup on metadata write failures and when avatars are replaced or removed.
+
+### Cloud Architecture
+
+Vercel hosts the Next.js frontend and Render hosts the Spring Boot API. TiDB Cloud holds the relational data, and MongoDB Atlas hosts the GridFS buckets.
+
+On Vercel, `NEXT_PUBLIC_API_BASE_URL=/api/v1` sends browser API requests to the frontend origin. `BACKEND_PROXY_URL` sets the Render backend origin. The rewrites in `next.config.ts` forward `/api/v1/:path*` to the same path on that origin.
+
+In local Docker, the browser connects directly to the published Spring Boot port. The frontend builds that API URL from `NEXT_PUBLIC_WEB_SERVER` and `NEXT_PUBLIC_WEB_PORT_BACK_END`, with the `/api/v1` prefix.
 
 ## User Roles
 
