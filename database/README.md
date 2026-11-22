@@ -1,5 +1,7 @@
 # Help Desk — Database
 
+**English** | [Español](./README.es.md)
+
 Help Desk / IT Service Management uses **MySQL** for relational data and file metadata and **MongoDB GridFS** for the binary contents of attachments and avatars. This directory contains the SQL initialization scripts for MySQL.
 
 Spring Boot uses `spring.jpa.hibernate.ddl-auto=validate`. Initialize the relational schema before starting the backend. Hibernate validates the existing schema without creating or modifying tables.
