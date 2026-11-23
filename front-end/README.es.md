@@ -81,12 +81,12 @@ docker compose up -d --build
 docker compose --env-file .env.dev -f docker-compose.dev.yaml up -d --build
 ```
 
-|                       | DEV                                       | PROD (compilación local)      |
-| --------------------- | ----------------------------------------- | ----------------------------- |
-| URL del frontend      | `http://localhost:3001`                   | `http://localhost:3000`       |
-| API del backend       | `http://localhost:8081/api/v1`            | `http://localhost:8080/api/v1` |
-| Dockerfile            | `Dockerfile.dev`                          | `Dockerfile`                  |
-| Cambios en el código  | Montaje bind, Webpack y sondeo de cambios | Reconstruir la imagen         |
+|                      | DEV                                       | PROD (compilación local)       |
+| -------------------- | ----------------------------------------- | ------------------------------ |
+| URL del frontend     | `http://localhost:3001`                   | `http://localhost:3000`        |
+| API del backend      | `http://localhost:8081/api/v1`            | `http://localhost:8080/api/v1` |
+| Dockerfile           | `Dockerfile.dev`                          | `Dockerfile`                   |
+| Cambios en el código | Montaje bind, Webpack y sondeo de cambios | Reconstruir la imagen          |
 
 La imagen de producción utiliza una compilación de Node.js en varias etapas y la salida standalone de Next.js. En ejecución, inicia `node server.js` e incluye `public/` y `.next/static/`. En DEV, Compose ejecuta `npm run dev -- --webpack` con el sondeo de cambios habilitado. Ambos entornos reciben la configuración de la API desde Compose.
 
@@ -137,19 +137,19 @@ Abre **http://localhost:3000**. Asegúrate de que el backend está en ejecución
 
 ### En local y con Docker
 
-| Variable | Finalidad |
-| --- | --- |
-| `NEXT_PUBLIC_WEB_SERVER` | Nombre del host del backend desde el navegador. Los ejemplos locales utilizan `localhost`. |
+| Variable                        | Finalidad                                                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_WEB_SERVER`        | Nombre del host del backend desde el navegador. Los ejemplos locales utilizan `localhost`.                         |
 | `NEXT_PUBLIC_WEB_PORT_BACK_END` | Puerto publicado de Spring Boot. Usa `8080` para la instalación manual y PROD local, o `8081` para DEV con Docker. |
 
 `src/config/env.ts` construye la URL base con el formato `http://<host>:<port>/api/v1`. Con Docker, el navegador usa el puerto publicado en la máquina anfitriona. En PROD, ambos valores se pasan desde `.env` como argumentos de compilación del frontend. En DEV, las variables `DEV_NEXT_PUBLIC_WEB_SERVER` y `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` de `.env.dev` se pasan al contenedor del frontend. Si cambias variables públicas de una compilación de producción, debes reconstruir la imagen del frontend.
 
 ### Despliegue en Vercel
 
-| Variable | Finalidad |
-| --- | --- |
+| Variable                   | Finalidad                                                                                                                                                               |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_API_BASE_URL` | Configúrala como `/api/v1` para que el navegador envíe las peticiones al origen del frontend en Vercel. Este valor tiene prioridad sobre las variables de la API local. |
-| `BACKEND_PROXY_URL` | Configuración de Next.js en el servidor que indica el origen de Spring Boot en Render. |
+| `BACKEND_PROXY_URL`        | Configuración de Next.js en el servidor que indica el origen de Spring Boot en Render.                                                                                  |
 
 Cuando se define `BACKEND_PROXY_URL`, `next.config.ts` reescribe las peticiones a `/api/v1/:path*` para enviarlas a la misma ruta en el backend de Render. Mantén `BACKEND_PROXY_URL` en el entorno del servidor y sin el prefijo `NEXT_PUBLIC_`. Las variables públicas quedan expuestas al navegador y solo deben contener valores públicos. Consulta la [arquitectura en la nube del README principal](../README.es.md#arquitectura-en-la-nube).
 
@@ -167,11 +167,11 @@ Cuando se define `BACKEND_PROXY_URL`, `next.config.ts` reescribe las peticiones 
 
 El menú lateral y las pantallas de tickets adaptan la navegación y las acciones al rol del usuario autenticado. Spring Boot aplica las reglas de autorización a cada petición a la API, incluido el acceso a tickets y archivos concretos.
 
-| Rol | Interfaz |
-| --- | --- |
-| `ADMIN` | Panel, tickets, perfil, administración de usuarios y catálogos, y catálogo de roles. |
-| `TECHNICIAN` | Panel, listado de tickets asignados, perfil y acciones sobre tickets según los permisos. |
-| `USER` | Panel, tickets que ha creado o que se han solicitado para él, comentarios públicos y perfil. |
+| Rol          | Interfaz                                                                                     |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `ADMIN`      | Panel, tickets, perfil, administración de usuarios y catálogos, y catálogo de roles.         |
+| `TECHNICIAN` | Panel, listado de tickets asignados, perfil y acciones sobre tickets según los permisos.     |
+| `USER`       | Panel, tickets que ha creado o que se han solicitado para él, comentarios públicos y perfil. |
 
 - `admin_demo` puede gestionar cuentas `USER` y `TECHNICIAN` no protegidas. Para `admin_demo`, la interfaz de usuarios muestra las cuentas `admin`, `admin_demo`, `technician_demo` y `user_demo` en modo de solo lectura e impide conceder el rol `ADMIN`.
 - `technician_demo` y `user_demo` conservan las funciones de tickets y del panel correspondientes a sus roles.
@@ -204,11 +204,11 @@ Para añadir un idioma, crea los archivos JSON de sus módulos, registra el idio
 
 Las operaciones con archivos utilizan servicios de Axios específicos en los módulos correspondientes.
 
-| Servicio | Operaciones | Formatos admitidos | Tamaño máximo por archivo |
-| --- | --- | --- | --- |
-| `ticketAttachmentService.ts` | Listar, subir, previsualizar y descargar adjuntos de tickets. | PDF, JPEG, PNG | 10 MiB |
-| `ticketCommentAttachmentService.ts` | Listar, subir, previsualizar y descargar adjuntos de comentarios. | PDF, JPEG, PNG | 10 MiB |
-| `userAvatarService.ts` | Consultar un avatar por identificador de usuario y subir, reemplazar o eliminar el avatar del usuario actual. | JPEG, PNG | 5 MiB |
+| Servicio                            | Operaciones                                                                                                   | Formatos admitidos | Tamaño máximo por archivo |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------- |
+| `ticketAttachmentService.ts`        | Listar, subir, previsualizar y descargar adjuntos de tickets.                                                 | PDF, JPEG, PNG     | 10 MiB                    |
+| `ticketCommentAttachmentService.ts` | Listar, subir, previsualizar y descargar adjuntos de comentarios.                                             | PDF, JPEG, PNG     | 10 MiB                    |
+| `userAvatarService.ts`              | Consultar un avatar por identificador de usuario y subir, reemplazar o eliminar el avatar del usuario actual. | JPEG, PNG          | 5 MiB                     |
 
 Las subidas envían el archivo en un campo `file` de `FormData`. Los adjuntos de un comentario se seleccionan mientras se redacta y se suben después de crearlo. Las vistas previas y las descargas usan respuestas de tipo `Blob` y URL de objeto. El backend comprueba los permisos y valida los archivos.
 
@@ -216,23 +216,23 @@ Al subir, reemplazar o eliminar un avatar, el perfil actualiza su imagen y emite
 
 ## Páginas principales
 
-| Ruta                    | Descripción                                  |
-| ----------------------- | -------------------------------------------- |
-| `/`                     | Redirección a `/login`                        |
-| `/login`                | Autenticación de usuarios                   |
-| `/dashboard`            | Estadísticas y tickets recientes             |
-| `/tickets`              | Listado, filtrado y gestión de tickets       |
-| `/tickets/[id]`         | Detalle, acciones y adjuntos del ticket      |
-| `/tickets/[id]/comments` | Conversación del ticket                      |
-| `/tickets/[id]/history`  | Historial de actividad del ticket            |
-| `/profile`              | Gestión del perfil y de la contraseña        |
-| `/users`                | Administración de usuarios                   |
-| `/departments`          | Administración de departamentos              |
-| `/categories`           | Administración de categorías                 |
-| `/priorities`           | Administración de prioridades                 |
-| `/statuses`             | Administración de estados                     |
-| `/roles`                | Información sobre roles                       |
-| `/403`                  | Acceso denegado                               |
+| Ruta                     | Descripción                             |
+| ------------------------ | --------------------------------------- |
+| `/`                      | Redirección a `/login`                  |
+| `/login`                 | Autenticación de usuarios               |
+| `/dashboard`             | Estadísticas y tickets recientes        |
+| `/tickets`               | Listado, filtrado y gestión de tickets  |
+| `/tickets/[id]`          | Detalle, acciones y adjuntos del ticket |
+| `/tickets/[id]/comments` | Conversación del ticket                 |
+| `/tickets/[id]/history`  | Historial de actividad del ticket       |
+| `/profile`               | Gestión del perfil y de la contraseña   |
+| `/users`                 | Administración de usuarios              |
+| `/departments`           | Administración de departamentos         |
+| `/categories`            | Administración de categorías            |
+| `/priorities`            | Administración de prioridades           |
+| `/statuses`              | Administración de estados               |
+| `/roles`                 | Información sobre roles                 |
+| `/403`                   | Acceso denegado                         |
 
 Las páginas de usuarios, departamentos, categorías, prioridades, estados y roles son de administración. Las rutas de tickets comparten un layout que espera a que se resuelva la autenticación y valida el identificador del ticket. Las pantallas de cada módulo gestionan los errores de acceso de la API. `src/app/not-found.tsx` y `src/app/error.tsx` proporcionan las pantallas de página no encontrada y de error inesperado.
 

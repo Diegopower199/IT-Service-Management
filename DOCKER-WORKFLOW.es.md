@@ -6,17 +6,17 @@ Guía para construir, ejecutar y gestionar el proyecto Help Desk con Docker.
 
 ## 1. Entornos del proyecto
 
-| Recurso | DEV (desarrollo) | PROD local (versión compilada) |
-| --- | --- | --- |
-| Proyecto | `helpdesk-dev` | `helpdesk-prod` |
-| Docker Compose | `docker-compose.dev.yaml` | `docker-compose.yaml` |
-| Variables | `.env.dev` | `.env` |
-| Dockerfiles | `Dockerfile.dev` | `Dockerfile` |
-| Imagen del backend | `helpdesk-backend:dev` | `helpdesk-backend:prod` |
-| Imagen del frontend | `helpdesk-frontend:dev` | `helpdesk-frontend:prod` |
-| Frontend | <http://localhost:3001> | <http://localhost:3000> |
-| API | `http://localhost:8081/api/v1` | `http://localhost:8080/api/v1` |
-| Red predeterminada | `helpdesk-dev_default` | `helpdesk-prod_default` |
+| Recurso             | DEV (desarrollo)               | PROD local (versión compilada) |
+| ------------------- | ------------------------------ | ------------------------------ |
+| Proyecto            | `helpdesk-dev`                 | `helpdesk-prod`                |
+| Docker Compose      | `docker-compose.dev.yaml`      | `docker-compose.yaml`          |
+| Variables           | `.env.dev`                     | `.env`                         |
+| Dockerfiles         | `Dockerfile.dev`               | `Dockerfile`                   |
+| Imagen del backend  | `helpdesk-backend:dev`         | `helpdesk-backend:prod`        |
+| Imagen del frontend | `helpdesk-frontend:dev`        | `helpdesk-frontend:prod`       |
+| Frontend            | <http://localhost:3001>        | <http://localhost:3000>        |
+| API                 | `http://localhost:8081/api/v1` | `http://localhost:8080/api/v1` |
+| Red predeterminada  | `helpdesk-dev_default`         | `helpdesk-prod_default`        |
 
 Los dos entornos incluyen el frontend Next.js (`frontend`), el backend Spring Boot (`backend`), MySQL (`mysql`, imagen `mysql:8.4`) y MongoDB (`mongodb`, imagen `mongo:8.0`). Cada proyecto dispone de su propia red y sus propios volúmenes. Solo el frontend y el backend publican puertos en el equipo anfitrión.
 
@@ -33,15 +33,15 @@ Inicia Docker Desktop o Docker Engine con el complemento Docker Compose. DEV nec
 
 Para una instalación nueva, prepara `.env` a partir de `.env.sample` o `.env.dev` a partir de `.env.dev.sample`. Usa el archivo del entorno que vas a arrancar y sustituye las credenciales de ejemplo. [Archivos de entorno](./README.es.md#archivos-de-entorno)
 
-| PROD local | DEV | Finalidad |
-| --- | --- | --- |
-| `MYSQL_ROOT_PASSWORD` | `DEV_MYSQL_ROOT_PASSWORD` | Contraseña de la cuenta root de MySQL. |
-| `DB_USERNAME` | `DEV_DB_USERNAME` | Cuenta de MySQL que usa Spring Boot. El valor de ejemplo es `helpdesk`. |
-| `DB_PASSWORD` | `DEV_DB_PASSWORD` | Contraseña de la cuenta de MySQL de la aplicación. |
-| `JWT_SECRET` | `DEV_JWT_SECRET` | Clave de firma JWT codificada en Base64. |
-| `FRONTEND_URL` | `DEV_FRONTEND_URL` | Origen permitido por el backend. Usa `http://localhost:3000` en PROD local y `http://localhost:3001` en DEV. |
-| `NEXT_PUBLIC_WEB_SERVER` | `DEV_NEXT_PUBLIC_WEB_SERVER` | Nombre del host de la API desde el navegador. Usa `localhost` en ambos entornos. |
-| `NEXT_PUBLIC_WEB_PORT_BACK_END` | `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` | Puerto publicado de la API. Usa `8080` en PROD local y `8081` en DEV. |
+| PROD local                      | DEV                                 | Finalidad                                                                                                    |
+| ------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `MYSQL_ROOT_PASSWORD`           | `DEV_MYSQL_ROOT_PASSWORD`           | Contraseña de la cuenta root de MySQL.                                                                       |
+| `DB_USERNAME`                   | `DEV_DB_USERNAME`                   | Cuenta de MySQL que usa Spring Boot. El valor de ejemplo es `helpdesk`.                                      |
+| `DB_PASSWORD`                   | `DEV_DB_PASSWORD`                   | Contraseña de la cuenta de MySQL de la aplicación.                                                           |
+| `JWT_SECRET`                    | `DEV_JWT_SECRET`                    | Clave de firma JWT codificada en Base64.                                                                     |
+| `FRONTEND_URL`                  | `DEV_FRONTEND_URL`                  | Origen permitido por el backend. Usa `http://localhost:3000` en PROD local y `http://localhost:3001` en DEV. |
+| `NEXT_PUBLIC_WEB_SERVER`        | `DEV_NEXT_PUBLIC_WEB_SERVER`        | Nombre del host de la API desde el navegador. Usa `localhost` en ambos entornos.                             |
+| `NEXT_PUBLIC_WEB_PORT_BACK_END` | `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` | Puerto publicado de la API. Usa `8080` en PROD local y `8081` en DEV.                                        |
 
 Ejecuta los comandos de esta guía desde la raíz del repositorio, salvo cuando se indique otro directorio.
 
@@ -74,14 +74,14 @@ Abre <http://localhost:3000>. Compose utiliza por defecto `docker-compose.yaml` 
 
 ### Docker — consultar recursos
 
-| Comando | Significado |
-| --- | --- |
-| `docker images` | Muestra las imágenes y sus etiquetas. |
-| `docker ps` | Muestra los contenedores en ejecución y sus puertos publicados. |
-| `docker ps -a` | Muestra todos los contenedores, incluidos los detenidos. |
-| `docker volume ls` | Muestra los volúmenes. |
-| `docker network ls` | Muestra las redes. |
-| `docker compose ls` | Muestra los proyectos Compose en ejecución. |
+| Comando             | Significado                                                     |
+| ------------------- | --------------------------------------------------------------- |
+| `docker images`     | Muestra las imágenes y sus etiquetas.                           |
+| `docker ps`         | Muestra los contenedores en ejecución y sus puertos publicados. |
+| `docker ps -a`      | Muestra todos los contenedores, incluidos los detenidos.        |
+| `docker volume ls`  | Muestra los volúmenes.                                          |
+| `docker network ls` | Muestra las redes.                                              |
+| `docker compose ls` | Muestra los proyectos Compose en ejecución.                     |
 
 ### Docker — construir una imagen manualmente
 
@@ -98,29 +98,29 @@ docker build -f Dockerfile.dev -t helpdesk-backend:dev .
 
 Antepon a las operaciones de la tabla `docker compose --env-file .env.dev -f docker-compose.dev.yaml` en DEV, o `docker compose` en PROD local.
 
-| Operación | Significado |
-| --- | --- |
-| `config --quiet` | Valida la configuración de Compose sin imprimir los valores resueltos. |
-| `build` | Construye las imágenes sin crear ni arrancar los contenedores. |
-| `up -d` | Crea y arranca los contenedores necesarios. Reutiliza los que siguen siendo válidos y recrea los que tienen cambios de configuración o de imagen. |
-| `up -d --build` | Construye las imágenes y después crea, recrea o arranca los contenedores según corresponda. |
-| `start` | Arranca los contenedores existentes que están detenidos con la configuración que ya tenían. |
-| `stop` | Detiene los contenedores y conserva sus volúmenes. |
-| `restart backend` | Reinicia el contenedor del backend con su imagen y configuración actuales. |
-| `down` | Detiene y elimina los contenedores y la red predeterminada del proyecto. Conserva las imágenes y los volúmenes con nombre. |
-| `ps` / `ps -a` | Muestra los contenedores del proyecto. `-a` incluye los detenidos. |
-| `logs --tail=100 backend` | Muestra las últimas 100 líneas del backend. |
-| `logs -f frontend` | Sigue los logs del frontend en tiempo real. |
-| `watch --no-up backend` | Vigila los cambios del backend con los servicios ya iniciados. |
+| Operación                 | Significado                                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config --quiet`          | Valida la configuración de Compose sin imprimir los valores resueltos.                                                                            |
+| `build`                   | Construye las imágenes sin crear ni arrancar los contenedores.                                                                                    |
+| `up -d`                   | Crea y arranca los contenedores necesarios. Reutiliza los que siguen siendo válidos y recrea los que tienen cambios de configuración o de imagen. |
+| `up -d --build`           | Construye las imágenes y después crea, recrea o arranca los contenedores según corresponda.                                                       |
+| `start`                   | Arranca los contenedores existentes que están detenidos con la configuración que ya tenían.                                                       |
+| `stop`                    | Detiene los contenedores y conserva sus volúmenes.                                                                                                |
+| `restart backend`         | Reinicia el contenedor del backend con su imagen y configuración actuales.                                                                        |
+| `down`                    | Detiene y elimina los contenedores y la red predeterminada del proyecto. Conserva las imágenes y los volúmenes con nombre.                        |
+| `ps` / `ps -a`            | Muestra los contenedores del proyecto. `-a` incluye los detenidos.                                                                                |
+| `logs --tail=100 backend` | Muestra las últimas 100 líneas del backend.                                                                                                       |
+| `logs -f frontend`        | Sigue los logs del frontend en tiempo real.                                                                                                       |
+| `watch --no-up backend`   | Vigila los cambios del backend con los servicios ya iniciados.                                                                                    |
 
-| Parámetro | Significado |
-| --- | --- |
-| `--env-file .env.dev` | Selecciona el archivo de variables de desarrollo. |
-| `-f docker-compose.dev.yaml` | Selecciona el archivo Compose de desarrollo. |
-| `-d` | Ejecuta los servicios en segundo plano. |
-| `--build` | Construye las imágenes antes de arrancar los servicios. |
-| `--no-deps` | Arranca o actualiza el servicio indicado sin arrancar sus dependencias. |
-| `--force-recreate` | Fuerza la recreación de los contenedores seleccionados al ejecutar `up`. |
+| Parámetro                    | Significado                                                              |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| `--env-file .env.dev`        | Selecciona el archivo de variables de desarrollo.                        |
+| `-f docker-compose.dev.yaml` | Selecciona el archivo Compose de desarrollo.                             |
+| `-d`                         | Ejecuta los servicios en segundo plano.                                  |
+| `--build`                    | Construye las imágenes antes de arrancar los servicios.                  |
+| `--no-deps`                  | Arranca o actualiza el servicio indicado sin arrancar sus dependencias.  |
+| `--force-recreate`           | Fuerza la recreación de los contenedores seleccionados al ejecutar `up`. |
 
 Recrear un contenedor lo sustituye por uno que usa la configuración actual. Para aplicar cambios de configuración, usa `up -d`. Si el cambio afecta a lo que se incluye en la imagen, añade `--build`.
 
@@ -185,27 +185,27 @@ Usa `down` en lugar de `stop` si quieres retirar los contenedores y la red del e
 
 ## 5. Cuándo reconstruir una imagen
 
-| Cambio | DEV | PROD local |
-| --- | --- | --- |
-| Código Java | Guarda con Watch activo. Si Watch está detenido, reinicia `backend`. | Reconstruye `backend`. |
-| Código React o TypeScript | Guarda y comprueba la recarga en el navegador. | Reconstruye `frontend`. |
-| Dependencias Maven (`back-end/pom.xml`) | Watch reinicia `backend` y Maven resuelve los cambios con su caché. | Reconstruye `backend`. |
-| Dependencias npm (`front-end/package.json` o `front-end/package-lock.json`) | Actualiza el volumen de `node_modules` con el procedimiento de abajo. | Reconstruye `frontend`. |
-| Dockerfiles | Reconstruye el servicio afectado con `up -d --build`. | Reconstruye el servicio afectado con `up -d --build`. |
-| Docker Compose | Valida con `config --quiet` y aplica los cambios con `up -d`. Añade `--build` si cambian las instrucciones de construcción o sus argumentos. | Valida con `config --quiet` y aplica los cambios con `up -d`. Añade `--build` si cambian las instrucciones de construcción o sus argumentos. |
-| Variables del backend | Aplica los valores de `.env.dev` con `up -d backend`. | Aplica los valores de `.env` con `up -d backend`. |
-| Variables públicas `NEXT_PUBLIC_*` | Aplica los valores de `.env.dev` con `up -d frontend`. Compose pasa las variables de DEV al proceso de Next.js al crear el contenedor. | Reconstruye `frontend`. El Dockerfile incorpora `NEXT_PUBLIC_WEB_SERVER` y `NEXT_PUBLIC_WEB_PORT_BACK_END` durante la compilación. |
-| Scripts SQL | Aplica el cambio explícitamente si el volumen MySQL ya está inicializado. | Aplica el cambio explícitamente si el volumen MySQL ya está inicializado. |
-| Configuración de Next.js (`front-end/next.config.ts`) | Reinicia `frontend` si el servidor de desarrollo aún no ha cargado la configuración montada. | Reconstruye `frontend`. |
+| Cambio                                                                      | DEV                                                                                                                                          | PROD local                                                                                                                                   |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Código Java                                                                 | Guarda con Watch activo. Si Watch está detenido, reinicia `backend`.                                                                         | Reconstruye `backend`.                                                                                                                       |
+| Código React o TypeScript                                                   | Guarda y comprueba la recarga en el navegador.                                                                                               | Reconstruye `frontend`.                                                                                                                      |
+| Dependencias Maven (`back-end/pom.xml`)                                     | Watch reinicia `backend` y Maven resuelve los cambios con su caché.                                                                          | Reconstruye `backend`.                                                                                                                       |
+| Dependencias npm (`front-end/package.json` o `front-end/package-lock.json`) | Actualiza el volumen de `node_modules` con el procedimiento de abajo.                                                                        | Reconstruye `frontend`.                                                                                                                      |
+| Dockerfiles                                                                 | Reconstruye el servicio afectado con `up -d --build`.                                                                                        | Reconstruye el servicio afectado con `up -d --build`.                                                                                        |
+| Docker Compose                                                              | Valida con `config --quiet` y aplica los cambios con `up -d`. Añade `--build` si cambian las instrucciones de construcción o sus argumentos. | Valida con `config --quiet` y aplica los cambios con `up -d`. Añade `--build` si cambian las instrucciones de construcción o sus argumentos. |
+| Variables del backend                                                       | Aplica los valores de `.env.dev` con `up -d backend`.                                                                                        | Aplica los valores de `.env` con `up -d backend`.                                                                                            |
+| Variables públicas `NEXT_PUBLIC_*`                                          | Aplica los valores de `.env.dev` con `up -d frontend`. Compose pasa las variables de DEV al proceso de Next.js al crear el contenedor.       | Reconstruye `frontend`. El Dockerfile incorpora `NEXT_PUBLIC_WEB_SERVER` y `NEXT_PUBLIC_WEB_PORT_BACK_END` durante la compilación.           |
+| Scripts SQL                                                                 | Aplica el cambio explícitamente si el volumen MySQL ya está inicializado.                                                                    | Aplica el cambio explícitamente si el volumen MySQL ya está inicializado.                                                                    |
+| Configuración de Next.js (`front-end/next.config.ts`)                       | Reinicia `frontend` si el servidor de desarrollo aún no ha cargado la configuración montada.                                                 | Reconstruye `frontend`.                                                                                                                      |
 
 DEV monta `back-end/` y `front-end/` en `/app` dentro de sus contenedores. Otros volúmenes mantienen la caché, los artefactos y las dependencias en sus rutas de contenedor.
 
-| Volumen DEV | Ruta en el contenedor | Contenido |
-| --- | --- | --- |
-| `helpdesk-dev_backend_target` | `/app/target` | Salida de compilación de Maven. |
-| `helpdesk-dev_maven_cache` | `/root/.m2` | Repositorio local y caché de Maven. |
-| `helpdesk-dev_frontend_node_modules` | `/app/node_modules` | Dependencias npm instaladas. |
-| `helpdesk-dev_frontend_next` | `/app/.next` | Salida y caché de desarrollo de Next.js. |
+| Volumen DEV                          | Ruta en el contenedor | Contenido                                |
+| ------------------------------------ | --------------------- | ---------------------------------------- |
+| `helpdesk-dev_backend_target`        | `/app/target`         | Salida de compilación de Maven.          |
+| `helpdesk-dev_maven_cache`           | `/root/.m2`           | Repositorio local y caché de Maven.      |
+| `helpdesk-dev_frontend_node_modules` | `/app/node_modules`   | Dependencias npm instaladas.             |
+| `helpdesk-dev_frontend_next`         | `/app/.next`          | Salida y caché de desarrollo de Next.js. |
 
 El volumen existente de `node_modules` persiste al reconstruir o recrear `frontend`. Cuando cambien las dependencias npm en DEV, ejecuta `npm ci` en un contenedor temporal que monte ese mismo volumen. Arranca después el servicio con la imagen actualizada.
 
@@ -228,9 +228,9 @@ El archivo `03_seed_admin.sql` está excluido de Git y se prepara localmente. Un
 
 Reutilizar un volumen de MySQL inicializado omite los scripts. Editar o añadir un script no actualiza ese volumen. Aplica de forma explícita los cambios necesarios al esquema o a los datos existentes.
 
-| Datos | Volumen DEV | Volumen PROD local |
-| --- | --- | --- |
-| MySQL | `helpdesk-dev_mysql_data` | `helpdesk-prod_mysql_data` |
+| Datos   | Volumen DEV               | Volumen PROD local         |
+| ------- | ------------------------- | -------------------------- |
+| MySQL   | `helpdesk-dev_mysql_data` | `helpdesk-prod_mysql_data` |
 | MongoDB | `helpdesk-dev_mongo_data` | `helpdesk-prod_mongo_data` |
 
 MySQL guarda usuarios, catálogos, tickets, comentarios, historial, hashes de los tokens de renovación y metadatos de archivos. MongoDB guarda el contenido binario de los adjuntos y avatares mediante GridFS. Detener o recrear los servicios conserva estos datos en los volúmenes existentes. Los volúmenes separados permiten trabajar en DEV y validar PROD local con datos independientes.
@@ -243,17 +243,17 @@ Los volúmenes proporcionan persistencia. Haz copias de seguridad independientes
 
 Empieza por [consultar el estado y los logs del entorno](#consultar-el-estado-y-los-logs). Revisa la salida localmente y oculta cualquier valor sensible antes de compartirla.
 
-| Problema | Comprobación y solución |
-| --- | --- |
-| Docker Desktop está cerrado o Docker Engine no responde | Ejecuta `docker info`. Si el cliente no puede contactar con el servidor, inicia Docker Desktop o Docker Engine y espera a que esté disponible. |
-| El puerto `3000`, `3001`, `8080` o `8081` ya está en uso | Ejecuta `docker ps` para ver los puertos publicados de los contenedores. Si el puerto lo ocupa otro proceso, identifícalo con las herramientas del sistema y libera el puerto del entorno que vas a usar. |
-| Faltan variables de entorno | Ejecuta `config --quiet` con el archivo del entorno correcto y revisa los avisos. Compara los nombres y valores necesarios con la plantilla correspondiente. Las variables de la terminal pueden prevalecer sobre el archivo de entorno. |
-| Spring Boot no conecta con MySQL | Comprueba el estado de `mysql` y los logs de `backend` y `mysql`. El backend usa `jdbc:mysql://mysql:3306/helpdesk`. Comprueba que la cuenta de la aplicación y sus permisos correspondan al volumen activo. |
-| Spring Boot no conecta con MongoDB | Comprueba el estado y los logs de `mongodb`. El backend usa `mongodb://mongodb:27017/helpdesk_attachments`. En Docker se utilizan los nombres de servicio para la conexión entre contenedores. |
-| Una base de datos no supera su comprobación de estado | Consulta `ps -a` y los logs de la base de datos afectada. MySQL ejecuta `SELECT 1` con la cuenta de la aplicación y MongoDB ejecuta un ping. Espera a que finalice la inicialización o resuelve el error que indiquen los logs. El backend depende de que ambas comprobaciones sean satisfactorias. |
-| Los cambios Java no se reflejan | Comprueba que estás usando DEV, que Watch está activo y que el archivo editado está en `back-end/src` o es `back-end/pom.xml`. Busca el reinicio y posibles errores de compilación en los logs. Si trabajas en PROD local, reconstruye `backend`. |
-| Los cambios del frontend no se reflejan | Comprueba que has abierto el puerto del entorno correcto. En DEV, revisa los logs de `frontend` para detectar errores de compilación con Webpack o dependencias. Si cambió el archivo de bloqueo npm, sigue el procedimiento de dependencias de DEV. En PROD local, reconstruye `frontend`. |
-| Los scripts SQL modificados no se vuelven a ejecutar | Comprueba si MySQL está reutilizando un volumen. Aplica el cambio necesario de forma explícita al esquema o a los datos existentes. |
+| Problema                                                       | Comprobación y solución                                                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Docker Desktop está cerrado o Docker Engine no responde        | Ejecuta `docker info`. Si el cliente no puede contactar con el servidor, inicia Docker Desktop o Docker Engine y espera a que esté disponible.                                                                                                                                                                    |
+| El puerto `3000`, `3001`, `8080` o `8081` ya está en uso       | Ejecuta `docker ps` para ver los puertos publicados de los contenedores. Si el puerto lo ocupa otro proceso, identifícalo con las herramientas del sistema y libera el puerto del entorno que vas a usar.                                                                                                         |
+| Faltan variables de entorno                                    | Ejecuta `config --quiet` con el archivo del entorno correcto y revisa los avisos. Compara los nombres y valores necesarios con la plantilla correspondiente. Las variables de la terminal pueden prevalecer sobre el archivo de entorno.                                                                          |
+| Spring Boot no conecta con MySQL                               | Comprueba el estado de `mysql` y los logs de `backend` y `mysql`. El backend usa `jdbc:mysql://mysql:3306/helpdesk`. Comprueba que la cuenta de la aplicación y sus permisos correspondan al volumen activo.                                                                                                      |
+| Spring Boot no conecta con MongoDB                             | Comprueba el estado y los logs de `mongodb`. El backend usa `mongodb://mongodb:27017/helpdesk_attachments`. En Docker se utilizan los nombres de servicio para la conexión entre contenedores.                                                                                                                    |
+| Una base de datos no supera su comprobación de estado          | Consulta `ps -a` y los logs de la base de datos afectada. MySQL ejecuta `SELECT 1` con la cuenta de la aplicación y MongoDB ejecuta un ping. Espera a que finalice la inicialización o resuelve el error que indiquen los logs. El backend depende de que ambas comprobaciones sean satisfactorias.               |
+| Los cambios Java no se reflejan                                | Comprueba que estás usando DEV, que Watch está activo y que el archivo editado está en `back-end/src` o es `back-end/pom.xml`. Busca el reinicio y posibles errores de compilación en los logs. Si trabajas en PROD local, reconstruye `backend`.                                                                 |
+| Los cambios del frontend no se reflejan                        | Comprueba que has abierto el puerto del entorno correcto. En DEV, revisa los logs de `frontend` para detectar errores de compilación con Webpack o dependencias. Si cambió el archivo de bloqueo npm, sigue el procedimiento de dependencias de DEV. En PROD local, reconstruye `frontend`.                       |
+| Los scripts SQL modificados no se vuelven a ejecutar           | Comprueba si MySQL está reutilizando un volumen. Aplica el cambio necesario de forma explícita al esquema o a los datos existentes.                                                                                                                                                                               |
 | La contraseña de MySQL no cambia al editar `.env` o `.env.dev` | Los valores de inicialización se aplican cuando se crea la base de datos en un volumen vacío. Usa las credenciales que ya tiene el volumen o rota la contraseña mediante una sesión de administración de MySQL. Después coordina el cambio en el archivo de entorno y recrea los servicios afectados con `up -d`. |
 
 ## 8. Seguridad y recordatorios

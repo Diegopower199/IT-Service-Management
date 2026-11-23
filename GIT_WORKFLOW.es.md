@@ -8,14 +8,14 @@ Esta guía describe el flujo de trabajo con Git y GitHub de Help Desk. Mantén `
 
 Elige un prefijo que describa el propósito de la rama. Usa un nombre breve y específico después de la barra.
 
-| Prefijo | Cuándo usarlo | Ejemplo de Help Desk |
-| --- | --- | --- |
-| `feat/` | Nueva funcionalidad. | `feat/demo-account-restrictions` |
-| `fix/` | Corrección de un error. | `fix/demo-avatar-deletion` |
-| `docs/` | Cambios de documentación. | `docs/project-documentation` |
-| `refactor/` | Cambios internos que conservan el comportamiento. | `refactor/database-scripts` |
-| `test/` | Pruebas nuevas o actualizadas. | `test/auth-service` |
-| `chore/` | Mantenimiento o configuración. | `chore/docker-development-settings` |
+| Prefijo     | Cuándo usarlo                                     | Ejemplo de Help Desk                |
+| ----------- | ------------------------------------------------- | ----------------------------------- |
+| `feat/`     | Nueva funcionalidad.                              | `feat/demo-account-restrictions`    |
+| `fix/`      | Corrección de un error.                           | `fix/demo-avatar-deletion`          |
+| `docs/`     | Cambios de documentación.                         | `docs/project-documentation`        |
+| `refactor/` | Cambios internos que conservan el comportamiento. | `refactor/database-scripts`         |
+| `test/`     | Pruebas nuevas o actualizadas.                    | `test/auth-service`                 |
+| `chore/`    | Mantenimiento o configuración.                    | `chore/docker-development-settings` |
 
 El repositorio conserva ramas históricas con el prefijo `feature/`, como `feature/ticket-attachments`. Usa `feat/` para las nuevas funcionalidades y conserva los nombres de las ramas existentes.
 
@@ -54,14 +54,14 @@ git commit -m "docs: update project documentation"
 
 Escribe los mensajes en inglés con un tipo que indique el motivo del cambio y una descripción concreta.
 
-| Tipo | Cuándo usarlo | Ejemplo |
-| --- | --- | --- |
-| `feat:` | Añadir una funcionalidad. | `feat: restrict demo account permissions` |
-| `fix:` | Corregir un comportamiento incorrecto. | `fix: allow demo accounts to delete their own avatars` |
-| `docs:` | Cambiar documentación. | `docs: update backend API documentation` |
-| `refactor:` | Reorganizar la implementación sin cambiar el comportamiento. | `refactor: organize database initialization scripts` |
-| `test:` | Añadir o actualizar pruebas. | `test: add demo account authorization tests` |
-| `chore:` | Mantener las herramientas o la configuración del proyecto. | `chore: update Docker development settings` |
+| Tipo        | Cuándo usarlo                                                | Ejemplo                                                |
+| ----------- | ------------------------------------------------------------ | ------------------------------------------------------ |
+| `feat:`     | Añadir una funcionalidad.                                    | `feat: restrict demo account permissions`              |
+| `fix:`      | Corregir un comportamiento incorrecto.                       | `fix: allow demo accounts to delete their own avatars` |
+| `docs:`     | Cambiar documentación.                                       | `docs: update backend API documentation`               |
+| `refactor:` | Reorganizar la implementación sin cambiar el comportamiento. | `refactor: organize database initialization scripts`   |
+| `test:`     | Añadir o actualizar pruebas.                                 | `test: add demo account authorization tests`           |
+| `chore:`    | Mantener las herramientas o la configuración del proyecto.   | `chore: update Docker development settings`            |
 
 Otro ejemplo es `docs: add Spanish translation of frontend README`. Durante el desarrollo puedes hacer varios commits pequeños, cada uno con un propósito concreto.
 

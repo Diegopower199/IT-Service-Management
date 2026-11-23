@@ -49,16 +49,16 @@ src/
 
 The backend is a layered Spring Boot application.
 
-| Package | Responsibility |
-| --- | --- |
-| `controller` | Define REST routes, handle request validation, and build HTTP responses. |
-| `service` | Apply business rules and resource authorization, and coordinate SQL and GridFS operations. |
-| `repository` | Access relational data through Spring Data JPA. |
-| `dtos` | Define request and response payloads, including validation constraints. |
-| `model` | Map domain entities and their relationships to SQL tables. |
-| `security` | Issue and validate JWTs, authenticate requests, and handle authentication failures. |
-| `specification` | Compose JPA predicates for ticket search and filtering. |
-| `exception` | Map application and validation exceptions to HTTP error responses. |
+| Package         | Responsibility                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `controller`    | Define REST routes, handle request validation, and build HTTP responses.                   |
+| `service`       | Apply business rules and resource authorization, and coordinate SQL and GridFS operations. |
+| `repository`    | Access relational data through Spring Data JPA.                                            |
+| `dtos`          | Define request and response payloads, including validation constraints.                    |
+| `model`         | Map domain entities and their relationships to SQL tables.                                 |
+| `security`      | Issue and validate JWTs, authenticate requests, and handle authentication failures.        |
+| `specification` | Compose JPA predicates for ticket search and filtering.                                    |
+| `exception`     | Map application and validation exceptions to HTTP error responses.                         |
 
 ## Requirements
 
@@ -92,24 +92,24 @@ MySQL stores the relational records and file metadata. MongoDB stores binary fil
 
 Set these variables before starting the backend.
 
-| Variable       | Example / purpose                                                     |
-| -------------- | --------------------------------------------------------------------- |
-| `DB_URL`       | `jdbc:mysql://localhost:3306/helpdesk`                                |
-| `DB_USERNAME`  | MySQL application username                                            |
-| `DB_PASSWORD`  | MySQL application password                                            |
-| `JWT_SECRET`   | Base64-encoded signing key (at least 32 random bytes before encoding) |
+| Variable       | Example / purpose                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| `DB_URL`       | `jdbc:mysql://localhost:3306/helpdesk`                                                            |
+| `DB_USERNAME`  | MySQL application username                                                                        |
+| `DB_PASSWORD`  | MySQL application password                                                                        |
+| `JWT_SECRET`   | Base64-encoded signing key (at least 32 random bytes before encoding)                             |
 | `FRONTEND_URL` | Allowed frontend origin for CORS with credentials. For manual local use, `http://localhost:3000`. |
 
 Optional variables:
 
-| Variable                              | Default                            |
-| ------------------------------------- | ---------------------------------- |
-| `SERVER_PORT`                         | Value of `PORT` when present, then `8080` |
+| Variable                              | Default                                          |
+| ------------------------------------- | ------------------------------------------------ |
+| `SERVER_PORT`                         | Value of `PORT` when present, then `8080`        |
 | `PORT`                                | Fallback server port when `SERVER_PORT` is unset |
 | `MONGODB_URI`                         | `mongodb://localhost:27017/helpdesk_attachments` |
-| `JWT_ACCESS_TOKEN_EXPIRATION_MINUTES` | `15`                               |
-| `JWT_REFRESH_TOKEN_EXPIRATION_DAYS`   | `7`                                |
-| `COOKIE_SECURE`                       | `false`. Set to `true` for HTTPS deployments. |
+| `JWT_ACCESS_TOKEN_EXPIRATION_MINUTES` | `15`                                             |
+| `JWT_REFRESH_TOKEN_EXPIRATION_DAYS`   | `7`                                              |
+| `COOKIE_SECURE`                       | `false`. Set to `true` for HTTPS deployments.    |
 
 For local execution, use the local MySQL and MongoDB connection settings. Compose supplies its service hostnames and maps the root environment files into the backend's variables. For Render, use the MySQL-compatible JDBC URL for TiDB Cloud in `DB_URL`, the database account in `DB_USERNAME` and `DB_PASSWORD`, and the Atlas connection URI in `MONGODB_URI`. Set `FRONTEND_URL` to the Vercel frontend origin.
 
@@ -177,11 +177,11 @@ The refresh cookie is `HttpOnly`, uses `SameSite=Strict`, and is scoped to `/api
 
 Spring Security enforces role checks at the endpoint level. Application services use the authenticated account to check relationships to specific resources. Administrators create user accounts through the Users API.
 
-| Role | Ticket detail and related resources |
-| --- | --- |
-| `ADMIN` | Access to all tickets. |
+| Role         | Ticket detail and related resources                                                                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ADMIN`      | Access to all tickets.                                                                                                                                                 |
 | `TECHNICIAN` | Access to tickets assigned to them and unassigned tickets. Editing ticket details and uploading ticket-level attachments require assignment to the current technician. |
-| `USER` | Access to tickets they created or that were requested for them. Comment access is limited to public comments. |
+| `USER`       | Access to tickets they created or that were requested for them. Comment access is limited to public comments.                                                          |
 
 Separate authorization applies to operations such as assignment and workflow changes. See the [API Overview](#api-overview).
 
@@ -214,72 +214,72 @@ All paths below are relative to `/api/v1`. Routes require bearer authentication 
 
 ### Authentication and Users
 
-| Method | Path | Access and purpose |
-| --- | --- | --- |
-| `POST` | `/auth/login` | Authenticate with a username and password. |
-| `POST` | `/auth/refresh` | Renew a session using a valid refresh cookie. |
-| `POST` | `/auth/logout` | Clear the cookie and revoke its refresh token when supplied. |
-| `GET`, `POST` | `/users` | `ADMIN`. List or create users. Demo account rules apply to creation. |
-| `GET`, `PUT` | `/users/{id}` | `ADMIN`. Read or edit a user. Demo account rules apply to edits. |
-| `GET` | `/users/me` | Read the authenticated user's profile. |
-| `PUT` | `/users/me` | Edit the authenticated user's personal details. Demo accounts are read-only for this operation. |
-| `PUT` | `/users/change-password` | Change the authenticated user's password. Demo accounts have this action disabled. |
-| `GET` | `/users/options` | `ADMIN` or `TECHNICIAN`. List enabled users for selection. |
-| `GET` | `/users/technicians` | `ADMIN` or `TECHNICIAN`. List enabled technicians. |
-| `GET` | `/roles` | `ADMIN`. List predefined roles. |
-| `GET` | `/roles/{id}` | `ADMIN`. Read a predefined role. |
+| Method        | Path                     | Access and purpose                                                                              |
+| ------------- | ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `POST`        | `/auth/login`            | Authenticate with a username and password.                                                      |
+| `POST`        | `/auth/refresh`          | Renew a session using a valid refresh cookie.                                                   |
+| `POST`        | `/auth/logout`           | Clear the cookie and revoke its refresh token when supplied.                                    |
+| `GET`, `POST` | `/users`                 | `ADMIN`. List or create users. Demo account rules apply to creation.                            |
+| `GET`, `PUT`  | `/users/{id}`            | `ADMIN`. Read or edit a user. Demo account rules apply to edits.                                |
+| `GET`         | `/users/me`              | Read the authenticated user's profile.                                                          |
+| `PUT`         | `/users/me`              | Edit the authenticated user's personal details. Demo accounts are read-only for this operation. |
+| `PUT`         | `/users/change-password` | Change the authenticated user's password. Demo accounts have this action disabled.              |
+| `GET`         | `/users/options`         | `ADMIN` or `TECHNICIAN`. List enabled users for selection.                                      |
+| `GET`         | `/users/technicians`     | `ADMIN` or `TECHNICIAN`. List enabled technicians.                                              |
+| `GET`         | `/roles`                 | `ADMIN`. List predefined roles.                                                                 |
+| `GET`         | `/roles/{id}`            | `ADMIN`. Read a predefined role.                                                                |
 
 ### Catalogs
 
 In the table, `<catalog>` is one of `/departments`, `/categories`, `/priorities`, or `/statuses`.
 
-| Method | Path | Access and purpose |
-| --- | --- | --- |
-| `GET` | `<catalog>` | Authenticated users. List entries. |
-| `GET` | `<catalog>/active` | Authenticated users. List active entries. |
-| `GET` | `<catalog>/{id}` | Authenticated users. Read one entry. |
-| `POST` | `<catalog>` | `ADMIN`. Create an entry. |
-| `PUT` | `<catalog>/{id}` | `ADMIN`. Update an entry. |
-| `PATCH` | `<catalog>/{id}/activate` | `ADMIN`. Activate an entry. |
+| Method  | Path                        | Access and purpose                                      |
+| ------- | --------------------------- | ------------------------------------------------------- |
+| `GET`   | `<catalog>`                 | Authenticated users. List entries.                      |
+| `GET`   | `<catalog>/active`          | Authenticated users. List active entries.               |
+| `GET`   | `<catalog>/{id}`            | Authenticated users. Read one entry.                    |
+| `POST`  | `<catalog>`                 | `ADMIN`. Create an entry.                               |
+| `PUT`   | `<catalog>/{id}`            | `ADMIN`. Update an entry.                               |
+| `PATCH` | `<catalog>/{id}/activate`   | `ADMIN`. Activate an entry.                             |
 | `PATCH` | `<catalog>/{id}/deactivate` | `ADMIN`. Deactivate an entry, subject to catalog rules. |
 
 ### Tickets, Comments, History, and Statistics
 
-| Method | Path | Access and purpose |
-| --- | --- | --- |
-| `GET` | `/tickets` | `ADMIN`. List tickets across the system. |
-| `GET` | `/tickets/my` | List tickets created by or requested for the authenticated user. |
-| `GET` | `/tickets/assigned` | `TECHNICIAN`. List tickets assigned to the current technician. |
-| `GET` | `/tickets/unassigned` | `TECHNICIAN`. List tickets without an assigned technician, with filtering and pagination. |
-| `GET` | `/tickets/{id}` | Read a ticket using the [ticket access rules](#role-and-resource-access). |
-| `POST` | `/tickets` | Create a ticket. Accounts with role `USER` can create tickets for themselves. |
-| `PATCH` | `/tickets/{id}` | Edit ticket details subject to ticket access. Technicians must be assigned to the ticket. |
-| `PATCH` | `/tickets/{id}/assign` | `ADMIN` or `TECHNICIAN` with ticket access. The assignee must be a technician. |
-| `PATCH` | `/tickets/{id}/priority` | `ADMIN` or `TECHNICIAN` with ticket access. Change the priority. |
-| `PATCH` | `/tickets/{id}/status` | `ADMIN` or `TECHNICIAN` with ticket access. Change the status. |
-| `GET`, `POST` | `/ticket-comments/ticket/{id}` | List or add comments with ticket access. Internal comments are limited to admins and technicians with ticket access. |
-| `GET` | `/ticket-history` | `ADMIN` sees all history. `TECHNICIAN` sees history for tickets assigned to them and unassigned tickets. |
-| `GET` | `/ticket-history/ticket/{ticketId}` | Read the history of a ticket with ticket access. |
-| `GET` | `/tickets/statistics` | Dashboard counts cover all tickets for `ADMIN`, the technician's own assignments for `TECHNICIAN`, and tickets they created or that were requested for them for `USER`. |
+| Method        | Path                                | Access and purpose                                                                                                                                                      |
+| ------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`         | `/tickets`                          | `ADMIN`. List tickets across the system.                                                                                                                                |
+| `GET`         | `/tickets/my`                       | List tickets created by or requested for the authenticated user.                                                                                                        |
+| `GET`         | `/tickets/assigned`                 | `TECHNICIAN`. List tickets assigned to the current technician.                                                                                                          |
+| `GET`         | `/tickets/unassigned`               | `TECHNICIAN`. List tickets without an assigned technician, with filtering and pagination.                                                                               |
+| `GET`         | `/tickets/{id}`                     | Read a ticket using the [ticket access rules](#role-and-resource-access).                                                                                               |
+| `POST`        | `/tickets`                          | Create a ticket. Accounts with role `USER` can create tickets for themselves.                                                                                           |
+| `PATCH`       | `/tickets/{id}`                     | Edit ticket details subject to ticket access. Technicians must be assigned to the ticket.                                                                               |
+| `PATCH`       | `/tickets/{id}/assign`              | `ADMIN` or `TECHNICIAN` with ticket access. The assignee must be a technician.                                                                                          |
+| `PATCH`       | `/tickets/{id}/priority`            | `ADMIN` or `TECHNICIAN` with ticket access. Change the priority.                                                                                                        |
+| `PATCH`       | `/tickets/{id}/status`              | `ADMIN` or `TECHNICIAN` with ticket access. Change the status.                                                                                                          |
+| `GET`, `POST` | `/ticket-comments/ticket/{id}`      | List or add comments with ticket access. Internal comments are limited to admins and technicians with ticket access.                                                    |
+| `GET`         | `/ticket-history`                   | `ADMIN` sees all history. `TECHNICIAN` sees history for tickets assigned to them and unassigned tickets.                                                                |
+| `GET`         | `/ticket-history/ticket/{ticketId}` | Read the history of a ticket with ticket access.                                                                                                                        |
+| `GET`         | `/tickets/statistics`               | Dashboard counts cover all tickets for `ADMIN`, the technician's own assignments for `TECHNICIAN`, and tickets they created or that were requested for them for `USER`. |
 
 ### File endpoints
 
 Ticket attachments follow the ticket access rules. A technician must be assigned to the ticket to upload a ticket-level attachment. Comment attachments also follow comment visibility rules, and only the comment author can upload files to it.
 
-| Method | Path                                                                           | Purpose                                                           |
-| ------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| GET    | `/tickets/{ticketId}/attachments`                                              | List ticket attachments                                           |
-| POST   | `/tickets/{ticketId}/attachments`                                              | Upload a ticket attachment                                        |
-| GET    | `/tickets/{ticketId}/attachments/{attachmentId}/download`                      | Download a file                                                   |
-| GET    | `/tickets/{ticketId}/attachments/{attachmentId}/preview`                       | Preview a file                                                    |
-| GET    | `/tickets/{ticketId}/comments/{commentId}/attachments`                         | List comment attachments                                          |
-| POST   | `/tickets/{ticketId}/comments/{commentId}/attachments`                         | Upload a comment attachment                                       |
-| GET    | `/tickets/{ticketId}/comments/{commentId}/attachments/{attachmentId}/download` | Download a comment file                                           |
-| GET    | `/tickets/{ticketId}/comments/{commentId}/attachments/{attachmentId}/preview`  | Preview a comment file                                            |
-| GET    | `/users/{userId}/avatar/metadata`                                              | Retrieve avatar metadata as an authenticated user. |
+| Method | Path                                                                           | Purpose                                                                                          |
+| ------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| GET    | `/tickets/{ticketId}/attachments`                                              | List ticket attachments                                                                          |
+| POST   | `/tickets/{ticketId}/attachments`                                              | Upload a ticket attachment                                                                       |
+| GET    | `/tickets/{ticketId}/attachments/{attachmentId}/download`                      | Download a file                                                                                  |
+| GET    | `/tickets/{ticketId}/attachments/{attachmentId}/preview`                       | Preview a file                                                                                   |
+| GET    | `/tickets/{ticketId}/comments/{commentId}/attachments`                         | List comment attachments                                                                         |
+| POST   | `/tickets/{ticketId}/comments/{commentId}/attachments`                         | Upload a comment attachment                                                                      |
+| GET    | `/tickets/{ticketId}/comments/{commentId}/attachments/{attachmentId}/download` | Download a comment file                                                                          |
+| GET    | `/tickets/{ticketId}/comments/{commentId}/attachments/{attachmentId}/preview`  | Preview a comment file                                                                           |
+| GET    | `/users/{userId}/avatar/metadata`                                              | Retrieve avatar metadata as an authenticated user.                                               |
 | GET    | `/users/{userId}/avatar`                                                       | Retrieve an avatar as an authenticated user. Returns `204` if the user exists without an avatar. |
-| PUT    | `/users/me/avatar`                                                             | Upload or replace own avatar                                      |
-| DELETE | `/users/me/avatar`                                                             | Remove own avatar                                                 |
+| PUT    | `/users/me/avatar`                                                             | Upload or replace own avatar                                                                     |
+| DELETE | `/users/me/avatar`                                                             | Remove own avatar                                                                                |
 
 ### Filtering and errors
 

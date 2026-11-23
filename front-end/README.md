@@ -137,19 +137,19 @@ Open **http://localhost:3000**. Ensure the backend is running and its CORS confi
 
 ### Local and Docker
 
-| Variable | Purpose |
-| --- | --- |
-| `NEXT_PUBLIC_WEB_SERVER` | Backend hostname as seen by the browser. The local examples use `localhost`. |
+| Variable                        | Purpose                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_WEB_SERVER`        | Backend hostname as seen by the browser. The local examples use `localhost`.                      |
 | `NEXT_PUBLIC_WEB_PORT_BACK_END` | Published Spring Boot port. Use `8080` for manual setup and local PROD, or `8081` for Docker DEV. |
 
 `src/config/env.ts` builds the base URL as `http://<host>:<port>/api/v1`. In Docker, the browser uses the published port on the host. PROD supplies both values as frontend build arguments from `.env`. DEV maps `DEV_NEXT_PUBLIC_WEB_SERVER` and `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` from `.env.dev` into the frontend container. Changes to public variables in a production build require rebuilding the frontend image.
 
 ### Cloud on Vercel
 
-| Variable | Purpose |
-| --- | --- |
+| Variable                   | Purpose                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `NEXT_PUBLIC_API_BASE_URL` | Set to `/api/v1` so browser requests use the Vercel frontend origin. This value takes precedence over the local API variables. |
-| `BACKEND_PROXY_URL` | Server-side Next.js setting for the Spring Boot origin on Render. |
+| `BACKEND_PROXY_URL`        | Server-side Next.js setting for the Spring Boot origin on Render.                                                              |
 
 When `BACKEND_PROXY_URL` is set, `next.config.ts` rewrites `/api/v1/:path*` to the same path on the Render backend. Keep `BACKEND_PROXY_URL` in the server environment without a `NEXT_PUBLIC_` prefix. Public variables are exposed to the browser and must contain only public values. See the [cloud architecture in the main README](../README.md#cloud-architecture).
 
@@ -167,11 +167,11 @@ When `BACKEND_PROXY_URL` is set, `next.config.ts` rewrites `/api/v1/:path*` to t
 
 The sidebar and ticket screens adapt navigation and actions to the authenticated role. Spring Boot enforces authorization for each API request, including access to specific tickets and files.
 
-| Role | Interface |
-| --- | --- |
-| `ADMIN` | Dashboard, tickets, profile, user and catalog administration, and the role catalog. |
-| `TECHNICIAN` | Dashboard, assigned ticket list, profile, and ticket actions where permitted. |
-| `USER` | Dashboard, tickets they created or that were requested for them, public comments, and profile. |
+| Role         | Interface                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| `ADMIN`      | Dashboard, tickets, profile, user and catalog administration, and the role catalog.            |
+| `TECHNICIAN` | Dashboard, assigned ticket list, profile, and ticket actions where permitted.                  |
+| `USER`       | Dashboard, tickets they created or that were requested for them, public comments, and profile. |
 
 - `admin_demo` can manage unprotected `USER` and `TECHNICIAN` accounts. The Users interface makes `admin`, `admin_demo`, `technician_demo`, and `user_demo` read-only for `admin_demo` and prevents granting `ADMIN`.
 - `technician_demo` and `user_demo` retain the ticket and dashboard features of their roles.
@@ -204,11 +204,11 @@ To add a locale, create its module JSON files, register the locale and its names
 
 File operations use dedicated Axios services in the feature modules.
 
-| Service | Operations | Accepted formats | Maximum per file |
-| --- | --- | --- | --- |
-| `ticketAttachmentService.ts` | List, upload, preview, and download ticket attachments. | PDF, JPEG, PNG | 10 MiB |
-| `ticketCommentAttachmentService.ts` | List, upload, preview, and download comment attachments. | PDF, JPEG, PNG | 10 MiB |
-| `userAvatarService.ts` | Read an avatar by user ID, and upload, replace, or delete the current user's avatar. | JPEG, PNG | 5 MiB |
+| Service                             | Operations                                                                           | Accepted formats | Maximum per file |
+| ----------------------------------- | ------------------------------------------------------------------------------------ | ---------------- | ---------------- |
+| `ticketAttachmentService.ts`        | List, upload, preview, and download ticket attachments.                              | PDF, JPEG, PNG   | 10 MiB           |
+| `ticketCommentAttachmentService.ts` | List, upload, preview, and download comment attachments.                             | PDF, JPEG, PNG   | 10 MiB           |
+| `userAvatarService.ts`              | Read an avatar by user ID, and upload, replace, or delete the current user's avatar. | JPEG, PNG        | 5 MiB            |
 
 Uploads send the file in a `FormData` field named `file`. Comment attachments are selected while writing a comment and uploaded after the comment is created. Previews and downloads use `Blob` responses and object URLs. The backend enforces permissions and file validation.
 
@@ -218,7 +218,7 @@ After an avatar is uploaded, replaced, or deleted, the profile refreshes its ima
 
 | Route                    | Description                              |
 | ------------------------ | ---------------------------------------- |
-| `/`                     | Redirect to `/login`                     |
+| `/`                      | Redirect to `/login`                     |
 | `/login`                 | User authentication                      |
 | `/dashboard`             | Statistics and recent tickets            |
 | `/tickets`               | Ticket listing, filtering and management |
@@ -232,7 +232,7 @@ After an avatar is uploaded, replaced, or deleted, the profile refreshes its ima
 | `/priorities`            | Priority administration                  |
 | `/statuses`              | Status administration                    |
 | `/roles`                 | Role information                         |
-| `/403`                  | Access denied                            |
+| `/403`                   | Access denied                            |
 
 Users, departments, categories, priorities, statuses, and roles are admin pages. The ticket routes share a layout that waits for authentication and checks the ticket ID. The feature screens handle access errors from the API. `src/app/not-found.tsx` and `src/app/error.tsx` provide the not-found and unexpected-error views.
 

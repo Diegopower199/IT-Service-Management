@@ -10,44 +10,44 @@ Spring Boot uses `spring.jpa.hibernate.ddl-auto=validate`. Initialize the relati
 
 The MySQL database is named `helpdesk`. [01_create_tables.sql](./01_create_tables.sql) defines 13 InnoDB tables.
 
-| Area | Table | Purpose |
-| --- | --- | --- |
-| Configuration | `roles` | Application roles assigned to user accounts. |
-| Configuration | `departments` | Departments to which users belong. |
-| Configuration | `categories` | Ticket classifications. |
-| Configuration | `priorities` | Ticket urgency levels. |
-| Configuration | `statuses` | Ticket workflow states. |
-| Users and authentication | `users` | Login identity, profile, BCrypt password hash, enabled flag, role, and department. |
-| Users and authentication | `refresh_tokens` | User-linked refresh token hashes, creation and expiry timestamps, and revocation status. The stored hash is SHA-256. |
-| Ticket management | `tickets` | Ticket details, timestamps, creator, user receiving support, assignee, category, priority, and status. |
-| Ticket management | `ticket_comments` | Ticket conversation entries with an author and an `internal` flag. A value of `0` is public within the ticket, and `1` is internal. |
-| Ticket management | `ticket_history` | Events for ticket creation, field changes, assignment, and reassignment. Records include the actor, action, timestamp, and old and new values when relevant. |
-| File metadata | `ticket_attachments` | Metadata for files uploaded directly to tickets. |
-| File metadata | `ticket_comment_attachments` | Metadata for files uploaded to ticket comments. |
-| File metadata | `user_avatars` | Current avatar metadata, with at most one row per user. |
+| Area                     | Table                        | Purpose                                                                                                                                                      |
+| ------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Configuration            | `roles`                      | Application roles assigned to user accounts.                                                                                                                 |
+| Configuration            | `departments`                | Departments to which users belong.                                                                                                                           |
+| Configuration            | `categories`                 | Ticket classifications.                                                                                                                                      |
+| Configuration            | `priorities`                 | Ticket urgency levels.                                                                                                                                       |
+| Configuration            | `statuses`                   | Ticket workflow states.                                                                                                                                      |
+| Users and authentication | `users`                      | Login identity, profile, BCrypt password hash, enabled flag, role, and department.                                                                           |
+| Users and authentication | `refresh_tokens`             | User-linked refresh token hashes, creation and expiry timestamps, and revocation status. The stored hash is SHA-256.                                         |
+| Ticket management        | `tickets`                    | Ticket details, timestamps, creator, user receiving support, assignee, category, priority, and status.                                                       |
+| Ticket management        | `ticket_comments`            | Ticket conversation entries with an author and an `internal` flag. A value of `0` is public within the ticket, and `1` is internal.                          |
+| Ticket management        | `ticket_history`             | Events for ticket creation, field changes, assignment, and reassignment. Records include the actor, action, timestamp, and old and new values when relevant. |
+| File metadata            | `ticket_attachments`         | Metadata for files uploaded directly to tickets.                                                                                                             |
+| File metadata            | `ticket_comment_attachments` | Metadata for files uploaded to ticket comments.                                                                                                              |
+| File metadata            | `user_avatars`               | Current avatar metadata, with at most one row per user.                                                                                                      |
 
 ### Foreign keys
 
-| Source column | Referenced column | SQL constraint |
-| --- | --- | --- |
-| `users.id_role` | `roles.id_role` | `FK_users_roles` |
-| `users.id_department` | `departments.id_department` | `FK_users_departments` |
-| `refresh_tokens.id_user` | `users.id_user` | `fk_refresh_tokens_user` |
-| `tickets.id_created_by` | `users.id_user` | `FK_ticket_created_by` |
-| `tickets.id_requested_for` | `users.id_user` | `FK_ticket_requested_for` |
-| `tickets.id_assigned_to` | `users.id_user` | `FK_ticket_assigned_to` |
-| `tickets.id_category` | `categories.id_category` | `FK_ticket_category` |
-| `tickets.id_priority` | `priorities.id_priority` | `FK_ticket_priority` |
-| `tickets.id_status` | `statuses.id_status` | `FK_ticket_status` |
-| `ticket_comments.id_ticket` | `tickets.id_ticket` | `fk_ticket_comments_ticket` |
-| `ticket_comments.id_user` | `users.id_user` | `fk_ticket_comments_user` |
-| `ticket_history.id_ticket` | `tickets.id_ticket` | `fk_ticket_history_ticket` |
-| `ticket_history.id_user` | `users.id_user` | `fk_ticket_history_user` |
-| `ticket_attachments.id_ticket` | `tickets.id_ticket` | `fk_ticket_attachments_ticket` |
-| `ticket_attachments.id_uploaded_by` | `users.id_user` | `fk_ticket_attachments_user` |
+| Source column                                  | Referenced column            | SQL constraint                          |
+| ---------------------------------------------- | ---------------------------- | --------------------------------------- |
+| `users.id_role`                                | `roles.id_role`              | `FK_users_roles`                        |
+| `users.id_department`                          | `departments.id_department`  | `FK_users_departments`                  |
+| `refresh_tokens.id_user`                       | `users.id_user`              | `fk_refresh_tokens_user`                |
+| `tickets.id_created_by`                        | `users.id_user`              | `FK_ticket_created_by`                  |
+| `tickets.id_requested_for`                     | `users.id_user`              | `FK_ticket_requested_for`               |
+| `tickets.id_assigned_to`                       | `users.id_user`              | `FK_ticket_assigned_to`                 |
+| `tickets.id_category`                          | `categories.id_category`     | `FK_ticket_category`                    |
+| `tickets.id_priority`                          | `priorities.id_priority`     | `FK_ticket_priority`                    |
+| `tickets.id_status`                            | `statuses.id_status`         | `FK_ticket_status`                      |
+| `ticket_comments.id_ticket`                    | `tickets.id_ticket`          | `fk_ticket_comments_ticket`             |
+| `ticket_comments.id_user`                      | `users.id_user`              | `fk_ticket_comments_user`               |
+| `ticket_history.id_ticket`                     | `tickets.id_ticket`          | `fk_ticket_history_ticket`              |
+| `ticket_history.id_user`                       | `users.id_user`              | `fk_ticket_history_user`                |
+| `ticket_attachments.id_ticket`                 | `tickets.id_ticket`          | `fk_ticket_attachments_ticket`          |
+| `ticket_attachments.id_uploaded_by`            | `users.id_user`              | `fk_ticket_attachments_user`            |
 | `ticket_comment_attachments.id_ticket_comment` | `ticket_comments.id_comment` | `fk_ticket_comment_attachments_comment` |
-| `ticket_comment_attachments.id_uploaded_by` | `users.id_user` | `fk_ticket_comment_attachments_user` |
-| `user_avatars.id_user` | `users.id_user` | `fk_user_avatars_user` |
+| `ticket_comment_attachments.id_uploaded_by`    | `users.id_user`              | `fk_ticket_comment_attachments_user`    |
+| `user_avatars.id_user`                         | `users.id_user`              | `fk_user_avatars_user`                  |
 
 `id_created_by` identifies the user who submitted the ticket. `id_requested_for` identifies the user who needs support and can be the same as the creator. Both are required. `id_assigned_to` identifies the technician responsible for the ticket and can be `NULL` while it is unassigned. Spring Boot validates the assignee's role. All three foreign keys reference `users`.
 
@@ -55,23 +55,23 @@ The MySQL database is named `helpdesk`. [01_create_tables.sql](./01_create_table
 
 [02_seed_reference_data.sql](./02_seed_reference_data.sql) loads the following catalogs. All seed entries in catalogs with an `active` flag start active.
 
-| Catalog | Initial values | Administration rules |
-| --- | --- | --- |
-| Roles (3) | `ADMIN`, `TECHNICIAN`, `USER` | Fixed application roles. The roles API is read-only. |
-| Departments (14) | IT, Finance, Human Resources, Sales, Marketing, Legal, Operations, Security, Customer Support, Procurement, Facilities, Logistics, Product Development, Quality Assurance | Administrators can create, edit, activate, and deactivate department entries. |
-| Categories (14) | Hardware, Software, Network, Access, Security, Email, Printers and Scanners, Mobile Devices, Remote Access, Cloud Services, Backup and Recovery, Collaboration Tools, Databases, Telephony | Administrators can create, edit, activate, and deactivate category entries. |
-| Priorities (6) | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`, `VERY_LOW`, `URGENT` | The backend blocks edits and deactivation for `LOW`, `MEDIUM`, `HIGH`, and `CRITICAL`. Administrators can manage custom priorities such as `VERY_LOW` and `URGENT`. The critical-ticket counter uses `CRITICAL` only. |
-| Statuses (5) | `OPEN`, `IN_PROGRESS`, `BLOCKED`, `RESOLVED`, `CLOSED` | The backend blocks edits and deactivation for all five seeded statuses. Administrators can create and manage additional statuses. |
+| Catalog          | Initial values                                                                                                                                                                             | Administration rules                                                                                                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Roles (3)        | `ADMIN`, `TECHNICIAN`, `USER`                                                                                                                                                              | Fixed application roles. The roles API is read-only.                                                                                                                                                                  |
+| Departments (14) | IT, Finance, Human Resources, Sales, Marketing, Legal, Operations, Security, Customer Support, Procurement, Facilities, Logistics, Product Development, Quality Assurance                  | Administrators can create, edit, activate, and deactivate department entries.                                                                                                                                         |
+| Categories (14)  | Hardware, Software, Network, Access, Security, Email, Printers and Scanners, Mobile Devices, Remote Access, Cloud Services, Backup and Recovery, Collaboration Tools, Databases, Telephony | Administrators can create, edit, activate, and deactivate category entries.                                                                                                                                           |
+| Priorities (6)   | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`, `VERY_LOW`, `URGENT`                                                                                                                                  | The backend blocks edits and deactivation for `LOW`, `MEDIUM`, `HIGH`, and `CRITICAL`. Administrators can manage custom priorities such as `VERY_LOW` and `URGENT`. The critical-ticket counter uses `CRITICAL` only. |
+| Statuses (5)     | `OPEN`, `IN_PROGRESS`, `BLOCKED`, `RESOLVED`, `CLOSED`                                                                                                                                     | The backend blocks edits and deactivation for all five seeded statuses. Administrators can create and manage additional statuses.                                                                                     |
 
 ## Hybrid File Storage
 
 Spring Boot stores binary files through GridFS in the `helpdesk_attachments` database. MySQL stores the metadata for each file.
 
-| MySQL metadata table | Row identifier | Associated user | MongoDB GridFS bucket |
-| --- | --- | --- | --- |
-| `ticket_attachments` | `id_attachment` | `id_uploaded_by` | `ticket_files` |
+| MySQL metadata table         | Row identifier  | Associated user  | MongoDB GridFS bucket  |
+| ---------------------------- | --------------- | ---------------- | ---------------------- |
+| `ticket_attachments`         | `id_attachment` | `id_uploaded_by` | `ticket_files`         |
 | `ticket_comment_attachments` | `id_attachment` | `id_uploaded_by` | `ticket_comment_files` |
-| `user_avatars` | `id_avatar` | `id_user` | `user_avatars` |
+| `user_avatars`               | `id_avatar`     | `id_user`        | `user_avatars`         |
 
 Each row stores `file_name`, `content_type` (MIME type), `file_size` (bytes), and `mongo_file_id`. The last field stores the 24-character hexadecimal ObjectId of the GridFS file in the corresponding bucket. Its value is unique within each SQL metadata table. The `uq_user_avatars_user` constraint limits each user to one avatar metadata row.
 
@@ -89,13 +89,13 @@ These cleanup operations are best effort. A failure can leave an unreferenced fi
 
 Run the applicable scripts in order when setting up a new database. The script under `local/` is a manual preparation step.
 
-| Script | Description |
-| --- | --- |
-| `local/00_setup_local_database.sql` | Creates `helpdesk` with `utf8mb4` and `utf8mb4_0900_ai_ci` and displays its definition. Configure the MySQL account and its grants separately when needed. |
-| `01_create_tables.sql` | Creates the 13 tables, relationships, and constraints. |
-| `02_seed_reference_data.sql` | Loads the initial roles, departments, categories, priorities, and statuses. |
-| `03_seed_admin.sql` | Creates the private application administrator `admin` when the owner has prepared this local file. It is excluded by [database/.gitignore](./.gitignore) and absent from a fresh clone. |
-| `04_seed_demo_data.sql` | Loads public demo accounts, additional test users, sample tickets, comments, and history. Include it for test and portfolio demo environments. |
+| Script                              | Description                                                                                                                                                                             |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `local/00_setup_local_database.sql` | Creates `helpdesk` with `utf8mb4` and `utf8mb4_0900_ai_ci` and displays its definition. Configure the MySQL account and its grants separately when needed.                              |
+| `01_create_tables.sql`              | Creates the 13 tables, relationships, and constraints.                                                                                                                                  |
+| `02_seed_reference_data.sql`        | Loads the initial roles, departments, categories, priorities, and statuses.                                                                                                             |
+| `03_seed_admin.sql`                 | Creates the private application administrator `admin` when the owner has prepared this local file. It is excluded by [database/.gitignore](./.gitignore) and absent from a fresh clone. |
+| `04_seed_demo_data.sql`             | Loads public demo accounts, additional test users, sample tickets, comments, and history. Include it for test and portfolio demo environments.                                          |
 
 The schema and seed scripts are intended for a new, empty database. Run `01` and then `02`. Run `03` if the private seed is available, then `04` if you need the demo data. The demo script looks up the catalogs from `02` and uses accounts it inserts itself, including `admin_demo`. It can run after `02` without the private seed. The schema and seed scripts are not designed for repeated execution. The project has no automatic schema migration tool.
 
@@ -117,9 +117,9 @@ The MySQL healthcheck runs `SELECT 1` over TCP with the configured application d
 
 ### Persistent volumes
 
-| Data | DEV volume | Local PROD volume |
-| --- | --- | --- |
-| MySQL | `helpdesk-dev_mysql_data` | `helpdesk-prod_mysql_data` |
+| Data    | DEV volume                | Local PROD volume          |
+| ------- | ------------------------- | -------------------------- |
+| MySQL   | `helpdesk-dev_mysql_data` | `helpdesk-prod_mysql_data` |
 | MongoDB | `helpdesk-dev_mongo_data` | `helpdesk-prod_mongo_data` |
 
 Each environment uses its own named volumes. Recreating containers preserves the data in those volumes. Reusing an initialized MySQL volume skips the SQL scripts, even if the files have changed. Apply schema changes explicitly to existing databases when needed.
@@ -159,18 +159,18 @@ The local MongoDB URI matches the default in [application.properties](../back-en
 
 The [demo seed](./04_seed_demo_data.sql) creates these three public accounts for the portfolio demonstration. Their credentials are listed under [Demo accounts in the main README](../README.md#demo-accounts).
 
-| Username | Role |
-| --- | --- |
-| `admin_demo` | `ADMIN` |
+| Username          | Role         |
+| ----------------- | ------------ |
+| `admin_demo`      | `ADMIN`      |
 | `technician_demo` | `TECHNICIAN` |
-| `user_demo` | `USER` |
+| `user_demo`       | `USER`       |
 
 | Records inserted by `04_seed_demo_data.sql` | Count |
-| --- | ---: |
-| Users, including the three public accounts | 15 |
-| Tickets | 60 |
-| Ticket comments | 175 |
-| Ticket history events | 218 |
+| ------------------------------------------- | ----: |
+| Users, including the three public accounts  |    15 |
+| Tickets                                     |    60 |
+| Ticket comments                             |   175 |
+| Ticket history events                       |   218 |
 
 The private application account `admin` is created separately by `03_seed_admin.sql` when the file is available. A fresh schema seeded with both files has 16 users. The demo seed stores BCrypt password hashes and includes tickets that vary by creator, user receiving support, technician assignment, priority, category, and status. It includes unassigned tickets and both public and internal comments.
 
@@ -260,10 +260,10 @@ Compare the GridFS filename and byte length with the SQL metadata and retrieve t
 
 ## Local and Cloud Databases
 
-| Environment | Relational storage | Binary file storage | Backend configuration |
-| --- | --- | --- | --- |
-| Local | MySQL in Docker or installed directly | Local MongoDB GridFS | Compose supplies the service connection settings. For manual setup, set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `MONGODB_URI` as shown above. |
-| Cloud | TiDB Cloud, using its MySQL-compatible interface | MongoDB Atlas GridFS | Spring Boot runs on Render. Set the same environment variables there with the values for the hosted services. |
+| Environment | Relational storage                               | Binary file storage  | Backend configuration                                                                                                                             |
+| ----------- | ------------------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local       | MySQL in Docker or installed directly            | Local MongoDB GridFS | Compose supplies the service connection settings. For manual setup, set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `MONGODB_URI` as shown above. |
+| Cloud       | TiDB Cloud, using its MySQL-compatible interface | MongoDB Atlas GridFS | Spring Boot runs on Render. Set the same environment variables there with the values for the hosted services.                                     |
 
 See the [cloud architecture in the main README](../README.md#cloud-architecture) for application context.
 

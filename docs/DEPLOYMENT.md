@@ -16,11 +16,11 @@ flowchart LR
     R -->|GridFS + TLS| M["MongoDB Atlas"]
 ```
 
-| Environment | Applications | Databases |
-| --- | --- | --- |
-| Docker DEV | Next.js on `http://localhost:3001` and Spring Boot on `http://localhost:8081/api/v1`, with mounted source code. | MySQL and MongoDB in `helpdesk-dev`. |
-| Local Docker PROD | Compiled images on `http://localhost:3000` and `http://localhost:8080/api/v1`. | MySQL and MongoDB in `helpdesk-prod`. |
-| Public cloud | Vercel builds Next.js, and Render builds the Spring Boot image. The browser uses the Vercel HTTPS origin. | TiDB Cloud and MongoDB Atlas are provisioned separately. The deployment operator initializes the SQL schema. |
+| Environment       | Applications                                                                                                    | Databases                                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Docker DEV        | Next.js on `http://localhost:3001` and Spring Boot on `http://localhost:8081/api/v1`, with mounted source code. | MySQL and MongoDB in `helpdesk-dev`.                                                                         |
+| Local Docker PROD | Compiled images on `http://localhost:3000` and `http://localhost:8080/api/v1`.                                  | MySQL and MongoDB in `helpdesk-prod`.                                                                        |
+| Public cloud      | Vercel builds Next.js, and Render builds the Spring Boot image. The browser uses the Vercel HTTPS origin.       | TiDB Cloud and MongoDB Atlas are provisioned separately. The deployment operator initializes the SQL schema. |
 
 The Compose files and sample environment files describe local setups. Keep the cloud settings in the providers' dashboards. [Docker Workflow](../DOCKER-WORKFLOW.md)
 
@@ -43,12 +43,12 @@ The Compose files and sample environment files describe local setups. Keep the c
    SOURCE database/02_seed_reference_data.sql;
    ```
 
-| Order | Script | Purpose |
-| --- | --- | --- |
-| 1 | `01_create_tables.sql` | Create the tables and foreign keys. |
-| 2 | `02_seed_reference_data.sql` | Insert the initial catalogs and roles. |
-| 3 | `03_seed_admin.sql` | Initialize the private application administrator if the owner prepared the local file. It is ignored by Git and is absent from a fresh clone. |
-| 4 | `04_seed_demo_data.sql` | Load the public demo accounts and sample data when deploying the portfolio demo. It works without the private seed. |
+| Order | Script                       | Purpose                                                                                                                                       |
+| ----- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | `01_create_tables.sql`       | Create the tables and foreign keys.                                                                                                           |
+| 2     | `02_seed_reference_data.sql` | Insert the initial catalogs and roles.                                                                                                        |
+| 3     | `03_seed_admin.sql`          | Initialize the private application administrator if the owner prepared the local file. It is ignored by Git and is absent from a fresh clone. |
+| 4     | `04_seed_demo_data.sql`      | Load the public demo accounts and sample data when deploying the portfolio demo. It works without the private seed.                           |
 
 In local Docker, the MySQL image runs the root SQL files when it initializes an empty volume. In the cloud, run the scripts yourself before starting Render. The Dockerfile packages the backend, and Hibernate uses `spring.jpa.hibernate.ddl-auto=validate` to check the existing schema. Keep the private seed local and avoid rerunning the seed files on an existing database. [Database initialization](../database/README.md#sql-initialization-scripts)
 
@@ -74,11 +74,11 @@ DB_URL=jdbc:mysql://TIDB_HOST:TIDB_PORT/helpdesk?sslMode=VERIFY_IDENTITY
 2. Create an Atlas **database user** for the backend with `readWrite` scoped to `helpdesk_attachments`. This scope supports the application's GridFS uploads, reads, and deletions. Keep those credentials separate from your Atlas dashboard account.
 3. In Atlas, choose the driver connection method and get the Java driver URI. Insert the database name `helpdesk_attachments` in the URI path before the query string and retain the Atlas connection options. Percent-encode reserved characters in the credentials. Store the complete URI only as `MONGODB_URI` in Render. `mongodb+srv://` enables TLS by default in the Java driver. Keep certificate and hostname validation enabled. [Atlas driver setup](https://www.mongodb.com/docs/atlas/driver-connection/) · [MongoDB Java driver TLS](https://www.mongodb.com/docs/drivers/java/sync/current/security/tls/)
 
-| GridFS bucket | File type | SQL metadata table |
-| --- | --- | --- |
-| `ticket_files` | Ticket attachments | `ticket_attachments` |
+| GridFS bucket          | File type           | SQL metadata table           |
+| ---------------------- | ------------------- | ---------------------------- |
+| `ticket_files`         | Ticket attachments  | `ticket_attachments`         |
 | `ticket_comment_files` | Comment attachments | `ticket_comment_attachments` |
-| `user_avatars` | Profile images | `user_avatars` |
+| `user_avatars`         | Profile images      | `user_avatars`               |
 
 GridFS creates a bucket's `.files` and `.chunks` collections as needed when it stores files. A fresh deployment can have an empty database until the first upload. A test upload during validation is enough to initialize those collections. [GridFS with the Java driver](https://www.mongodb.com/docs/drivers/java/sync/current/crud/gridfs/)
 
@@ -90,19 +90,19 @@ Create a **Web Service** in Render, connect the Help Desk Git repository and the
 
 Set these values in the Render service environment. Use the HTTPS origins provided by the dashboards. Replace the host and port placeholders in the examples with the actual values.
 
-| Variable | Requirement and value |
-| --- | --- |
-| `DB_URL` | Required. Use the TiDB JDBC URL with certificate and hostname verification, as shown above. |
-| `DB_USERNAME` | Required. Use the TiDB application username in its full connection format. |
-| `DB_PASSWORD` | Required. Use the TiDB application password. Store it as a secret. |
-| `MONGODB_URI` | Required for this cloud deployment. Use the Atlas driver URI for `helpdesk_attachments`. The code defaults to `mongodb://localhost:27017/helpdesk_attachments` for local use. |
-| `JWT_SECRET` | Required. Use a Base64 signing key generated from at least 32 cryptographically random bytes. Store it as a secret. |
-| `FRONTEND_URL` | Required. Use the exact Vercel HTTPS origin, such as `https://VERCEL_HOST`, with no path or trailing slash. |
-| `COOKIE_SECURE` | Set `true` for HTTPS in the cloud. The application default is `false` for local use. |
-| `SERVER_PORT` | Optional. This overrides `PORT` when set. Leave it unset to use the port supplied by Render. |
-| `PORT` | Provided by Render for its Web Service. Spring Boot uses it when `SERVER_PORT` is unset and falls back to `8080` when both are absent. |
-| `JWT_ACCESS_TOKEN_EXPIRATION_MINUTES` | Optional. Defaults to `15` minutes. |
-| `JWT_REFRESH_TOKEN_EXPIRATION_DAYS` | Optional. Defaults to `7` days. |
+| Variable                              | Requirement and value                                                                                                                                                         |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DB_URL`                              | Required. Use the TiDB JDBC URL with certificate and hostname verification, as shown above.                                                                                   |
+| `DB_USERNAME`                         | Required. Use the TiDB application username in its full connection format.                                                                                                    |
+| `DB_PASSWORD`                         | Required. Use the TiDB application password. Store it as a secret.                                                                                                            |
+| `MONGODB_URI`                         | Required for this cloud deployment. Use the Atlas driver URI for `helpdesk_attachments`. The code defaults to `mongodb://localhost:27017/helpdesk_attachments` for local use. |
+| `JWT_SECRET`                          | Required. Use a Base64 signing key generated from at least 32 cryptographically random bytes. Store it as a secret.                                                           |
+| `FRONTEND_URL`                        | Required. Use the exact Vercel HTTPS origin, such as `https://VERCEL_HOST`, with no path or trailing slash.                                                                   |
+| `COOKIE_SECURE`                       | Set `true` for HTTPS in the cloud. The application default is `false` for local use.                                                                                          |
+| `SERVER_PORT`                         | Optional. This overrides `PORT` when set. Leave it unset to use the port supplied by Render.                                                                                  |
+| `PORT`                                | Provided by Render for its Web Service. Spring Boot uses it when `SERVER_PORT` is unset and falls back to `8080` when both are absent.                                        |
+| `JWT_ACCESS_TOKEN_EXPIRATION_MINUTES` | Optional. Defaults to `15` minutes.                                                                                                                                           |
+| `JWT_REFRESH_TOKEN_EXPIRATION_DAYS`   | Optional. Defaults to `7` days.                                                                                                                                               |
 
 See the signing-key instructions in the main README and store the resulting key in Render. [JWT signing key](../README.md#jwt-signing-key) · [Render environment variables and secrets](https://render.com/docs/configure-environment-variables)
 
@@ -147,32 +147,32 @@ The demo seed provides `admin_demo`, `technician_demo`, and `user_demo`. Their p
 
 This is a checklist to run after deployment. Record the environment, revision, and outcome of each check.
 
-| Check | How to verify |
-| --- | --- |
-| Backend startup | Review Render's runtime logs for a completed Spring Boot startup, the expected listening port, and no unresolved startup errors. |
-| TiDB connection | Confirm Hibernate validates the schema and the API reads seeded relational data. Review JDBC errors in Render's logs if the check fails. |
-| Atlas connection | Check Render for MongoDB connection errors. Confirm an actual upload and retrieval through a GridFS-backed operation, since startup alone does not establish that storage works. |
-| Vercel to Render proxy | In the browser's Network panel, verify that an API call goes to the Vercel origin under `/api/v1` and returns a Spring Boot response. Check Vercel deployment logs and Render runtime logs if it fails. |
-| Login | Sign in from the Vercel UI with an authorized test account. Check that `POST /api/v1/auth/login` succeeds and the browser accepts the refresh cookie with `HttpOnly`, `Secure`, and `SameSite=Strict`. Keep token and cookie values out of shared logs. |
-| Session renewal | Leave the session signed in until the access token expires. Trigger a protected request and verify that `POST /api/v1/auth/refresh` succeeds, the cookie is rotated, and the retried request succeeds. |
-| Demo ticket access | Try `GET /api/v1/tickets` as `admin_demo`, `GET /api/v1/tickets/assigned` as `technician_demo`, and `GET /api/v1/tickets/my` as `user_demo`. Compare the results with each role's visible tickets. |
-| Comments | Add a public comment to an authorized test ticket through `POST /api/v1/ticket-comments/ticket/{id}` and confirm it appears on reload. |
-| Attachments and avatars | Upload and retrieve a small test file through `/api/v1/tickets/{ticketId}/attachments` or `/api/v1/tickets/{ticketId}/comments/{commentId}/attachments` with an account allowed to upload. Upload, replace, and remove a demo account's own test avatar through `/api/v1/users/me/avatar`. Check the appropriate metadata and GridFS bucket where you have access. |
+| Check                        | How to verify                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend startup              | Review Render's runtime logs for a completed Spring Boot startup, the expected listening port, and no unresolved startup errors.                                                                                                                                                                                                                                                                         |
+| TiDB connection              | Confirm Hibernate validates the schema and the API reads seeded relational data. Review JDBC errors in Render's logs if the check fails.                                                                                                                                                                                                                                                                 |
+| Atlas connection             | Check Render for MongoDB connection errors. Confirm an actual upload and retrieval through a GridFS-backed operation, since startup alone does not establish that storage works.                                                                                                                                                                                                                         |
+| Vercel to Render proxy       | In the browser's Network panel, verify that an API call goes to the Vercel origin under `/api/v1` and returns a Spring Boot response. Check Vercel deployment logs and Render runtime logs if it fails.                                                                                                                                                                                                  |
+| Login                        | Sign in from the Vercel UI with an authorized test account. Check that `POST /api/v1/auth/login` succeeds and the browser accepts the refresh cookie with `HttpOnly`, `Secure`, and `SameSite=Strict`. Keep token and cookie values out of shared logs.                                                                                                                                                  |
+| Session renewal              | Leave the session signed in until the access token expires. Trigger a protected request and verify that `POST /api/v1/auth/refresh` succeeds, the cookie is rotated, and the retried request succeeds.                                                                                                                                                                                                   |
+| Demo ticket access           | Try `GET /api/v1/tickets` as `admin_demo`, `GET /api/v1/tickets/assigned` as `technician_demo`, and `GET /api/v1/tickets/my` as `user_demo`. Compare the results with each role's visible tickets.                                                                                                                                                                                                       |
+| Comments                     | Add a public comment to an authorized test ticket through `POST /api/v1/ticket-comments/ticket/{id}` and confirm it appears on reload.                                                                                                                                                                                                                                                                   |
+| Attachments and avatars      | Upload and retrieve a small test file through `/api/v1/tickets/{ticketId}/attachments` or `/api/v1/tickets/{ticketId}/comments/{commentId}/attachments` with an account allowed to upload. Upload, replace, and remove a demo account's own test avatar through `/api/v1/users/me/avatar`. Check the appropriate metadata and GridFS bucket where you have access.                                       |
 | Demo restrictions in the API | With demo accounts, verify that valid attempts to edit personal details via `PUT /api/v1/users/me` or change passwords via `PUT /api/v1/users/change-password` return `403`. As `admin_demo`, verify `403` when trying to edit a protected user via `PUT /api/v1/users/{id}` or create a user with the `ADMIN` role via `POST /api/v1/users`. Run write checks in a controlled demo or test environment. |
 
 ## Troubleshooting
 
-| Symptom | Where to look and what to verify |
-| --- | --- |
-| Render build fails | Read the first failing step in the Render build log. Check the tracked Dockerfile, build context, `pom.xml`, and Maven dependency resolution. For a Vercel build failure, inspect the build log, root directory, Node.js version, and lockfile install. |
-| Missing variables or startup failure | Check the Render service environment for every required backend value. In Vercel, check the variable names and the deployment scope. Local sample files do not populate the cloud service environments. |
-| TiDB JDBC connection fails | Check Render's runtime logs for authentication, timeout, TLS, or schema-validation errors. Confirm the TiDB host, port, username format, database name, network access, and the runtime CA trust. Confirm the SQL scripts completed in the intended schema. |
-| Atlas TLS or network error | Look for DNS, socket timeout, authentication, or certificate errors in Render. Check Atlas network access against the Render service's outbound ranges, the database user permissions, the URI path and reserved characters, and the Java runtime's truststore. Keep TLS and hostname verification enabled. |
-| CORS or origin rejection | Check the request URL and `Origin` in the Network panel. Confirm calls use `/api/v1` on Vercel and that `FRONTEND_URL` matches the actual frontend origin. Check whether the browser is using a preview domain. |
-| `401` or `403` | For `401`, check login credentials, the Bearer header, expiration, and the refresh flow. For `403`, inspect the response and verify the account's role and resource permissions or the request origin. Demo profile denials are expected. |
-| Proxy returns `404` or `502` | For `404`, compare the HTTP method and path with the backend API, check both Vercel variables, and ensure the proxy origin has no `/api/v1` suffix. For `502`, inspect Vercel and Render logs for an unreachable origin, an unhealthy backend, a timeout, or a failed deployment. |
-| Refresh cookie fails | In the browser, inspect whether the login response stored the cookie and whether the refresh request includes it. Check HTTPS, `COOKIE_SECURE`, `SameSite=Strict`, `Path=/api/v1/auth`, and whether login and refresh go through the same Vercel origin. Check Render logs for refresh expiration or revocation. |
-| Old variables or local-only behavior | Check the active deployment and its scope in Vercel, then redeploy with the saved values. On Render, confirm the running revision uses the intended environment. Compare local and cloud host settings, ports, TLS, cookie settings, and the Vercel rewrite. |
+| Symptom                              | Where to look and what to verify                                                                                                                                                                                                                                                                                 |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Render build fails                   | Read the first failing step in the Render build log. Check the tracked Dockerfile, build context, `pom.xml`, and Maven dependency resolution. For a Vercel build failure, inspect the build log, root directory, Node.js version, and lockfile install.                                                          |
+| Missing variables or startup failure | Check the Render service environment for every required backend value. In Vercel, check the variable names and the deployment scope. Local sample files do not populate the cloud service environments.                                                                                                          |
+| TiDB JDBC connection fails           | Check Render's runtime logs for authentication, timeout, TLS, or schema-validation errors. Confirm the TiDB host, port, username format, database name, network access, and the runtime CA trust. Confirm the SQL scripts completed in the intended schema.                                                      |
+| Atlas TLS or network error           | Look for DNS, socket timeout, authentication, or certificate errors in Render. Check Atlas network access against the Render service's outbound ranges, the database user permissions, the URI path and reserved characters, and the Java runtime's truststore. Keep TLS and hostname verification enabled.      |
+| CORS or origin rejection             | Check the request URL and `Origin` in the Network panel. Confirm calls use `/api/v1` on Vercel and that `FRONTEND_URL` matches the actual frontend origin. Check whether the browser is using a preview domain.                                                                                                  |
+| `401` or `403`                       | For `401`, check login credentials, the Bearer header, expiration, and the refresh flow. For `403`, inspect the response and verify the account's role and resource permissions or the request origin. Demo profile denials are expected.                                                                        |
+| Proxy returns `404` or `502`         | For `404`, compare the HTTP method and path with the backend API, check both Vercel variables, and ensure the proxy origin has no `/api/v1` suffix. For `502`, inspect Vercel and Render logs for an unreachable origin, an unhealthy backend, a timeout, or a failed deployment.                                |
+| Refresh cookie fails                 | In the browser, inspect whether the login response stored the cookie and whether the refresh request includes it. Check HTTPS, `COOKIE_SECURE`, `SameSite=Strict`, `Path=/api/v1/auth`, and whether login and refresh go through the same Vercel origin. Check Render logs for refresh expiration or revocation. |
+| Old variables or local-only behavior | Check the active deployment and its scope in Vercel, then redeploy with the saved values. On Render, confirm the running revision uses the intended environment. Compare local and cloud host settings, ports, TLS, cookie settings, and the Vercel rewrite.                                                     |
 
 ## Limitations and security
 

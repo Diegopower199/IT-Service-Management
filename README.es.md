@@ -22,19 +22,19 @@ El proyecto está desarrollado con **Java, Spring Boot, Next.js, TypeScript, MyS
 
 ## Tecnologías
 
-| Capa | Tecnologías |
-| --- | --- |
-| Frontend | Next.js 16 (App Router), React 19, TypeScript 5 |
-| Interfaz | Material UI, MUI X Data Grid |
-| Cliente de API e internacionalización | Axios, next-intl |
-| Backend | Java 17, Spring Boot 4.1.1, Spring MVC, Spring Security |
-| Autenticación | Tokens de acceso JWT (HS256), hash de contraseñas con BCrypt, rotación de tokens de renovación en cookies HttpOnly |
-| Persistencia relacional | MySQL 8.4 (local), TiDB Cloud (alojado), Spring Data JPA, Hibernate |
-| Almacenamiento de archivos | MongoDB 8.0 (local), MongoDB Atlas (en la nube), Spring Data MongoDB, GridFS |
-| Infraestructura local | Docker, Docker Compose, Compose Watch |
-| Despliegue en la nube | Vercel (frontend), Render (backend) |
-| Pruebas | JUnit Jupiter 6, Mockito, Spring MockMvc, Vitest, React Testing Library |
-| Herramientas | Maven, npm, ESLint, Git |
+| Capa                                  | Tecnologías                                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Frontend                              | Next.js 16 (App Router), React 19, TypeScript 5                                                                    |
+| Interfaz                              | Material UI, MUI X Data Grid                                                                                       |
+| Cliente de API e internacionalización | Axios, next-intl                                                                                                   |
+| Backend                               | Java 17, Spring Boot 4.1.1, Spring MVC, Spring Security                                                            |
+| Autenticación                         | Tokens de acceso JWT (HS256), hash de contraseñas con BCrypt, rotación de tokens de renovación en cookies HttpOnly |
+| Persistencia relacional               | MySQL 8.4 (local), TiDB Cloud (alojado), Spring Data JPA, Hibernate                                                |
+| Almacenamiento de archivos            | MongoDB 8.0 (local), MongoDB Atlas (en la nube), Spring Data MongoDB, GridFS                                       |
+| Infraestructura local                 | Docker, Docker Compose, Compose Watch                                                                              |
+| Despliegue en la nube                 | Vercel (frontend), Render (backend)                                                                                |
+| Pruebas                               | JUnit Jupiter 6, Mockito, Spring MockMvc, Vitest, React Testing Library                                            |
+| Herramientas                          | Maven, npm, ESLint, Git                                                                                            |
 
 ## Arquitectura
 
@@ -67,11 +67,11 @@ El frontend adapta la navegación y las acciones disponibles según el rol. Spri
 
 **MongoDB / MongoDB Atlas** almacena los archivos binarios de los adjuntos de tickets, los adjuntos de comentarios y los avatares de usuario en buckets separados de GridFS.
 
-| Funcionalidad | Tabla SQL de metadatos | Bucket de MongoDB GridFS |
-| --- | --- | --- |
-| Adjuntos de tickets | `ticket_attachments` | `ticket_files` |
-| Adjuntos de comentarios de tickets | `ticket_comment_attachments` | `ticket_comment_files` |
-| Avatares de usuario | `user_avatars` | `user_avatars` |
+| Funcionalidad                      | Tabla SQL de metadatos       | Bucket de MongoDB GridFS |
+| ---------------------------------- | ---------------------------- | ------------------------ |
+| Adjuntos de tickets                | `ticket_attachments`         | `ticket_files`           |
+| Adjuntos de comentarios de tickets | `ticket_comment_attachments` | `ticket_comment_files`   |
+| Avatares de usuario                | `user_avatars`               | `user_avatars`           |
 
 Cada fila de metadatos SQL almacena un `mongo_file_id` que apunta al archivo correspondiente de GridFS. El backend valida el tamaño y la firma de los archivos subidos. Las escrituras en SQL y GridFS son operaciones separadas. El backend intenta limpiar los archivos de GridFS cuando falla la escritura de metadatos y al reemplazar o eliminar avatares.
 
@@ -87,11 +87,11 @@ En Docker local, el navegador se conecta directamente al puerto publicado de Spr
 
 Los roles determinan los permisos generales de la aplicación.
 
-| Rol | Permisos principales |
-| --- | --- |
-| **ADMIN** | Gestionar todos los tickets, usuarios y catálogos de configuración, y consultar las estadísticas generales. |
+| Rol            | Permisos principales                                                                                                                                                                           |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ADMIN**      | Gestionar todos los tickets, usuarios y catálogos de configuración, y consultar las estadísticas generales.                                                                                    |
 | **TECHNICIAN** | Consultar los tickets asignados al usuario y los tickets sin asignar, actualizar tickets y añadir comentarios internos cuando tenga permiso, y consultar las estadísticas de sus asignaciones. |
-| **USER** | Crear solicitudes de soporte, hacer seguimiento de los tickets que ha creado o que se han solicitado para él, y añadir comentarios públicos. |
+| **USER**       | Crear solicitudes de soporte, hacer seguimiento de los tickets que ha creado o que se han solicitado para él, y añadir comentarios públicos.                                                   |
 
 Los administradores pueden consultar los roles predefinidos en un catálogo de solo lectura.
 
@@ -107,10 +107,10 @@ Docker ejecuta toda la aplicación Help Desk en local. Las imágenes de los cont
 - Docker Compose 2.32.0 o posterior para DEV, que utiliza la acción `restart` de Compose Watch. Consulta la versión instalada con `docker compose version`. [Especificación de Compose Develop](https://docs.docker.com/reference/compose-file/develop/#action)
 - Puertos libres en el equipo para el entorno que quieras ejecutar. Solo el frontend y el backend publican puertos en el equipo anfitrión.
 
-| Entorno | Puerto del frontend | Puerto del backend |
-| --- | --- | --- |
-| PROD (local) | `3000` | `8080` |
-| DEV | `3001` | `8081` |
+| Entorno      | Puerto del frontend | Puerto del backend |
+| ------------ | ------------------- | ------------------ |
+| PROD (local) | `3000`              | `8080`             |
+| DEV          | `3001`              | `8081`             |
 
 Ejecuta los comandos de este apartado desde la raíz del repositorio.
 
@@ -132,15 +132,15 @@ cp .env.dev.sample .env.dev
 
 Sustituye las contraseñas y claves JWT de ejemplo antes de arrancar la aplicación. Mantén `.env`, `.env.dev` y las credenciales privadas fuera del control de versiones y de GitHub.
 
-| PROD (`.env`) | DEV (`.env.dev`) | Uso y valores en local |
-| --- | --- | --- |
-| `MYSQL_ROOT_PASSWORD` | `DEV_MYSQL_ROOT_PASSWORD` | Contraseña de la cuenta root de MySQL. |
-| `DB_USERNAME` | `DEV_DB_USERNAME` | Cuenta de MySQL que utiliza Spring Boot. Los ejemplos usan `helpdesk`. |
-| `DB_PASSWORD` | `DEV_DB_PASSWORD` | Contraseña de la cuenta de MySQL que utiliza la aplicación. |
-| `JWT_SECRET` | `DEV_JWT_SECRET` | Clave de firma de JWT codificada en Base64. |
-| `FRONTEND_URL` | `DEV_FRONTEND_URL` | Origen del navegador permitido por la API. Usa `http://localhost:3000` en PROD y `http://localhost:3001` en DEV. |
-| `NEXT_PUBLIC_WEB_SERVER` | `DEV_NEXT_PUBLIC_WEB_SERVER` | Nombre de host del backend que utiliza el navegador. Usa `localhost` en ambos entornos. |
-| `NEXT_PUBLIC_WEB_PORT_BACK_END` | `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` | Puerto publicado del backend que utiliza el navegador. Usa `8080` en PROD y `8081` en DEV. |
+| PROD (`.env`)                   | DEV (`.env.dev`)                    | Uso y valores en local                                                                                           |
+| ------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `MYSQL_ROOT_PASSWORD`           | `DEV_MYSQL_ROOT_PASSWORD`           | Contraseña de la cuenta root de MySQL.                                                                           |
+| `DB_USERNAME`                   | `DEV_DB_USERNAME`                   | Cuenta de MySQL que utiliza Spring Boot. Los ejemplos usan `helpdesk`.                                           |
+| `DB_PASSWORD`                   | `DEV_DB_PASSWORD`                   | Contraseña de la cuenta de MySQL que utiliza la aplicación.                                                      |
+| `JWT_SECRET`                    | `DEV_JWT_SECRET`                    | Clave de firma de JWT codificada en Base64.                                                                      |
+| `FRONTEND_URL`                  | `DEV_FRONTEND_URL`                  | Origen del navegador permitido por la API. Usa `http://localhost:3000` en PROD y `http://localhost:3001` en DEV. |
+| `NEXT_PUBLIC_WEB_SERVER`        | `DEV_NEXT_PUBLIC_WEB_SERVER`        | Nombre de host del backend que utiliza el navegador. Usa `localhost` en ambos entornos.                          |
+| `NEXT_PUBLIC_WEB_PORT_BACK_END` | `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` | Puerto publicado del backend que utiliza el navegador. Usa `8080` en PROD y `8081` en DEV.                       |
 
 ### Clave de firma de JWT
 
@@ -242,11 +242,11 @@ Para consultar cómo reconstruir las imágenes, resolver problemas y trabajar en
 
 Los datos de inicialización incluyen tres cuentas públicas de demostración para explorar los roles de la aplicación.
 
-| Usuario | Contraseña | Rol |
-| --- | --- | --- |
-| `admin_demo` | `admin_demo12345678` | ADMIN |
+| Usuario           | Contraseña                | Rol        |
+| ----------------- | ------------------------- | ---------- |
+| `admin_demo`      | `admin_demo12345678`      | ADMIN      |
 | `technician_demo` | `technician_demo12345678` | TECHNICIAN |
-| `user_demo` | `user_demo12345678` | USER |
+| `user_demo`       | `user_demo12345678`       | USER       |
 
 Spring Boot aplica las restricciones de cuenta en el servidor.
 
@@ -413,13 +413,13 @@ Los scripts se ejecutan en el orden `01`, `02`, `03` si está presente el archiv
 
 ## Documentación del proyecto
 
-| Documento | Contenido |
-| --- | --- |
-| [Backend](./back-end/README.md) | Arquitectura de la API, seguridad, configuración, endpoints y pruebas |
-| [Frontend](./front-end/README.md) | Arquitectura de la interfaz, configuración del entorno, autenticación y pruebas |
-| [Base de datos](./database/README.md) | Esquema de MySQL, inicialización y datos de demostración |
-| [Flujo de trabajo con Docker](./DOCKER-WORKFLOW.md) | Entornos Docker, comandos y flujo de desarrollo |
-| [Flujo de trabajo con Git](./GIT_WORKFLOW.md) | Ramas, commits, pull requests y pautas de colaboración |
+| Documento                                           | Contenido                                                                       |
+| --------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [Backend](./back-end/README.md)                     | Arquitectura de la API, seguridad, configuración, endpoints y pruebas           |
+| [Frontend](./front-end/README.md)                   | Arquitectura de la interfaz, configuración del entorno, autenticación y pruebas |
+| [Base de datos](./database/README.md)               | Esquema de MySQL, inicialización y datos de demostración                        |
+| [Flujo de trabajo con Docker](./DOCKER-WORKFLOW.md) | Entornos Docker, comandos y flujo de desarrollo                                 |
+| [Flujo de trabajo con Git](./GIT_WORKFLOW.md)       | Ramas, commits, pull requests y pautas de colaboración                          |
 
 ## Licencia
 

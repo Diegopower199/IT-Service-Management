@@ -22,19 +22,19 @@ Built with **Java, Spring Boot, Next.js, TypeScript, MySQL, and MongoDB**, the p
 
 ## Tech Stack
 
-| Layer                  | Technologies |
-| ---------------------- | ------------ |
-| Frontend               | Next.js 16 (App Router), React 19, TypeScript 5 |
-| UI                     | Material UI, MUI X Data Grid |
-| API client / i18n      | Axios, next-intl |
-| Backend                | Java 17, Spring Boot 4.1.1, Spring MVC, Spring Security |
+| Layer                  | Technologies                                                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------------- |
+| Frontend               | Next.js 16 (App Router), React 19, TypeScript 5                                                 |
+| UI                     | Material UI, MUI X Data Grid                                                                    |
+| API client / i18n      | Axios, next-intl                                                                                |
+| Backend                | Java 17, Spring Boot 4.1.1, Spring MVC, Spring Security                                         |
 | Authentication         | JWT access tokens (HS256), BCrypt password hashing, rotating refresh tokens in HttpOnly cookies |
-| Relational persistence | MySQL 8.4 (local), TiDB Cloud (hosted), Spring Data JPA, Hibernate |
-| File storage           | MongoDB 8.0 (local), MongoDB Atlas (cloud), Spring Data MongoDB, GridFS |
-| Local infrastructure   | Docker, Docker Compose, Compose Watch |
-| Cloud deployment       | Vercel (frontend), Render (backend) |
-| Testing                | JUnit Jupiter 6, Mockito, Spring MockMvc, Vitest, React Testing Library |
-| Tooling                | Maven, npm, ESLint, Git |
+| Relational persistence | MySQL 8.4 (local), TiDB Cloud (hosted), Spring Data JPA, Hibernate                              |
+| File storage           | MongoDB 8.0 (local), MongoDB Atlas (cloud), Spring Data MongoDB, GridFS                         |
+| Local infrastructure   | Docker, Docker Compose, Compose Watch                                                           |
+| Cloud deployment       | Vercel (frontend), Render (backend)                                                             |
+| Testing                | JUnit Jupiter 6, Mockito, Spring MockMvc, Vitest, React Testing Library                         |
+| Tooling                | Maven, npm, ESLint, Git                                                                         |
 
 ## Architecture
 
@@ -87,11 +87,11 @@ In local Docker, the browser connects directly to the published Spring Boot port
 
 Roles define the application's general permissions.
 
-| Role           | Main capabilities                                                                                           |
-| -------------- | ----------------------------------------------------------------------------------------------------------- |
-| **ADMIN**      | Manage all tickets, users, and configuration catalogs; access system-wide statistics.                       |
+| Role           | Main capabilities                                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ADMIN**      | Manage all tickets, users, and configuration catalogs; access system-wide statistics.                                                                      |
 | **TECHNICIAN** | View tickets assigned to them and unassigned tickets, update tickets and add internal comments where permitted, and view statistics for their assignments. |
-| **USER**       | Create support requests, follow tickets they created or that were requested for them, and add public comments. |
+| **USER**       | Create support requests, follow tickets they created or that were requested for them, and add public comments.                                             |
 
 Administrators can view the predefined roles as a read-only catalog.
 
@@ -107,10 +107,10 @@ Docker runs the full Help Desk stack locally. Java, Node.js, MySQL, and MongoDB 
 - Docker Compose 2.32.0 or later for DEV, which uses the Compose Watch `restart` action. Check the installed version with `docker compose version`. [Compose Develop specification](https://docs.docker.com/reference/compose-file/develop/#action)
 - Free host ports for the environment you want to run. Only the frontend and backend publish host ports.
 
-| Environment | Frontend port | Backend port |
-| ----------- | ------------- | ------------ |
-| PROD (local) | `3000` | `8080` |
-| DEV | `3001` | `8081` |
+| Environment  | Frontend port | Backend port |
+| ------------ | ------------- | ------------ |
+| PROD (local) | `3000`        | `8080`       |
+| DEV          | `3001`        | `8081`       |
 
 Run the commands below from the repository root.
 
@@ -132,15 +132,15 @@ cp .env.dev.sample .env.dev
 
 Replace the placeholder passwords and JWT secrets before starting. Keep `.env`, `.env.dev`, and private credentials out of version control and off GitHub.
 
-| PROD (`.env`) | DEV (`.env.dev`) | Purpose and local values |
-| -------------- | ---------------- | ------------------------ |
-| `MYSQL_ROOT_PASSWORD` | `DEV_MYSQL_ROOT_PASSWORD` | Password for the MySQL root account. |
-| `DB_USERNAME` | `DEV_DB_USERNAME` | MySQL account used by Spring Boot. The samples use `helpdesk`. |
-| `DB_PASSWORD` | `DEV_DB_PASSWORD` | Password for the MySQL application account. |
-| `JWT_SECRET` | `DEV_JWT_SECRET` | Base64-encoded JWT signing key. |
-| `FRONTEND_URL` | `DEV_FRONTEND_URL` | Browser origin allowed by the API. Use `http://localhost:3000` in PROD and `http://localhost:3001` in DEV. |
-| `NEXT_PUBLIC_WEB_SERVER` | `DEV_NEXT_PUBLIC_WEB_SERVER` | Backend hostname used by the browser. Use `localhost` in both environments. |
-| `NEXT_PUBLIC_WEB_PORT_BACK_END` | `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` | Published backend port used by the browser. Use `8080` in PROD and `8081` in DEV. |
+| PROD (`.env`)                   | DEV (`.env.dev`)                    | Purpose and local values                                                                                   |
+| ------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `MYSQL_ROOT_PASSWORD`           | `DEV_MYSQL_ROOT_PASSWORD`           | Password for the MySQL root account.                                                                       |
+| `DB_USERNAME`                   | `DEV_DB_USERNAME`                   | MySQL account used by Spring Boot. The samples use `helpdesk`.                                             |
+| `DB_PASSWORD`                   | `DEV_DB_PASSWORD`                   | Password for the MySQL application account.                                                                |
+| `JWT_SECRET`                    | `DEV_JWT_SECRET`                    | Base64-encoded JWT signing key.                                                                            |
+| `FRONTEND_URL`                  | `DEV_FRONTEND_URL`                  | Browser origin allowed by the API. Use `http://localhost:3000` in PROD and `http://localhost:3001` in DEV. |
+| `NEXT_PUBLIC_WEB_SERVER`        | `DEV_NEXT_PUBLIC_WEB_SERVER`        | Backend hostname used by the browser. Use `localhost` in both environments.                                |
+| `NEXT_PUBLIC_WEB_PORT_BACK_END` | `DEV_NEXT_PUBLIC_WEB_PORT_BACK_END` | Published backend port used by the browser. Use `8080` in PROD and `8081` in DEV.                          |
 
 ### JWT signing key
 

@@ -8,14 +8,14 @@ This guide describes the Git and GitHub workflow for Help Desk. Keep `main` stab
 
 Choose a prefix that describes the branch's purpose. Use a short, specific name after the slash.
 
-| Prefix | When to use it | Help Desk example |
-| --- | --- | --- |
-| `feat/` | New functionality. | `feat/demo-account-restrictions` |
-| `fix/` | A bug fix. | `fix/demo-avatar-deletion` |
-| `docs/` | Documentation changes. | `docs/project-documentation` |
-| `refactor/` | Internal changes that preserve behavior. | `refactor/database-scripts` |
-| `test/` | New or updated tests. | `test/auth-service` |
-| `chore/` | Maintenance or configuration. | `chore/docker-development-settings` |
+| Prefix      | When to use it                           | Help Desk example                   |
+| ----------- | ---------------------------------------- | ----------------------------------- |
+| `feat/`     | New functionality.                       | `feat/demo-account-restrictions`    |
+| `fix/`      | A bug fix.                               | `fix/demo-avatar-deletion`          |
+| `docs/`     | Documentation changes.                   | `docs/project-documentation`        |
+| `refactor/` | Internal changes that preserve behavior. | `refactor/database-scripts`         |
+| `test/`     | New or updated tests.                    | `test/auth-service`                 |
+| `chore/`    | Maintenance or configuration.            | `chore/docker-development-settings` |
 
 The repository retains older branches with the `feature/` prefix, such as `feature/ticket-attachments`. Use `feat/` for new functionality and keep existing branch names as they are.
 
@@ -54,14 +54,14 @@ git commit -m "docs: update project documentation"
 
 Write commit messages in English. Use a type that identifies the reason for the change and a specific description.
 
-| Type | When to use it | Example |
-| --- | --- | --- |
-| `feat:` | Add functionality. | `feat: restrict demo account permissions` |
-| `fix:` | Correct incorrect behavior. | `fix: allow demo accounts to delete their own avatars` |
-| `docs:` | Change documentation. | `docs: update backend API documentation` |
-| `refactor:` | Restructure the implementation without changing behavior. | `refactor: organize database initialization scripts` |
-| `test:` | Add or update tests. | `test: add demo account authorization tests` |
-| `chore:` | Maintain project tooling or configuration. | `chore: update Docker development settings` |
+| Type        | When to use it                                            | Example                                                |
+| ----------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| `feat:`     | Add functionality.                                        | `feat: restrict demo account permissions`              |
+| `fix:`      | Correct incorrect behavior.                               | `fix: allow demo accounts to delete their own avatars` |
+| `docs:`     | Change documentation.                                     | `docs: update backend API documentation`               |
+| `refactor:` | Restructure the implementation without changing behavior. | `refactor: organize database initialization scripts`   |
+| `test:`     | Add or update tests.                                      | `test: add demo account authorization tests`           |
+| `chore:`    | Maintain project tooling or configuration.                | `chore: update Docker development settings`            |
 
 Another example is `docs: add Spanish translation of frontend README`. During development, make several small commits as needed, each with a specific purpose.
 
