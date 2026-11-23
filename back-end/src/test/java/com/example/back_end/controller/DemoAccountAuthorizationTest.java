@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,6 +38,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.example.back_end.enums.GridFsBucketType;
@@ -149,7 +151,7 @@ class DemoAccountAuthorizationTest {
 
     @ParameterizedTest
     @CsvSource({"admin_demo, ADMIN", "technician_demo, TECHNICIAN", "user_demo, USER"})
-    void demoAccountsCanReadTheirProfileButCannotEditDetailsChangePasswordOrDeleteAvatar(String username,
+    void demoAccountsCanReadTheirProfileButCannotEditDetailsOrChangePassword(String username,
             String roleName) throws Exception {
         Authentication demo = signIn(username, roleName);
         when(users.findByUsername(username)).thenReturn(Optional.of(account(username, new RoleModel(99L, roleName))));
@@ -158,17 +160,26 @@ class DemoAccountAuthorizationTest {
                 .andExpect(jsonPath("$.username").value(username));
         forbidden(put("/users/me").principal(demo).contentType(MediaType.APPLICATION_JSON).content(PROFILE));
         forbidden(put("/users/change-password").principal(demo).contentType(MediaType.APPLICATION_JSON).content(PASSWORD));
-        forbidden(delete("/users/me/avatar").principal(demo));
-
         verify(users, never()).save(any());
         verifyNoInteractions(passwords, avatars, storage);
     }
 
     @ParameterizedTest
-    @CsvSource({"admin, ADMIN", "admin_demo, ADMIN", "technician_demo, TECHNICIAN", "user_demo, USER"})
-    void accountsCanUploadTheirOwnAvatar(String username, String roleName) throws Exception {
+    @CsvSource({
+            "admin, ADMIN, false", "admin_demo, ADMIN, false", "technician_demo, TECHNICIAN, false",
+            "user_demo, USER, false", "admin_demo, ADMIN, true", "technician_demo, TECHNICIAN, true",
+            "user_demo, USER, true"
+    })
+    void accountsCanUploadOrReplaceTheirOwnAvatar(String username, String roleName, boolean replacing) throws Exception {
         Authentication actor = signIn(username, roleName);
-        when(users.findByUsername(username)).thenReturn(Optional.of(account(username, new RoleModel(99L, roleName))));
+        UserModel user = account(username, new RoleModel(99L, roleName));
+        when(users.findByUsername(username)).thenReturn(Optional.of(user));
+        UserAvatarModel previousAvatar = new UserAvatarModel();
+        if (replacing) {
+            previousAvatar.setUser(user);
+            previousAvatar.setMongoFileId("previous-avatar-id");
+            when(avatars.findByUser_IdUser(user.getIdUser())).thenReturn(Optional.of(previousAvatar));
+        }
         when(storage.saveFile(eq(GridFsBucketType.USER_AVATARS), any(), eq("photo.png"), eq("image/png")))
                 .thenReturn("avatar-id");
         when(avatars.saveAndFlush(any(UserAvatarModel.class))).thenAnswer(call -> call.getArgument(0));
@@ -183,6 +194,42 @@ class DemoAccountAuthorizationTest {
                     .andExpect(jsonPath("$.userId").value(501))
                     .andExpect(jsonPath("$.fileName").value("photo.png"))
                     .andExpect(jsonPath("$.contentType").value("image/png"));
+            if (replacing) {
+                verify(avatars).saveAndFlush(previousAvatar);
+                TransactionSynchronizationManager.getSynchronizations().forEach(
+                        synchronization -> synchronization.afterCompletion(TransactionSynchronization.STATUS_COMMITTED));
+                verify(storage).deleteFile(GridFsBucketType.USER_AVATARS, "previous-avatar-id");
+            }
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"admin_demo, ADMIN", "technician_demo, TECHNICIAN", "user_demo, USER"})
+    void demoAccountsCanDeleteOnlyTheirOwnAvatar(String username, String roleName) throws Exception {
+        Authentication actor = signIn(username, roleName);
+        UserModel user = account(username, new RoleModel(99L, roleName));
+        when(users.findByUsername(username)).thenReturn(Optional.of(user));
+        UserAvatarModel avatar = new UserAvatarModel();
+        avatar.setUser(user);
+        avatar.setMongoFileId("own-avatar-id");
+        when(avatars.findByUser_IdUser(user.getIdUser())).thenReturn(Optional.of(avatar));
+
+        mvc.perform(delete("/users/502/avatar").principal(actor)).andExpect(status().isMethodNotAllowed());
+        verifyNoInteractions(avatars, storage);
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            mvc.perform(delete("/users/me/avatar").principal(actor).param("userId", "502"))
+                    .andExpect(status().isNoContent());
+            verify(avatars).delete(avatar);
+            verify(avatars, never()).findByUser_IdUser(502L);
+            verifyNoInteractions(storage);
+
+            TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+            verify(storage).deleteFile(GridFsBucketType.USER_AVATARS, "own-avatar-id");
+            verifyNoMoreInteractions(storage);
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
         }

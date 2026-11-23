@@ -1,11 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import DashboardQuickActions from "@/app/modules/dashboard/components/DashboardQuickActions";
 import TicketsContent from "@/app/modules/tickets/components/content/TicketsContent";
 import TicketDetailsContent from "@/app/modules/tickets/components/details/TicketDetailsContent";
 import TicketRouteGuard from "@/app/modules/tickets/components/shared/TicketRouteGuard";
 import { parseTicketId } from "@/app/modules/tickets/components/shared/ticketNavigation";
+import AppSidebar from "@/layouts/AppSidebar";
 import { USER_ROLES } from "@/types/roleTypes";
 import type { TicketResponse } from "@/types/ticketTypes";
 import type { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
@@ -18,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   getAllTickets: vi.fn(),
   getAssignedTickets: vi.fn(),
   getOwnTickets: vi.fn(),
+  getUnassignedTickets: vi.fn(),
   getTicketById: vi.fn(),
   getAllActiveCategories: vi.fn(),
   getAllActiveStatuses: vi.fn(),
@@ -29,13 +33,23 @@ vi.mock("next/navigation", () => {
   const router = { push: mocks.push, replace: mocks.replace };
   return {
     useRouter: () => router,
+    usePathname: () => "/tickets",
     useSearchParams: () => mocks.searchParams,
   };
 });
+vi.mock("next/link", () => ({
+  default: ({ onNavigate, ...props }: ComponentProps<"a"> & { onNavigate?: () => void }) => (
+    <a {...props} onClick={(event) => {
+      event.preventDefault();
+      onNavigate?.();
+    }} />
+  ),
+}));
 vi.mock("@/app/modules/tickets/services/ticketService", () => ({
   getAllTickets: mocks.getAllTickets,
   getAssignedTickets: mocks.getAssignedTickets,
   getOwnTickets: mocks.getOwnTickets,
+  getUnassignedTickets: mocks.getUnassignedTickets,
   getTicketById: mocks.getTicketById,
 }));
 vi.mock("@/app/modules/categories/services/categoryService", () => ({
@@ -52,6 +66,9 @@ vi.mock("next-intl", () => {
   const labels: Record<string, string> = {
     allTickets: "All tickets",
     assignedTickets: "Assigned tickets",
+    unassignedTickets: "Unassigned Tickets",
+    viewAssigned: "View assigned tickets",
+    viewUnassigned: "View unassigned tickets",
     myTickets: "My tickets",
     createTicket: "Create ticket",
     view: "View",
@@ -194,6 +211,7 @@ describe("TicketsContent", () => {
     mocks.getAllTickets.mockResolvedValue(pagedTickets);
     mocks.getAssignedTickets.mockResolvedValue(pagedTickets);
     mocks.getOwnTickets.mockResolvedValue(pagedTickets);
+    mocks.getUnassignedTickets.mockResolvedValue(pagedTickets);
     mocks.getTicketById.mockResolvedValue(ticket);
     mocks.getAllActiveCategories.mockResolvedValue([ticket.category]);
     mocks.getAllActiveStatuses.mockResolvedValue([ticket.status]);
@@ -229,6 +247,9 @@ describe("TicketsContent", () => {
       isAuthReady: true,
       user: { userId: 7, username: "tech", role: USER_ROLES.TECHNICIAN },
     });
+    const dashboard = render(<DashboardQuickActions role={USER_ROLES.TECHNICIAN} />);
+    expect(screen.getByRole("link", { name: "View assigned tickets" })).toHaveAttribute("href", "/tickets");
+    dashboard.unmount();
     render(<TicketsContent />);
 
     expect(
@@ -239,9 +260,64 @@ describe("TicketsContent", () => {
     );
     expect(mocks.getAllTickets).not.toHaveBeenCalled();
     expect(mocks.getOwnTickets).not.toHaveBeenCalled();
+    expect(mocks.getUnassignedTickets).not.toHaveBeenCalled();
+  });
+
+  it("opens and restores the unassigned list without adding its selection to the URL", async () => {
+    const user = userEvent.setup();
+    mocks.useAuth.mockReturnValue({
+      isAuthReady: true,
+      user: { userId: 7, username: "tech", role: USER_ROLES.TECHNICIAN },
+    });
+    const dashboard = render(<DashboardQuickActions role={USER_ROLES.TECHNICIAN} />);
+    const unassignedLink = screen.getByRole("link", { name: "View unassigned tickets" });
+    expect(unassignedLink).toHaveAttribute("href", "/tickets");
+    await user.click(unassignedLink);
+    dashboard.unmount();
+    const list = render(<TicketsContent />);
+
+    expect(screen.getByRole("heading", { name: "Unassigned Tickets" })).toBeInTheDocument();
+    await screen.findByText("Printer issue");
+    expect(mocks.getUnassignedTickets).toHaveBeenCalledWith(expect.objectContaining({ page: 0 }));
+    expect(mocks.getAssignedTickets).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+
+    await user.type(screen.getByRole("textbox", { name: "Search by title" }), "Printer");
+    await user.click(screen.getByRole("button", { name: "Apply Filters" }));
+    expect(mocks.replace).toHaveBeenLastCalledWith("/tickets?title=Printer");
+    mocks.searchParams = new URLSearchParams("title=Printer");
+    list.rerender(<TicketsContent />);
+    await waitFor(() => expect(mocks.getUnassignedTickets).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: "Printer" }),
+    ));
+
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(mocks.replace).toHaveBeenLastCalledWith("/tickets?title=Printer&page=1", { scroll: false });
+
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    expect(mocks.replace).toHaveBeenLastCalledWith("/tickets");
+    mocks.searchParams = new URLSearchParams();
+    list.rerender(<TicketsContent />);
+
+    await user.click(screen.getByRole("button", { name: "View" }));
+    list.unmount();
+    const detail = renderTicketRoute("42");
+    render(<AppSidebar />);
+    const ticketsLink = screen.getByRole("link", { name: "tickets" });
+    await user.click(ticketsLink);
+    await user.click(await screen.findByRole("button", { name: "Back to tickets" }));
+    expect(mocks.replace).toHaveBeenLastCalledWith("/tickets");
+    detail.unmount();
+    render(<TicketsContent />);
+    expect(screen.getByRole("heading", { name: "Unassigned Tickets" })).toBeInTheDocument();
+
+    await user.click(ticketsLink);
+    expect(screen.getByRole("heading", { name: "Assigned tickets" })).toBeInTheDocument();
+    await waitFor(() => expect(mocks.getAssignedTickets).toHaveBeenCalledTimes(1));
   });
 
   it("loads own tickets for USER and skips status/priority catalogs", async () => {
+    mocks.searchParams = new URLSearchParams("assignment=unassigned");
     mocks.useAuth.mockReturnValue({
       isAuthReady: true,
       user: { userId: 5, username: "john", role: USER_ROLES.USER },
@@ -257,6 +333,7 @@ describe("TicketsContent", () => {
     });
     expect(mocks.getAllActiveStatuses).not.toHaveBeenCalled();
     expect(mocks.getAllActivePriorities).not.toHaveBeenCalled();
+    expect(mocks.getUnassignedTickets).not.toHaveBeenCalled();
   });
 
   it("uses query-string filters for the API and navigates on Apply Filters", async () => {

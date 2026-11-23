@@ -98,6 +98,17 @@ public class TicketController {
         return ResponseEntity.ok(tickets);
     }
 
+    @GetMapping("/unassigned")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    public ResponseEntity<Page<TicketResponse>> getUnassignedTickets(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String category,
+            Pageable pageable) {
+        return ResponseEntity.ok(ticketService.getUnassignedTickets(title, status, priority, category, pageable));
+    }
+
     @PostMapping
     public ResponseEntity<TicketResponse> createTicket(
             @Valid @RequestBody CreateTicketRequest request) {

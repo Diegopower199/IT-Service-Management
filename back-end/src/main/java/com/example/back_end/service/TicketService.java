@@ -62,14 +62,7 @@ public class TicketService {
             String category,
             Pageable pageable) {
 
-        Specification<TicketModel> specification = TicketSpecification.titleContains(title)
-                .and(TicketSpecification.statusIs(status))
-                .and(TicketSpecification.priorityIs(priority))
-                .and(TicketSpecification.categoryIs(category));
-
-        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
-
-        return tickets.map(this::convertToResponse);
+        return findTickets(Specification.unrestricted(), title, status, priority, category, pageable);
     }
 
     public TicketResponse getTicketById(Long ticketId) {
@@ -88,15 +81,8 @@ public class TicketService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        Specification<TicketModel> specification = TicketSpecification.createdByOrRequestedFor(currentUser)
-                .and(TicketSpecification.titleContains(title))
-                .and(TicketSpecification.statusIs(status))
-                .and(TicketSpecification.priorityIs(priority))
-                .and(TicketSpecification.categoryIs(category));
-
-        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
-
-        return tickets.map(this::convertToResponse);
+        return findTickets(TicketSpecification.createdByOrRequestedFor(currentUser),
+                title, status, priority, category, pageable);
     }
 
     public Page<TicketResponse> getAssignedTickets(
@@ -108,15 +94,23 @@ public class TicketService {
 
         UserModel currentUser = getAuthenticatedUser();
 
-        Specification<TicketModel> specification = TicketSpecification.assignedTo(currentUser)
+        return findTickets(TicketSpecification.assignedTo(currentUser), title, status, priority, category, pageable);
+    }
+
+    public Page<TicketResponse> getUnassignedTickets(String title, String status, String priority, String category,
+            Pageable pageable) {
+        return findTickets(TicketSpecification.unassigned(), title, status, priority, category, pageable);
+    }
+
+    private Page<TicketResponse> findTickets(Specification<TicketModel> scope, String title, String status,
+            String priority, String category, Pageable pageable) {
+        Specification<TicketModel> specification = scope
                 .and(TicketSpecification.titleContains(title))
                 .and(TicketSpecification.statusIs(status))
                 .and(TicketSpecification.priorityIs(priority))
                 .and(TicketSpecification.categoryIs(category));
 
-        Page<TicketModel> tickets = ticketRepository.findAll(specification, pageable);
-
-        return tickets.map(this::convertToResponse);
+        return ticketRepository.findAll(specification, pageable).map(this::convertToResponse);
     }
 
     @Transactional

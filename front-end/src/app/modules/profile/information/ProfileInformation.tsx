@@ -127,8 +127,6 @@ export default function ProfileInformation({
    * Deletes the authenticated user's avatar.
    */
   const handleDeleteAvatar = async () => {
-    if (readOnly) return;
-
     try {
       setDeletingAvatar(true);
       setAvatarError("");
@@ -227,7 +225,7 @@ export default function ProfileInformation({
             color="error"
             startIcon={deletingAvatar ? <CircularProgress size={16} color="inherit" /> : <DeleteOutlineRounded />}
             onClick={handleDeleteAvatar}
-            disabled={avatarBusy || readOnly}
+            disabled={avatarBusy}
             className={`${sharedStyles.secondaryButton} ${styles.deletePhoto}`}
           >
             {deletingAvatar ? t("deletingAvatar") : t("deleteAvatar")}
