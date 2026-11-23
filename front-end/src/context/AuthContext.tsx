@@ -9,6 +9,7 @@ import {
   useCallback,
   useEffect,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
@@ -17,6 +18,46 @@ interface AuthUser {
   username: string;
   role: UserRole;
 }
+
+interface AuthSession {
+  token: string | null;
+  user: AuthUser | null;
+}
+
+const signedOutSession: AuthSession = { token: null, user: null };
+
+function readStoredSession(): AuthSession {
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
+  const username = localStorage.getItem("username");
+  const role = localStorage.getItem("role") as UserRole | null;
+
+  if (!token || !userId || !username || !role) return signedOutSession;
+
+  return { token, user: { userId: Number(userId), username, role } };
+}
+
+function createAuthSessionStore() {
+  let session: AuthSession | undefined;
+  const listeners = new Set<() => void>();
+
+  return {
+    getSnapshot: () => (session ??= readStoredSession()),
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    setSession(nextSession: AuthSession) {
+      session = nextSession;
+      listeners.forEach((listener) => listener());
+    },
+  };
+}
+
+// React uses this snapshot on the server and during the initial hydration.
+const getServerSession = () => null;
 
 interface AuthContextType {
   token: string | null;
@@ -62,41 +103,23 @@ export const AuthContext = createContext<AuthContextType | undefined>(
  */
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
+  const [sessionStore] = useState(createAuthSessionStore);
 
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-
-  /**
-   * Restores persisted authentication information when the provider is
-   * initialized.
-   */
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUserId = localStorage.getItem("userId");
-    const storedUsername = localStorage.getItem("username");
-    const storedRole = localStorage.getItem("role") as UserRole | null;
-
-    if (storedToken && storedUserId && storedUsername && storedRole) {
-      setToken(storedToken);
-
-      setUser({
-        userId: Number(storedUserId),
-        username: storedUsername,
-        role: storedRole,
-      });
-    }
-
-    setIsAuthReady(true);
-  }, []);
+  const session = useSyncExternalStore<AuthSession | null>(
+    sessionStore.subscribe,
+    sessionStore.getSnapshot,
+    getServerSession,
+  );
+  const { token, user } = session ?? signedOutSession;
+  const isAuthReady = session !== null;
 
   /**
    * Updates the access token after a successful automatic refresh.
    */
   const handleAccessTokenRefreshed = useCallback((newToken: string) => {
     localStorage.setItem("token", newToken);
-    setToken(newToken);
-  }, []);
+    sessionStore.setSession({ ...sessionStore.getSnapshot(), token: newToken });
+  }, [sessionStore]);
 
   /**
    * Clears all authentication information stored locally.
@@ -107,9 +130,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem("username");
     localStorage.removeItem("role");
 
-    setToken(null);
-    setUser(null);
-  }, []);
+    sessionStore.setSession(signedOutSession);
+  }, [sessionStore]);
 
   /**
    * Handles a session that can no longer be renewed.
@@ -153,12 +175,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem("username", username);
     localStorage.setItem("role", role);
 
-    setToken(newToken);
-
-    setUser({
-      userId,
-      username,
-      role,
+    sessionStore.setSession({
+      token: newToken,
+      user: { userId, username, role },
     });
   };
 

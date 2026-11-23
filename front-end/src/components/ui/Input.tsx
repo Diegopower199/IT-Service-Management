@@ -15,7 +15,7 @@ import type { InputHTMLAttributes } from "react";
  * - required
  * - onChange
  */
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {}
+type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
 /**
  * Reusable input component.
