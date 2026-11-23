@@ -160,7 +160,7 @@ The API base URL is **`http://localhost:8080/api/v1`**.
 
 ## Cloud Deployment
 
-Render hosts the Spring Boot API and supplies its runtime environment, including `PORT` as the fallback for `SERVER_PORT`. The API connects to TiDB Cloud and MongoDB Atlas through the same [configuration variables](#configuration) used locally. Vercel forwards `/api/v1` requests to Render through the Next.js rewrite. See the [cloud architecture in the main README](../README.md#cloud-architecture).
+Render hosts the Spring Boot API and supplies its runtime environment, including `PORT` as the fallback for `SERVER_PORT`. The API connects to TiDB Cloud and MongoDB Atlas through the same [configuration variables](#configuration) used locally. Vercel forwards `/api/v1` requests to Render through the Next.js rewrite. See the [Cloud Deployment guide](../docs/DEPLOYMENT.md) for setup and verification.
 
 ## Authentication and Authorization
 
@@ -310,4 +310,4 @@ Controller and service tests use **JUnit Jupiter 6.0.3** and **Mockito**. They c
 ./mvnw clean verify
 ```
 
-Run these commands from `back-end/`. Maven compiles the application, runs the configured tests, and packages the backend through `verify`. For integration checks, use a running backend with initialized MySQL and MongoDB and exercise authentication and file operations through the application.
+Run these commands from `back-end/`. On Linux or macOS, make the wrapper executable first with `chmod u+x mvnw` if needed. Maven compiles the application, runs the configured tests, and packages the backend through `verify`. For integration checks, use a running backend with initialized MySQL and MongoDB and exercise authentication and file operations through the application.

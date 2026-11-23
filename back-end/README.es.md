@@ -86,7 +86,7 @@ spring.jpa.hibernate.ddl-auto=validate
 
 Docker monta `database/` en `/docker-entrypoint-initdb.d` en modo de solo lectura. MySQL ejecuta los archivos SQL de la raíz de ese directorio por orden al inicializar por primera vez un volumen vacío. Cuando se reutiliza un volumen, MySQL omite los scripts de inicialización. Utiliza `database/local/` para la instalación manual.
 
-MySQL almacena los registros relacionales y los metadatos de los archivos. MongoDB almacena los archivos binarios en GridFS y utiliza `helpdesk_attachments` por defecto en los entornos locales. Las colecciones de GridFS se crean cuando se necesitan. Consulta el [README de la base de datos](../database/README.md).
+MySQL almacena los registros relacionales y los metadatos de los archivos. MongoDB almacena los archivos binarios en GridFS y utiliza `helpdesk_attachments` por defecto en los entornos locales. Las colecciones de GridFS se crean cuando se necesitan. Consulta el [README de la base de datos](../database/README.es.md).
 
 ## Configuración
 
@@ -137,7 +137,7 @@ docker compose --env-file .env.dev -f docker-compose.dev.yaml up -d --build
 docker compose --env-file .env.dev -f docker-compose.dev.yaml watch --no-up backend
 ```
 
-Docker PROD ejecuta en local el backend compilado. Consulta el [flujo de trabajo con Docker](../DOCKER-WORKFLOW.md) para ver más comandos.
+Docker PROD ejecuta en local el backend compilado. Consulta el [flujo de trabajo con Docker](../DOCKER-WORKFLOW.es.md) para ver más comandos.
 
 ## Ejecutar en local (sin Docker)
 
@@ -160,7 +160,7 @@ La URL base de la API es **`http://localhost:8080/api/v1`**.
 
 ## Despliegue en la nube
 
-Render aloja la API de Spring Boot y proporciona su entorno de ejecución, incluida `PORT` como alternativa a `SERVER_PORT`. La API se conecta a TiDB Cloud y MongoDB Atlas mediante las mismas [variables de configuración](#configuración) que se usan en local. Vercel reenvía a Render las peticiones a `/api/v1` mediante una regla de reescritura de Next.js. Consulta la [arquitectura en la nube del README principal](../README.es.md#arquitectura-en-la-nube).
+Render aloja la API de Spring Boot y proporciona su entorno de ejecución, incluida `PORT` como alternativa a `SERVER_PORT`. La API se conecta a TiDB Cloud y MongoDB Atlas mediante las mismas [variables de configuración](#configuración) que se usan en local. Vercel reenvía a Render las peticiones a `/api/v1` mediante una regla de reescritura de Next.js. Consulta la [guía de despliegue en la nube](../docs/DEPLOYMENT.es.md) para configurar y comprobar el despliegue.
 
 ## Autenticación y autorización
 
@@ -310,4 +310,4 @@ Las pruebas de controladores y servicios utilizan **JUnit Jupiter 6.0.3** y **Mo
 ./mvnw clean verify
 ```
 
-Ejecuta estos comandos desde `back-end/`. Maven compila la aplicación, ejecuta las pruebas configuradas y empaqueta el backend en el ciclo que llega hasta la fase `verify`. Para las comprobaciones de integración, ejecuta el backend con MySQL y MongoDB inicializados y prueba la autenticación y las operaciones con archivos desde la aplicación.
+Ejecuta estos comandos desde `back-end/`. En Linux o macOS, si hace falta, concede primero permiso de ejecución al wrapper con `chmod u+x mvnw`. Maven compila la aplicación, ejecuta las pruebas configuradas y empaqueta el backend en el ciclo que llega hasta la fase `verify`. Para las comprobaciones de integración, ejecuta el backend con MySQL y MongoDB inicializados y prueba la autenticación y las operaciones con archivos desde la aplicación.

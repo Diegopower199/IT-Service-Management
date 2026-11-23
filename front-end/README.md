@@ -151,7 +151,7 @@ Open **http://localhost:3000**. Ensure the backend is running and its CORS confi
 | `NEXT_PUBLIC_API_BASE_URL` | Set to `/api/v1` so browser requests use the Vercel frontend origin. This value takes precedence over the local API variables. |
 | `BACKEND_PROXY_URL`        | Server-side Next.js setting for the Spring Boot origin on Render.                                                              |
 
-When `BACKEND_PROXY_URL` is set, `next.config.ts` rewrites `/api/v1/:path*` to the same path on the Render backend. Keep `BACKEND_PROXY_URL` in the server environment without a `NEXT_PUBLIC_` prefix. Public variables are exposed to the browser and must contain only public values. See the [cloud architecture in the main README](../README.md#cloud-architecture).
+When `BACKEND_PROXY_URL` is set, `next.config.ts` rewrites `/api/v1/:path*` to the same path on the Render backend. Keep `BACKEND_PROXY_URL` in the server environment without a `NEXT_PUBLIC_` prefix. Public variables are exposed to the browser and must contain only public values. See the [Cloud Deployment guide](../docs/DEPLOYMENT.md) for setup and verification.
 
 ## Authentication
 
@@ -170,7 +170,7 @@ The sidebar and ticket screens adapt navigation and actions to the authenticated
 | Role         | Interface                                                                                      |
 | ------------ | ---------------------------------------------------------------------------------------------- |
 | `ADMIN`      | Dashboard, tickets, profile, user and catalog administration, and the role catalog.            |
-| `TECHNICIAN` | Dashboard, assigned ticket list, profile, and ticket actions where permitted.                  |
+| `TECHNICIAN` | Dashboard, assigned and unassigned ticket lists, profile, and ticket actions where permitted. |
 | `USER`       | Dashboard, tickets they created or that were requested for them, public comments, and profile. |
 
 - `admin_demo` can manage unprotected `USER` and `TECHNICIAN` accounts. The Users interface makes `admin`, `admin_demo`, `technician_demo`, and `user_demo` read-only for `admin_demo` and prevents granting `ADMIN`.

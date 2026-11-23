@@ -1,6 +1,6 @@
 # Help Desk — Gestión de servicios de TI
 
-**[English](./README.md) | Español**
+[English](./README.md) | **Español**
 
 Aplicación full stack de **gestión de servicios de TI (ITSM)** para gestionar solicitudes de soporte, hacer seguimiento de la actividad de los tickets y organizar el trabajo del servicio de asistencia.
 
@@ -236,7 +236,7 @@ DEV y PROD utilizan volúmenes con nombre independientes para MySQL y MongoDB. A
 
 **`docker compose down -v` elimina los volúmenes declarados del proyecto seleccionado y los datos de MySQL y MongoDB que contienen.**
 
-Para consultar cómo reconstruir las imágenes, resolver problemas y trabajar en el día a día, consulta el [Flujo de trabajo con Docker](./DOCKER-WORKFLOW.md).
+Para consultar cómo reconstruir las imágenes, resolver problemas y trabajar en el día a día, consulta el [Flujo de trabajo con Docker](./DOCKER-WORKFLOW.es.md).
 
 ### Cuentas de demostración
 
@@ -273,7 +273,7 @@ Inicializa la base de datos nueva ejecutando los siguientes archivos en orden.
 3. `database/03_seed_admin.sql` crea el administrador privado cuando el propietario ha preparado en local ese archivo excluido de Git.
 4. `database/04_seed_demo_data.sql` carga las cuentas públicas de demostración y los datos de tickets de ejemplo.
 
-Completa la inicialización de MySQL antes de iniciar Spring Boot. Hibernate utiliza `spring.jpa.hibernate.ddl-auto=validate` y necesita que el esquema ya exista. MongoDB almacena archivos binarios en la base de datos `helpdesk_attachments` mediante GridFS. El backend crea las colecciones de GridFS cuando las necesita. Los scripts SQL se aplican solo a MySQL. Consulta el [README de la base de datos](./database/README.md).
+Completa la inicialización de MySQL antes de iniciar Spring Boot. Hibernate utiliza `spring.jpa.hibernate.ddl-auto=validate` y necesita que el esquema ya exista. MongoDB almacena archivos binarios en la base de datos `helpdesk_attachments` mediante GridFS. El backend crea las colecciones de GridFS cuando las necesita. Los scripts SQL se aplican solo a MySQL. Consulta el [README de la base de datos](./database/README.es.md).
 
 ### Configurar y ejecutar Spring Boot
 
@@ -303,7 +303,7 @@ chmod u+x mvnw
 ./mvnw spring-boot:run
 ```
 
-Spring Boot usa por defecto el puerto `8080` y sirve la API bajo `/api/v1`. Consulta el [README del backend](./back-end/README.md) para ver opciones adicionales de configuración.
+Spring Boot usa por defecto el puerto `8080` y sirve la API bajo `/api/v1`. Consulta el [README del backend](./back-end/README.es.md) para ver opciones adicionales de configuración.
 
 ### Configurar y ejecutar Next.js
 
@@ -321,7 +321,7 @@ npm ci
 npm run dev
 ```
 
-Abre <http://localhost:3000>. Consulta el [README del frontend](./front-end/README.md) para más detalles.
+Abre <http://localhost:3000>. Consulta el [README del frontend](./front-end/README.es.md) para más detalles.
 
 ### Verificar la instalación local
 
@@ -380,11 +380,13 @@ IT-Service-Management/
 ├── back-end/                 # API REST de Spring Boot y pruebas del backend
 │   ├── Dockerfile
 │   ├── Dockerfile.dev
-│   └── README.md
+│   ├── README.md
+│   └── README.es.md
 ├── front-end/                # Aplicación Next.js y pruebas del frontend
 │   ├── Dockerfile
 │   ├── Dockerfile.dev
-│   └── README.md
+│   ├── README.md
+│   └── README.es.md
 ├── database/                 # Esquema de MySQL y datos de demostración
 │   ├── local/
 │   │   └── 00_setup_local_database.sql
@@ -392,15 +394,22 @@ IT-Service-Management/
 │   ├── 02_seed_reference_data.sql
 │   ├── 03_seed_admin.sql      # Archivo privado local que prepara el propietario y que Git ignora
 │   ├── 04_seed_demo_data.sql
-│   └── README.md
+│   ├── README.md
+│   └── README.es.md
+├── docs/
+│   ├── DEPLOYMENT.md
+│   └── DEPLOYMENT.es.md
 ├── docker-compose.yaml
 ├── docker-compose.dev.yaml
 ├── .env.sample
 ├── .env.dev.sample
 ├── DOCKER-WORKFLOW.md
+├── DOCKER-WORKFLOW.es.md
 ├── GIT_WORKFLOW.md
+├── GIT_WORKFLOW.es.md
 ├── LICENSE
-└── README.md
+├── README.md
+└── README.es.md
 ```
 
 - `local/00_setup_local_database.sql` crea la base de datos local `helpdesk` para la instalación manual.
@@ -415,11 +424,12 @@ Los scripts se ejecutan en el orden `01`, `02`, `03` si está presente el archiv
 
 | Documento                                           | Contenido                                                                       |
 | --------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [Backend](./back-end/README.md)                     | Arquitectura de la API, seguridad, configuración, endpoints y pruebas           |
-| [Frontend](./front-end/README.md)                   | Arquitectura de la interfaz, configuración del entorno, autenticación y pruebas |
-| [Base de datos](./database/README.md)               | Esquema de MySQL, inicialización y datos de demostración                        |
-| [Flujo de trabajo con Docker](./DOCKER-WORKFLOW.md) | Entornos Docker, comandos y flujo de desarrollo                                 |
-| [Flujo de trabajo con Git](./GIT_WORKFLOW.md)       | Ramas, commits, pull requests y pautas de colaboración                          |
+| [Backend](./back-end/README.es.md)                     | Arquitectura de la API, seguridad, configuración, endpoints y pruebas           |
+| [Frontend](./front-end/README.es.md)                   | Arquitectura de la interfaz, configuración del entorno, autenticación y pruebas |
+| [Base de datos](./database/README.es.md)               | Esquema de MySQL, inicialización y datos de demostración                        |
+| [Flujo de trabajo con Docker](./DOCKER-WORKFLOW.es.md) | Entornos Docker, comandos y flujo de desarrollo                                 |
+| [Flujo de trabajo con Git](./GIT_WORKFLOW.es.md)       | Ramas, commits, pull requests y pautas de colaboración                          |
+| [Despliegue en la nube](./docs/DEPLOYMENT.es.md)        | Render, Vercel, TiDB Cloud, MongoDB Atlas y comprobaciones de despliegue        |
 
 ## Licencia
 

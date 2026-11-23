@@ -65,7 +65,7 @@ El layout raíz envuelve la aplicación con `NextIntlClientProvider` y `AuthProv
 - **npm**
 - Un backend de Spring Boot en ejecución, conectado a la base de datos MySQL ya inicializada y a MongoDB GridFS
 
-Para configurar el backend y la base de datos, consulta el [README del backend](../back-end/README.es.md) y el [README de la base de datos](../database/README.md).
+Para configurar el backend y la base de datos, consulta el [README del backend](../back-end/README.es.md) y el [README de la base de datos](../database/README.es.md).
 
 ## Ejecutar con Docker
 
@@ -90,7 +90,7 @@ docker compose --env-file .env.dev -f docker-compose.dev.yaml up -d --build
 
 La imagen de producción utiliza una compilación de Node.js en varias etapas y la salida standalone de Next.js. En ejecución, inicia `node server.js` e incluye `public/` y `.next/static/`. En DEV, Compose ejecuta `npm run dev -- --webpack` con el sondeo de cambios habilitado. Ambos entornos reciben la configuración de la API desde Compose.
 
-Consulta el [flujo de trabajo con Docker](../DOCKER-WORKFLOW.md) para conocer el proceso de desarrollo y los comandos para actualizar dependencias.
+Consulta el [flujo de trabajo con Docker](../DOCKER-WORKFLOW.es.md) para conocer el proceso de desarrollo y los comandos para actualizar dependencias.
 
 ## Puesta en marcha (sin Docker)
 
@@ -151,7 +151,7 @@ Abre **http://localhost:3000**. Asegúrate de que el backend está en ejecución
 | `NEXT_PUBLIC_API_BASE_URL` | Configúrala como `/api/v1` para que el navegador envíe las peticiones al origen del frontend en Vercel. Este valor tiene prioridad sobre las variables de la API local. |
 | `BACKEND_PROXY_URL`        | Configuración de Next.js en el servidor que indica el origen de Spring Boot en Render.                                                                                  |
 
-Cuando se define `BACKEND_PROXY_URL`, `next.config.ts` reescribe las peticiones a `/api/v1/:path*` para enviarlas a la misma ruta en el backend de Render. Mantén `BACKEND_PROXY_URL` en el entorno del servidor y sin el prefijo `NEXT_PUBLIC_`. Las variables públicas quedan expuestas al navegador y solo deben contener valores públicos. Consulta la [arquitectura en la nube del README principal](../README.es.md#arquitectura-en-la-nube).
+Cuando se define `BACKEND_PROXY_URL`, `next.config.ts` reescribe las peticiones a `/api/v1/:path*` para enviarlas a la misma ruta en el backend de Render. Mantén `BACKEND_PROXY_URL` en el entorno del servidor y sin el prefijo `NEXT_PUBLIC_`. Las variables públicas quedan expuestas al navegador y solo deben contener valores públicos. Consulta la [guía de despliegue en la nube](../docs/DEPLOYMENT.es.md) para configurar y comprobar el despliegue.
 
 ## Autenticación
 
@@ -170,7 +170,7 @@ El menú lateral y las pantallas de tickets adaptan la navegación y las accione
 | Rol          | Interfaz                                                                                     |
 | ------------ | -------------------------------------------------------------------------------------------- |
 | `ADMIN`      | Panel, tickets, perfil, administración de usuarios y catálogos, y catálogo de roles.         |
-| `TECHNICIAN` | Panel, listado de tickets asignados, perfil y acciones sobre tickets según los permisos.     |
+| `TECHNICIAN` | Panel, listados de tickets asignados y sin asignar, perfil y acciones sobre tickets según los permisos. |
 | `USER`       | Panel, tickets que ha creado o que se han solicitado para él, comentarios públicos y perfil. |
 
 - `admin_demo` puede gestionar cuentas `USER` y `TECHNICIAN` no protegidas. Para `admin_demo`, la interfaz de usuarios muestra las cuentas `admin`, `admin_demo`, `technician_demo` y `user_demo` en modo de solo lectura e impide conceder el rol `ADMIN`.

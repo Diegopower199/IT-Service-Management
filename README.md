@@ -1,6 +1,6 @@
 # Help Desk — IT Service Management
 
-**English | [Español](./README.es.md)**
+**English** | [Español](./README.es.md)
 
 A full-stack **IT Service Management (ITSM)** application for managing IT support requests, tracking ticket activity, and organizing service desk operations.
 
@@ -380,11 +380,13 @@ IT-Service-Management/
 ├── back-end/                 # Spring Boot REST API and backend tests
 │   ├── Dockerfile
 │   ├── Dockerfile.dev
-│   └── README.md
+│   ├── README.md
+│   └── README.es.md
 ├── front-end/                # Next.js application and frontend tests
 │   ├── Dockerfile
 │   ├── Dockerfile.dev
-│   └── README.md
+│   ├── README.md
+│   └── README.es.md
 ├── database/                 # MySQL schema and demo data
 │   ├── local/
 │   │   └── 00_setup_local_database.sql
@@ -392,15 +394,22 @@ IT-Service-Management/
 │   ├── 02_seed_reference_data.sql
 │   ├── 03_seed_admin.sql      # Private local file prepared by the owner and ignored by Git
 │   ├── 04_seed_demo_data.sql
-│   └── README.md
+│   ├── README.md
+│   └── README.es.md
+├── docs/
+│   ├── DEPLOYMENT.md
+│   └── DEPLOYMENT.es.md
 ├── docker-compose.yaml
 ├── docker-compose.dev.yaml
 ├── .env.sample
 ├── .env.dev.sample
 ├── DOCKER-WORKFLOW.md
+├── DOCKER-WORKFLOW.es.md
 ├── GIT_WORKFLOW.md
+├── GIT_WORKFLOW.es.md
 ├── LICENSE
-└── README.md
+├── README.md
+└── README.es.md
 ```
 
 - `local/00_setup_local_database.sql` creates the local `helpdesk` database for manual setup.
@@ -420,6 +429,7 @@ The initialization order is `01`, `02`, `03` when the private seed is present, t
 | [Database](./database/README.md)        | MySQL schema, initialization, and demo data                     |
 | [Docker Workflow](./DOCKER-WORKFLOW.md) | Docker environments, commands, and development workflow         |
 | [Git Workflow](./GIT_WORKFLOW.md)       | Branches, commits, pull requests, and collaboration guidelines  |
+| [Cloud Deployment](./docs/DEPLOYMENT.md) | Render, Vercel, TiDB Cloud, MongoDB Atlas, and deployment checks |
 
 ## License
 
